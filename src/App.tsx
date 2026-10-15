@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ensureAudio } from './audio/sfx';
+import { installAudioUnlock } from './audio/sfx';
 import { DragLayer } from './game/Tray';
 import { ModalHost } from './modals/ModalHost';
 import { Dex } from './screens/Dex';
@@ -10,12 +10,8 @@ import { useGame } from './state/store';
 
 export function App() {
   const screen = useGame((s) => s.ui.screen);
-  useEffect(() => {
-    // Browsers only allow sound after the first tap
-    const unlock = () => ensureAudio();
-    window.addEventListener('pointerdown', unlock);
-    return () => window.removeEventListener('pointerdown', unlock);
-  }, []);
+  // Browsers only allow sound after a tap; on touch screens that means when the finger lifts
+  useEffect(() => installAudioUnlock(), []);
   return (
     <>
       {screen === 'home' && <Home />}

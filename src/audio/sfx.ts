@@ -5,19 +5,50 @@ let ac: AudioContext | null = null;
 
 const soundOn = () => useGame.getState().progress.sound;
 
+const wake = (ctx: AudioContext) => {
+  if (ctx.state !== 'running') ctx.resume().catch(() => {});
+};
+
+/**
+ * Creates or wakes the audio context. Only works inside a gesture the browser counts as user activation:
+ * on touch screens that is the finger lifting (pointerup / touchend / click), not the finger going down.
+ */
 export function ensureAudio(): void {
   if (!soundOn()) return;
   try {
-    if (!ac) ac = new AudioContext();
-    if (ac.state === 'suspended') void ac.resume();
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!ac && Ctx) ac = new Ctx();
+    if (!ac || ac.state === 'running') return;
+    wake(ac);
+    // iOS Safari only unlocks audio once something has actually played inside a gesture
+    const blip = ac.createBufferSource();
+    blip.buffer = ac.createBuffer(1, 1, 22050);
+    blip.connect(ac.destination);
+    blip.start(0);
   } catch {
     ac = null;
   }
 }
 
+/**
+ * Keeps trying to start audio on every gesture until it runs. Stays installed because iOS suspends
+ * audio again when the app goes to the background.
+ */
+export function installAudioUnlock(): () => void {
+  const events = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const;
+  const handler = () => {
+    if (ac?.state !== 'running') ensureAudio();
+  };
+  for (const e of events) window.addEventListener(e, handler, { capture: true, passive: true });
+  return () => {
+    for (const e of events) window.removeEventListener(e, handler, { capture: true });
+  };
+}
+
 function tone(f: number, d: number, type: OscillatorType = 'triangle', v = 0.12, wait = 0, f2?: number): void {
   if (!soundOn() || !ac) return;
   try {
+    wake(ac);
     const t = ac.currentTime + wait;
     const o = ac.createOscillator();
     const g = ac.createGain();
