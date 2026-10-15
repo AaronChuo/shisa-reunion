@@ -6,6 +6,8 @@
 - **積木與機關**：玻璃石階、赤瓦塔、紅芋拱門、竹梯、跳跳貝、石拱橋；海膽、漲潮、石門壓板
 - **PWA**：可以加到主畫面，沒有網路也能玩
 
+線上試玩：<https://shisa-reunion.vercel.app>（iPad／iPhone 請用 Safari 打開 → 分享 → 加入主畫面）
+
 發展計畫、架構、版權評估與路線圖：[docs/README.md](docs/README.md)
 
 ## 開發
