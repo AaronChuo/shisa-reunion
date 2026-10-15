@@ -1,0 +1,192 @@
+import { useId } from 'react';
+import type { Gate } from '../engine';
+import { boardWidth, C, M, Y0 } from '../game/geometry';
+
+const f1 = (v: number) => +v.toFixed(1);
+
+export function Sun({ cx, cy, r, color }: { cx: number; cy: number; r: number; color: string }) {
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={r} fill={color} />
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
+        const a = (i * Math.PI) / 4;
+        return (
+          <path
+            key={i}
+            d={`M${f1(cx + Math.cos(a) * r * 1.35)},${f1(cy + Math.sin(a) * r * 1.35)} L${f1(cx + Math.cos(a) * r * 1.9)},${f1(cy + Math.sin(a) * r * 1.9)}`}
+            stroke={color}
+            strokeWidth={f1(r * 0.4)}
+            strokeLinecap="round"
+          />
+        );
+      })}
+    </g>
+  );
+}
+
+function Cloud({ x, y, s }: { x: number; y: number; s: number }) {
+  return (
+    <g transform={`translate(${x},${y}) scale(${s})`} fill="#fff" opacity={0.92}>
+      <circle r={26} />
+      <circle cx={30} cy={-12} r={32} />
+      <circle cx={64} r={24} />
+      <rect x={-10} width={84} height={22} rx={11} />
+    </g>
+  );
+}
+
+/** Sky, sun, islands and sea behind the board */
+export function Background({ w }: { w: number }) {
+  const id = useId();
+  const W2 = boardWidth(w);
+  return (
+    <>
+      <defs>
+        <linearGradient id={`sky${id}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#93D2E8" />
+          <stop offset=".8" stopColor="#E6F6F3" />
+        </linearGradient>
+        <clipPath id={`clip${id}`}>
+          <rect x={0} y={30} width={W2} height={690} rx={26} />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#clip${id})`}>
+        <rect x={0} y={30} width={W2} height={690} fill={`url(#sky${id})`} />
+        <circle cx={W2 - 94} cy={112} r={50} fill="#FFF4C9" opacity={0.75} />
+        <circle cx={W2 - 94} cy={112} r={32} fill="#FFD45E" />
+        <Cloud x={110} y={132} s={1} />
+        <Cloud x={W2 * 0.57} y={92} s={0.75} />
+        <path d="M0,604 C70,572 150,566 230,586 C262,594 284,600 304,604 Z" fill="#7DBE93" />
+        <path d={`M${W2 - 180},604 c24,-16 64,-20 96,-9 c22,7 46,9 84,9 Z`} fill="#94CEA6" />
+        <rect x={0} y={602} width={W2} height={118} fill="#3DB0C1" />
+        <path
+          d={`M20,624 q15,-8 30,0 t30,0 M${W2 * 0.45},624 q15,-8 30,0 t30,0 M${W2 - 140},620 q15,-8 30,0 t30,0`}
+          stroke="#A9E6EC"
+          strokeWidth={4}
+          fill="none"
+          strokeLinecap="round"
+        />
+        <rect x={0} y={690} width={W2} height={30} fill="#2B95A8" />
+      </g>
+    </>
+  );
+}
+
+/** The wooden tray the blocks stand on, with dashed column guides */
+export function TrayBase({ w }: { w: number }) {
+  return (
+    <>
+      <rect x={M - 18} y={Y0} width={w * C + 36} height={48} rx={14} fill="#CFA471" stroke="#8E6435" strokeWidth={4} />
+      <rect x={M - 12} y={Y0 + 5} width={w * C + 24} height={8} rx={4} fill="#E8CB9C" />
+      {Array.from({ length: w }, (_, x) => (
+        <rect key={`slot${x}`} x={M + x * C + 28} y={Y0 + 22} width={44} height={11} rx={5.5} fill="#8E6435" opacity={0.28} />
+      ))}
+      {Array.from({ length: w - 1 }, (_, i) => (
+        <path
+          key={`guide${i}`}
+          d={`M${M + (i + 1) * C},${Y0 - 6} V${Y0 - 500}`}
+          stroke="#fff"
+          strokeOpacity={0.6}
+          strokeWidth={2}
+          strokeDasharray="2 10"
+          strokeLinecap="round"
+        />
+      ))}
+    </>
+  );
+}
+
+export function Urchin({ cx, cy }: { cx: number; cy: number }) {
+  return (
+    <g>
+      {Array.from({ length: 14 }, (_, i) => {
+        const a = (i / 14) * Math.PI * 2;
+        return (
+          <path
+            key={i}
+            d={`M${f1(cx + Math.cos(a) * 10)},${f1(cy + Math.sin(a) * 10)} L${f1(cx + Math.cos(a) * 23)},${f1(cy + Math.sin(a) * 23)}`}
+            stroke="#3B2450"
+            strokeWidth={3.2}
+            strokeLinecap="round"
+          />
+        );
+      })}
+      <circle cx={cx} cy={cy} r={14} fill="#5B3A7A" stroke="#3B2450" strokeWidth={2.5} />
+      <circle cx={cx - 5} cy={cy - 2} r={3.2} fill="#fff" />
+      <circle cx={cx + 5} cy={cy - 2} r={3.2} fill="#fff" />
+      <circle cx={cx - 4.5} cy={cy - 1.5} r={1.6} fill="#1d1d1d" />
+      <circle cx={cx + 5.5} cy={cy - 1.5} r={1.6} fill="#1d1d1d" />
+    </g>
+  );
+}
+
+export function Plate({ px, on }: { px: number; on: boolean }) {
+  const cx = M + px * C + 50;
+  return (
+    <g>
+      <rect x={cx - 36} y={Y0 - 8} width={72} height={14} rx={6} fill={on ? '#FFE08A' : '#CFC3AF'} stroke={on ? '#C8961E' : '#8E8270'} strokeWidth={3} />
+      <Sun cx={cx} cy={Y0 - 1} r={4} color={on ? '#E8A21E' : '#9C907C'} />
+      {!on && (
+        <rect className="ghostLine" x={cx - 42} y={Y0 - 14} width={84} height={26} rx={10} fill="none" stroke="#E8A21E" strokeWidth={3} strokeDasharray="8 6" />
+      )}
+    </g>
+  );
+}
+
+/** Stone gate with a sloped red-tile roof (so nothing can rest on it) */
+export function GateArt({ gate, open }: { gate: Pick<Gate, 'x' | 'h'>; open: boolean }) {
+  const x0 = M + gate.x * C;
+  const top = Y0 - gate.h * C;
+  const hh = gate.h * C;
+  const dy = top + 21;
+  const dh = Y0 - dy;
+  const studs: number[] = [];
+  for (let y = dy + 16; y < Y0 - 8; y += 22) studs.push(y);
+  return (
+    <g>
+      <path
+        d={`M${x0 - 6},${top + 10} L${x0 + 12},${top - 14} L${x0 + 88},${top - 14} L${x0 + 106},${top + 10} Z`}
+        fill="#CD4A31"
+        stroke="#86281A"
+        strokeWidth={3}
+        strokeLinejoin="round"
+      />
+      <path d={`M${x0 + 6},${top + 2} H${x0 + 94} M${x0 + 14},${top - 6} H${x0 + 86}`} stroke="#F7E2C7" strokeWidth={2.5} opacity={0.8} />
+      <rect x={x0 + 4} y={top + 10} width={14} height={hh - 10} fill="#D9CFBD" stroke="#8C7F6B" strokeWidth={3} />
+      <rect x={x0 + 82} y={top + 10} width={14} height={hh - 10} fill="#D9CFBD" stroke="#8C7F6B" strokeWidth={3} />
+      <rect x={x0 + 2} y={top + 8} width={96} height={13} fill="#C23A2B" stroke="#7A1E12" strokeWidth={3} />
+      {open ? (
+        <>
+          <rect x={x0 + 18} y={dy} width={64} height={dh} fill="#2B1B17" opacity={0.22} />
+          <rect x={x0 + 18} y={dy} width={8} height={dh} fill="#B8332A" stroke="#6E1A13" strokeWidth={2} />
+          <rect x={x0 + 74} y={dy} width={8} height={dh} fill="#B8332A" stroke="#6E1A13" strokeWidth={2} />
+        </>
+      ) : (
+        <>
+          <rect x={x0 + 18} y={dy} width={32} height={dh} fill="#B8332A" stroke="#6E1A13" strokeWidth={2.5} />
+          <rect x={x0 + 50} y={dy} width={32} height={dh} fill="#B8332A" stroke="#6E1A13" strokeWidth={2.5} />
+          {studs.map((y) => (
+            <g key={y}>
+              <circle cx={x0 + 30} cy={y} r={2.6} fill="#F2B233" />
+              <circle cx={x0 + 70} cy={y} r={2.6} fill="#F2B233" />
+            </g>
+          ))}
+          <Sun cx={x0 + 50} cy={dy + dh / 2} r={7} color="#FFD45E" />
+        </>
+      )}
+    </g>
+  );
+}
+
+export function Water({ w, level, rise }: { w: number; level: number; rise: boolean }) {
+  const top = Y0 - level * C + 22;
+  const x1 = boardWidth(w);
+  let d = `M0,${top}`;
+  for (let x = 0; x < x1; x += 50) d += ' q12.5,-8 25,0 t25,0';
+  return (
+    <g className={rise ? 'rise' : undefined} pointerEvents="none">
+      <path d={`${d} V720 H0 Z`} fill="#2EA6BE" fillOpacity={0.45} />
+      <path d={d} fill="none" stroke="#DDF7FA" strokeWidth={3} opacity={0.9} />
+    </g>
+  );
+}
