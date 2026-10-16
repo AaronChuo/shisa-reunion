@@ -7,3 +7,8 @@ test-results
 playwright-report
 *.log
 .DS_Store
+
+# Local secrets (e.g. the Azure Speech key used by the voice script); never commit
+.env
+.env.*
+!.env.example
