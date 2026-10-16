@@ -23,8 +23,8 @@ describe('shisa collection', () => {
   it.each(VARIANTS.map((v) => [v.name, v.story]))('tells a short story for %s that can be read aloud', (_, story) => {
     expect(spoken(story)).toBeGreaterThanOrEqual(40);
     expect(spoken(story)).toBeLessThanOrEqual(100);
-    // Every Japanese word comes with a reading in brackets
-    expect(story.replace(/[぀-ヿ]+（[^）]+）/g, '')).not.toMatch(/[぀-ヿ]/);
+    // Every Japanese word sits in brackets right after its Chinese reading
+    expect(story.replace(/(?<=[\u4e00-\u9fff])（[\u3040-\u30FF]+）/g, '')).not.toMatch(/[\u3040-\u30FF]/);
   });
 
   it('explains what a shisa is', () => {
@@ -33,8 +33,8 @@ describe('shisa collection', () => {
 });
 
 describe('read-aloud text', () => {
-  it('says the reading in place of the Japanese word', () => {
-    expect(speakable('叫牠「シーサー（西薩）」')).toBe('叫牠「西薩」');
+  it('says the reading and skips the Japanese word after it', () => {
+    expect(speakable('叫牠「西薩（シーサー）」')).toBe('叫牠「西薩」');
   });
 
   it('drops stray kana a Mandarin voice cannot say', () => {

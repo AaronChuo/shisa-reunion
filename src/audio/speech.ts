@@ -4,11 +4,11 @@ import { holdMusicDown } from './context';
 // Read-aloud for the shisa stories with the device's own Mandarin voice (Web Speech API, works offline on most devices).
 
 /**
- * What the voice should say: a Japanese word followed by its reading in brackets, 「シーサー（西薩）」, is said as
+ * What the voice should say: a reading with the Japanese word after it in brackets, 「西薩（シーサー）」, is said as
  * the reading alone, and any other kana is dropped, since a Mandarin voice can't pronounce it.
  */
 export function speakable(text: string): string {
-  return text.replace(/[぀-ヿ]+（([^）]+)）/g, '$1').replace(/[぀-ヿ]+/g, '');
+  return text.replace(/（[\u3040-\u30FF]+）/g, '').replace(/[\u3040-\u30FF]+/g, '');
 }
 
 export const canSpeak = (): boolean => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;

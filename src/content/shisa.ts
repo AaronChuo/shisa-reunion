@@ -53,8 +53,9 @@ export interface Variant {
   /** A few words shown on the tile */
   note: string;
   /**
-   * Where the idea comes from, in a few sentences a parent can read aloud. Japanese words are followed by
-   * a reading in full-width brackets, e.g. 「シーサー（西薩）」; read-aloud skips the Japanese and says the reading.
+   * Where the idea comes from, in a few sentences a parent can read aloud. A Japanese word is written as its
+   * Chinese reading with the Japanese after it in full-width brackets, e.g. 「西薩（シーサー）」; read-aloud says
+   * the reading and skips the bracket.
    */
   story: string;
   pattern?: Pattern;
@@ -81,7 +82,7 @@ export const SERIES: Series[] = [
 export const ABOUT_SHISA = {
   title: '風獅爺是什麼？',
   story:
-    '遊戲裡我們叫牠們「風獅爺」，這是金門守護獅的名字。在沖繩，大家叫牠「シーサー（西薩）」，就是沖繩話的「獅子」。' +
+    '遊戲裡我們叫牠們「風獅爺」，這是金門守護獅的名字。在沖繩，大家叫牠「西薩（シーサー）」，就是沖繩話的「獅子」。' +
     '獅子的樣子很久以前從中國傳到琉球，先是守護城門和村子；後來一般人家也能蓋紅瓦屋頂，師傅就用剩下的瓦片和白灰，在屋頂上捏一隻獅子，保護住在下面的一家人。' +
     '牠們常常一對出現：張嘴的把福氣接進來，閉嘴的把福氣守住。',
 };
@@ -112,7 +113,7 @@ export const VARIANTS: Variant[] = [
     starter: true,
     note: '最常見的紅陶風獅爺',
     story:
-      '「シーサー（西薩）」就是沖繩話的「獅子」。牠們常常一對一起出現：張開嘴的叫「阿」，把福氣接進來；閉著嘴的叫「吽」，把福氣守住。遊戲裡的兩隻小獅子也是這樣一對喔。',
+      '「西薩（シーサー）」就是沖繩話的「獅子」。牠們常常一對一起出現：張開嘴的叫「阿」，把福氣接進來；閉著嘴的叫「吽」，把福氣守住。遊戲裡的兩隻小獅子也是這樣一對喔。',
   }),
   v('celadon', '青釉獅', 'trad', '#3DA399', '#6CC4B8', '#25756E', '#174E49', {
     starter: true,
@@ -157,7 +158,7 @@ export const VARIANTS: Variant[] = [
     pattern: 'minsa',
     note: '八重山的小獅子',
     story:
-      '在石垣島、竹富島這些八重山的島上，大家把獅子叫做「シーシー（西西）」。身上的花紋是八重山的「ミンサー（敏沙）織」，五格和四格排在一起，代表「永遠在一起」。',
+      '在石垣島、竹富島這些八重山的島上，大家把獅子叫做「西西（シーシー）」。身上的花紋是八重山的「敏沙（ミンサー）織」，五格和四格排在一起，代表「永遠在一起」。',
   }),
 
   // ---------- 海洋系列 ----------
@@ -175,7 +176,7 @@ export const VARIANTS: Variant[] = [
     pattern: 'stripes',
     stripe: '#2D7FD0',
     note: '黃藍條紋，游得很快',
-    story: '沖繩的縣魚叫「グルクン（古魯昆）」，是一群群游在珊瑚礁旁的藍色小魚。漁夫抓到以後，常常整條拿去炸，是沖繩餐桌上很常見的一道菜。',
+    story: '沖繩的縣魚叫「古魯昆（グルクン）」，是一群群游在珊瑚礁旁的藍色小魚。漁夫抓到以後，常常整條拿去炸，是沖繩餐桌上很常見的一道菜。',
   }),
   v('starsand', '星砂獅', 'sea', '#EAD7AE', '#F6EBCF', '#C9AE76', '#6E5A33', {
     pattern: 'stars',
@@ -227,7 +228,7 @@ export const VARIANTS: Variant[] = [
     pattern: 'bumps',
     hat: 'leaf',
     note: '有點苦，但是很健康',
-    story: '沖繩話叫苦瓜「ゴーヤー（勾壓）」。把苦瓜和豆腐、雞蛋、豬肉一起炒，就是有名的炒苦瓜。5月8日念起來像「勾壓」，所以是苦瓜日喔。',
+    story: '沖繩話叫苦瓜「勾壓（ゴーヤー）」。把苦瓜和豆腐、雞蛋、豬肉一起炒，就是有名的炒苦瓜。5月8日念起來像「勾壓」，所以是苦瓜日喔。',
   }),
   v('chinsuko', '金楚糕獅', 'food', '#E2B77A', '#F1D3A3', '#B98845', '#6A4A1E', {
     pattern: 'crumbs',
@@ -249,7 +250,7 @@ export const VARIANTS: Variant[] = [
   v('andagi', '沙翁獅', 'food', '#C98A3E', '#E3AE66', '#9C6224', '#5A3510', {
     pattern: 'cracks',
     note: '笑開了口',
-    story: '沙翁在沖繩叫「サーターアンダギー（沙達安答吉）」，意思是「用砂糖做的油炸點心」。炸好的時候表面會裂開，好像在笑，看起來很像中國點心「開口笑」。',
+    story: '沙翁在沖繩叫「沙達安答吉（サーターアンダギー）」，意思是「用砂糖做的油炸點心」。炸好的時候表面會裂開，好像在笑，看起來很像中國點心「開口笑」。',
   }),
   v('soba', '沖繩麵獅', 'food', '#F2E2B8', '#FFF4D6', '#E0C88E', '#7A6236', {
     pattern: 'noodles',

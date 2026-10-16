@@ -71,7 +71,7 @@ it.describe('shisa stories', () => {
     await page.goto('/');
     await page.click('[data-go="dex"]');
     await page.click('[data-pick="terracotta"]');
-    await expect(page.locator('#modal .tale p')).toContainText('シーサー（西薩）');
+    await expect(page.locator('#modal .tale p')).toContainText('西薩（シーサー）');
     await page.click('#modal [data-read]');
     await expect.poll(() => page.evaluate(() => (window as unknown as { said: string[] }).said.join(''))).toContain('「西薩」');
     expect(await page.evaluate(() => (window as unknown as { said: string[] }).said.join(''))).not.toMatch(/[぀-ヿ]/);
