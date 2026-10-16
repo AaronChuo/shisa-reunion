@@ -113,6 +113,33 @@ export const sfx = {
     sanba('sfx', t + 0.45, 1, 3);
     taiko('sfx', t + 0.9, 0.6);
   },
+  /** A coin drops into the slot: a bright clink and a little rattle down inside */
+  coinIn() {
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'classic', 'E6', t, 0.12, { vel: 0.7 });
+    pluck('sfx', 'classic', 'B5', t + 0.07, 0.15, { vel: 0.5 });
+    sanba('sfx', t + 0.12, 0.35);
+  },
+  /** The crank clicks past a notch */
+  ratchet() {
+    const t = at();
+    if (t === null) return;
+    sanba('sfx', t, 0.55);
+  },
+  /** Capsules knocking together in the dome; `v` is how hard (0–1) */
+  clack(v: number) {
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'soft', v > 0.6 ? 'G5' : 'B5', t, 0.06, { vel: 0.15 + v * 0.35 });
+  },
+  /** A capsule lands in the tray */
+  thunk() {
+    const t = at();
+    if (t === null) return;
+    taiko('sfx', t, 0.4);
+    pluck('sfx', 'classic', 'G4', t, 0.15, { vel: 0.5 });
+  },
   /** The gacha crank turns */
   crank() {
     const t = at();

@@ -1,5 +1,5 @@
 import { sfx } from '../audio/sfx';
-import { drawFromSeries, type Series, VARIANT_BY_ID } from '../content/shisa';
+import { drawFromSeries, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { CARDS, type CardKey, pickCards, STAGES, stageCfg, ZONES } from '../content/zones';
 import { canLift, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, rng, solve, stable, waterAt } from '../engine';
@@ -524,37 +524,64 @@ export function reroll(): void {
 }
 
 // ---------- gacha & collection ----------
-export function pull(): void {
+const leftIn = (series: Series['id'], owned: readonly string[]) => VARIANTS.filter((v) => v.series === series && !owned.includes(v.id)).length;
+
+/** A coin goes into the slot and the crank unlocks. The coin is only spent when a capsule actually comes out. */
+export function insertCoin(): boolean {
   const st = getState();
-  if (st.ui.pull !== 'idle' || st.progress.tokens < 1) return;
+  if (st.ui.pull !== 'idle' || st.progress.tokens < 1 || !leftIn(st.ui.gseries, st.progress.owned)) return false;
+  mut((s) => {
+    s.ui.pull = 'ready';
+  });
+  sfx.coinIn();
+  return true;
+}
+
+/** The main button turns the crank by itself, for children who can't turn it yet */
+export function autoTurn(): void {
+  if (getState().ui.pull !== 'ready') return;
+  mut((s) => {
+    s.ui.spin += 1;
+  });
+}
+
+/**
+ * A full turn of the crank: the shisa is drawn by the fair rule (never a duplicate, rare ones less often) and the
+ * capsule that physically fell out carries it. Returns the shisa id, or null when no coin is in.
+ */
+export function releaseCapsule(color: string): string | null {
+  const st = getState();
+  if (st.ui.pull !== 'ready' || st.progress.tokens < 1) return null;
   const got = drawFromSeries(st.ui.gseries, st.progress.owned);
-  if (!got) return;
+  if (!got) return null;
   mut((s) => {
     s.progress.tokens -= 1;
     s.progress.owned.push(got.id);
-    s.ui.pull = 'coin';
+    s.ui.pull = 'drop';
     s.ui.pulled = got.id;
+    s.ui.capColor = color;
   });
-  sfx.coin();
-  setTimeout(() => {
-    mut((s) => {
-      s.ui.pull = 'crank';
-    });
-    sfx.crank();
-  }, 550);
-  setTimeout(() => {
-    mut((s) => {
-      s.ui.pull = 'drop';
-    });
-    sfx.pop();
-  }, 1500);
-  setTimeout(
-    () =>
-      mut((s) => {
-        s.ui.modal = { kind: 'reveal', id: got.id, series: got.series };
-      }),
-    2200,
-  );
+  sfx.crank();
+  return got.id;
+}
+
+/** The capsule has rolled down the chute into the tray */
+export function capsuleOut(): void {
+  if (getState().ui.pull !== 'drop') return;
+  mut((s) => {
+    s.ui.pull = 'out';
+  });
+  sfx.thunk();
+}
+
+export function openCapsule(): void {
+  const { ui } = getState();
+  const v = ui.pulled ? VARIANT_BY_ID[ui.pulled] : null;
+  if (ui.pull !== 'out' || !v) return;
+  sfx.pop();
+  mut((s) => {
+    s.ui.modal = { kind: 'reveal', id: v.id, series: v.series, color: ui.capColor ?? '#E2703A' };
+  });
 }
 
 /** After a capsule opens: keep the new shisa, or send it out right away as the one that sets out */
@@ -562,6 +589,8 @@ export function finishReveal(next: 'keep' | 'use'): void {
   const id = getState().ui.pulled;
   mut((s) => {
     s.ui.pull = 'idle';
+    s.ui.pulled = null;
+    s.ui.capColor = null;
     s.ui.modal = null;
   });
   if (next === 'use' && id) chooseRole(id, 0);
@@ -574,10 +603,13 @@ export function goPlay(): void {
   else goHome();
 }
 
+/** Switching machines is fine before the crank turns; a coin already in the slot comes back */
 export function setSeries(id: Series['id']): void {
-  if (getState().ui.pull !== 'idle') return;
+  const p = getState().ui.pull;
+  if (p !== 'idle' && p !== 'ready') return;
   mut((s) => {
     s.ui.gseries = id;
+    s.ui.pull = 'idle';
   });
 }
 

@@ -95,9 +95,9 @@ export function Icon({ name }: { name: IconName }) {
 }
 
 /** A cartoon finger that taps, pointing at the one button to press; place it inside a positioned parent */
-export function TapHand({ className = 'tapHand' }: { className?: string }) {
+export function TapHand({ className = 'tapHand', x, y, size }: { className?: string; x?: number; y?: number; size?: number }) {
   return (
-    <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
+    <svg className={className} x={x} y={y} width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
       <path
         d="M14,26 V8 a4.5,4.5 0 0 1 9,0 V20 l3,-1 a4,4 0 0 1 5,2.5 l3,-0.5 a4,4 0 0 1 4.5,3.5 V33 a11,11 0 0 1 -11,11 h-6 a11,11 0 0 1 -9.5,-5.5 L7,32 a3.6,3.6 0 0 1 5.5,-4.5 Z"
         fill="#FFFFFF"

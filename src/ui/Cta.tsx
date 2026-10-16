@@ -17,6 +17,7 @@ export function Cta({
   wide,
   id,
   data,
+  nudge = true,
 }: {
   icon: ReactNode;
   children: ReactNode;
@@ -26,13 +27,15 @@ export function Cta({
   id?: string;
   /** Extra attributes such as data-next used by tests and focus handling */
   data?: Record<string, string | boolean>;
+  /** Off where something else on screen already shows a finger, so a child only ever sees one */
+  nudge?: boolean;
 }) {
   const idle = useIdle(NUDGE_MS);
   return (
     <button type="button" id={id} className={wide ? 'cta wide' : 'cta'} disabled={disabled} onClick={onClick} {...data}>
       <span className="ci">{icon}</span>
       <span className="cl">{children}</span>
-      {idle && !disabled && <TapHand />}
+      {nudge && idle && !disabled && <TapHand />}
     </button>
   );
 }

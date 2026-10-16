@@ -18,7 +18,10 @@ it.describe('a full journey', () => {
     expect(p.run).toBeNull();
 
     await page.locator('#modal [data-g]').click();
-    await page.locator('#pullBtn').click();
+    // The main button walks through the machine: coin in, one turn of the crank, open what rolled out
+    await page.locator('#coinBtn').click();
+    await page.locator('#turnBtn').click();
+    await page.locator('#openBtn').click();
     await page.locator('#capsule').click();
     // One tap sends the new shisa out as the one that sets out; no second question
     await page.locator('#modal [data-use]').click();

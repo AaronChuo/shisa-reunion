@@ -207,11 +207,12 @@ function ConfirmRun({ zi }: { zi: number }) {
   );
 }
 
-function Reveal({ id, seriesId }: { id: string; seriesId: string }) {
+function Reveal({ id, seriesId, color }: { id: string; seriesId: string; color: string }) {
   const [open, setOpen] = useState(false);
   const v = VARIANT_BY_ID[id];
   const series = SERIES.find((s) => s.id === seriesId) ?? SERIES[0];
-  const col = Array.isArray(v.mane) ? v.mane[0] : v.body;
+  // The shell is the one that actually rolled out of the machine
+  const col = color;
   return (
     <Sheet label="扭蛋">
       <div className="eyebrow">{series.name}</div>
@@ -408,7 +409,7 @@ export function ModalHost() {
       body = <ConfirmRun zi={m.zi} />;
       break;
     case 'reveal':
-      body = <Reveal key={m.id} id={m.id} seriesId={m.series} />;
+      body = <Reveal key={m.id} id={m.id} seriesId={m.series} color={m.color} />;
       break;
     case 'role':
       body = <Role id={m.id} />;

@@ -56,7 +56,7 @@ export type Modal =
   | { kind: 'branch' }
   | { kind: 'done'; zi: number; earned: number; unlocked: number | null }
   | { kind: 'confirmRun'; zi: number }
-  | { kind: 'reveal'; id: string; series: Series['id'] }
+  | { kind: 'reveal'; id: string; series: Series['id']; color: string }
   | { kind: 'role'; id: string }
   | { kind: 'about' }
   | { kind: 'audio' };
@@ -82,8 +82,16 @@ export interface Ui {
   cheer: boolean;
   shake: { target: string; n: number } | null;
   gseries: Series['id'];
-  pull: 'idle' | 'coin' | 'crank' | 'drop';
+  /**
+   * The gacha machine: idle → a coin goes in (ready) → a full turn of the crank lets a capsule drop → it lands in
+   * the tray (out) → tapping it opens it
+   */
+  pull: 'idle' | 'ready' | 'drop' | 'out';
   pulled: string | null;
+  /** Colour of the capsule that dropped */
+  capColor: string | null;
+  /** Bumped to make the crank turn by itself once (the main button, or the keyboard) */
+  spin: number;
 }
 
 export interface GameState {
@@ -120,6 +128,8 @@ const freshUi = (): Ui => ({
   gseries: 'trad',
   pull: 'idle',
   pulled: null,
+  capColor: null,
+  spin: 0,
 });
 
 /** Zone order before v0.5: progress was saved as arrays in this order */
