@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findPath, generate, makeGrid, solve } from '../engine';
+import { findRoute, generate, makeGrid, solve } from '../engine';
 import { drawFromSeries, VARIANTS } from './shisa';
 import { type CardKey, relax, STAGES, stageCfg, ZONES } from './zones';
 
@@ -15,7 +15,7 @@ describe('level generation', () => {
     const cfg = stageCfg(zi, si, card);
     for (const seed of [1, 2, 3]) {
       const lv = generate(cfg, seed * 7919 + zi * 101 + si, relax);
-      expect(findPath(makeGrid(lv, []), lv.hero, lv.goal)).toBeNull();
+      expect(findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)).toBeNull();
       const { sols } = solve(lv, 20);
       expect(sols.length).toBeGreaterThan(0);
       expect(sols.every((s) => s.length === lv.inv.length)).toBe(true);

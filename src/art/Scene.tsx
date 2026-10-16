@@ -120,6 +120,36 @@ export function Urchin({ cx, cy }: { cx: number; cy: number }) {
   );
 }
 
+/** A little heap of star sand standing on the ground at (cx, cy); it fades out once picked up */
+export function StarSand({ cx, cy, taken }: { cx: number; cy: number; taken?: boolean }) {
+  const star = (x: number, y: number, r: number) => {
+    let d = '';
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+      const rr = i % 2 ? r * 0.45 : r;
+      d += `${i ? 'L' : 'M'}${f1(x + Math.cos(a) * rr)},${f1(y + Math.sin(a) * rr)} `;
+    }
+    return `${d}Z`;
+  };
+  return (
+    <g className={taken ? 'starSand taken' : 'starSand'}>
+      <ellipse cx={cx} cy={cy - 4} rx={26} ry={9} fill="#FFF3C9" stroke="#D9B45A" strokeWidth={2} />
+      {(
+        [
+          [-12, -10, 7],
+          [4, -14, 8],
+          [16, -8, 6],
+          [-2, -4, 5],
+          [-20, -3, 4.5],
+        ] as const
+      ).map(([dx, dy, r]) => (
+        <path key={`${dx},${dy}`} d={star(cx + dx, cy + dy, r)} fill="#FFE07A" stroke="#C98F1E" strokeWidth={1.5} strokeLinejoin="round" />
+      ))}
+      <path className="starGlint" d={`M${cx + 20},${cy - 34} v12 M${cx + 14},${cy - 28} h12`} stroke="#FFD45E" strokeWidth={3} strokeLinecap="round" />
+    </g>
+  );
+}
+
 export function Plate({ px, on }: { px: number; on: boolean }) {
   const cx = M + px * C + 50;
   return (

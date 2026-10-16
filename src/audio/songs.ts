@@ -1,4 +1,4 @@
-// Background music. Four traditional Okinawan folk songs (public domain, melody only; read from the melody line
+// Background music. Seven traditional Okinawan folk songs (public domain, melody only; read from the melody line
 // of mu-tech.org's MIDI files and transposed to C) and two originals in the Ryukyu scale.
 
 export interface NoteEvent {
@@ -100,6 +100,31 @@ export const SONGS = {
      G4:1 G4:0.75 A4:0.25 G4:1 G4:1 | A4:1 A4:1 G4:1 A4:0.75 C5:0.25 | A4:1 G4:0.75 E4:0.25 D4:1 E4:0.75 A4:0.25 |
      G4:0.75 E4:0.25 D4:0.75 C4:0.25 C4:1 C4:0.75 C4:0.25 | D4:1 E4:0.75 D4:0.25 G3:1 G3:0.5 A3:0.5 |
      C4:0.5 E4:0.5 D4:0.5 D4:0.5 C4:1 r:1 | D4:1 E4:0.5 D4:0.5 G3:1 G3:0.5 A3:0.5 | C4:0.5 E4:0.5 D4:1 C4:1 C4:1`,
+  ),
+  toshin: song(
+    '唐船ドーイ',
+    112,
+    'eisa',
+    `F5:1 F5:0.75 F5:0.25 F5:1 F5:1 | F5:0.75 F5:0.25 D5:1 D5:0.75 D5:0.25 C5:1.5 B4:0.5 C5:0.75 C5:0.25 C5:1 D5:1 |
+     F5:0.75 F5:0.25 D5:0.75 D5:1 C5:1 D5:0.25 | C5:0.75 B4:0.25 G4:0.75 G4:0.25 F4:0.75 F4:1.25 | E4:0.75 F4:0.25 G4:1 r:1 B4:1 |
+     C5:2 B4:1 C5:2 B4:1 G4:1 B4:0.75 B4:0.25 | C5:0.75 D5:0.75 G4:1 B4:0.5 F4:0.75 E4:0.25 | F4:0.75 D4:0.25 C4:1 r:0.75 B4:0.25 B4:0.75 B4:0.25 |
+     C5:0.75 C5:0.25 C5:0.75 G4:0.25 r:0.75 E4:0.25 F4:0.75 D4:0.25 | C4:1 r:3`,
+  ),
+  densa: song(
+    'デンサー節',
+    76,
+    'calm',
+    `G3:0.25 G3:0.25 G3:0.5 G3:1 G3:0.5 C4:0.5 C4:0.5 E4:0.5 | D4:0.75 G4:0.25 G4:1.5 A4:0.5 G4:0.75 E4:0.25 |
+     E4:0.5 G4:0.5 D4:0.75 C4:0.25 D4:0.5 G4:0.5 G4:0.5 E4:0.5 | D4:0.5 D4:0.5 C4:1 r:1 D4:0.75 E4:0.25 | C4:0.5 A3:0.5 G3:1 G3:1 r:1 |
+     C4:0.75 E4:0.25 D4:1 E4:0.75 G4:0.25 G4:0.25 G4:0.5 A4:0.25 | G4:0.5 E4:0.25 G4:0.25 D4:0.75 C4:0.25 D4:0.5 E4:0.5 G3:1 | C4:1 r:3`,
+  ),
+  hana: song(
+    '花ぬ風車',
+    84,
+    'calm',
+    `r:0.5 C4:0.5 E4:1 F4:3 F4:0.5 B4:0.5 G4:1 G4:1 | F4:2 D4:1 F4:0.5 F4:0.5 | r:1 D4:1 C4:1 D4:0.5 C4:0.5 |
+     B3:1 G3:1 B3:1 C4:2 C4:0.5 F4:0.5 D4:1 B3:1 | C4:2 C4:1 B3:1 | C4:1 D4:1 F4:1 B3:1 | C4:2 F4:0.5 F4:0.5 E4:0.5 E4:0.5 |
+     F4:0.5 F4:0.5 G4:1 B4:0.5 B4:0.5 E4:0.5 E4:0.5 | F4:2 r:2`,
   ),
 } satisfies Record<string, Song>;
 

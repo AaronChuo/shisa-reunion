@@ -129,6 +129,14 @@ export function duckMusic(seconds: number, to = 0.2): void {
   musicFade.gain.setTargetAtTime(1, t + seconds, 0.3);
 }
 
+/** Keeps the music quiet while something else needs the room (a story read aloud), until released */
+export function holdMusicDown(on: boolean): void {
+  if (!ac) return;
+  const t = ac.currentTime;
+  musicFade.gain.cancelScheduledValues(t);
+  musicFade.gain.setTargetAtTime(on ? 0.15 : 1, t, on ? 0.08 : 0.4);
+}
+
 /** Fades the music out now and back in at `at`, so the old song's ringing notes don't overlap the new one */
 export function musicCrossfade(at: number): void {
   if (!ac) return;

@@ -1,5 +1,5 @@
 import { makeGrid, placementsFor } from './grid';
-import { findPath } from './path';
+import { findRoute, surfaces } from './path';
 import { cellsOf, DEFS } from './pieces';
 import { solve } from './solver';
 import type { GenConfig, Level, PieceType, Placement, Pos } from './types';
@@ -51,7 +51,7 @@ export function attempt(r: Rng, cfg: GenConfig): Level | null {
     }
     chars.push({ x, y });
   }
-  const lv: Level = { w, fixed, hero: chars[0], goal: chars[1], inv: [], urchin: [], tide: cfg.tide, gate: null };
+  const lv: Level = { w, fixed, hero: chars[0], goal: chars[1], inv: [], urchin: [], stars: [], tide: cfg.tide, gate: null };
   const reserved = new Set([hx, gx]);
   if (cfg.gate) {
     const gateCols: number[] = [];
@@ -83,6 +83,17 @@ export function attempt(r: Rng, cfg: GenConfig): Level | null {
     takeFixed(t);
     fixed.push(pick(opts));
   }
+  // Star sand goes on a spot the hero could stand on before anything is built, away from both figures
+  if (cfg.stars) {
+    const floor = cfg.tide ? cfg.tide.max : 0;
+    const spots = surfaces(makeGrid(lv, [])).filter((s) => !s.ramp && !s.hang && !reserved.has(s.x) && s.y >= floor);
+    for (let n = 0; n < cfg.stars && spots.length; n++) {
+      const s = spots.splice(Math.floor(r() * spots.length), 1)[0];
+      if (lv.stars.some((p) => p.x === s.x)) continue;
+      lv.stars.push({ x: s.x, y: s.y });
+    }
+    if (lv.stars.length < cfg.stars) return null;
+  }
   const pool = { ...cfg.pool };
   const inv: PieceType[] = [];
   for (const t of cfg.must) {
@@ -99,13 +110,13 @@ export function attempt(r: Rng, cfg: GenConfig): Level | null {
   }
   inv.sort();
   lv.inv = inv;
-  if (findPath(makeGrid(lv, []), lv.hero, lv.goal)) return null;
+  if (findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)) return null;
   const { sols } = solve(lv, cfg.maxSols + 1);
   if (!sols.length || sols.length > cfg.maxSols) return null;
   if (sols.some((s) => s.length < cfg.k)) return null;
   for (const sol of sols) {
     const g = makeGrid(lv, sol);
-    const path = findPath(g, lv.hero, lv.goal);
+    const path = findRoute(g, lv.hero, lv.goal, lv.stars);
     if (!path) return null;
     if (cfg.need && !path.some((p) => p.via === cfg.need)) return null;
     const gate = lv.gate;

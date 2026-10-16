@@ -9,6 +9,8 @@ import type { Level, PathStep, Placed, Placement } from '../engine';
 export type Phase = 'play' | 'branch' | 'choose' | 'done';
 
 export interface Run {
+  /** Zone id; `zi` is re-derived from it on load so reordering zones never breaks a saved run */
+  zone: string;
   zi: number;
   si: number;
   seed: number;
@@ -24,6 +26,8 @@ export interface Run {
   earned: number;
   rerolls: number;
   phase: Phase;
+  /** Zone id opened by finishing this run, if any */
+  opened?: string | null;
 }
 
 /** Everything that survives a reload (saved to this device's localStorage) */
@@ -31,8 +35,10 @@ export interface Progress {
   tokens: number;
   owned: string[];
   pair: [string, string];
-  unlocked: number;
-  clears: number[];
+  /** Ids of zones that can be entered */
+  open: string[];
+  /** Finished runs per zone id */
+  clears: Record<string, number>;
   /** Sound effects on/off */
   sound: boolean;
   /** Background music on/off */
@@ -52,6 +58,7 @@ export type Modal =
   | { kind: 'confirmRun'; zi: number }
   | { kind: 'reveal'; id: string; series: Series['id'] }
   | { kind: 'role'; id: string }
+  | { kind: 'about' }
   | { kind: 'audio' };
 
 export type Hint = { type: 'lift'; pi: number } | { type: 'put'; p: Placement; k: number };
@@ -68,6 +75,8 @@ export interface Ui {
   coach: boolean;
   bubble: { text: string; n: number } | null;
   walking: PathStep[] | null;
+  /** Star sand the hero has scooped up on the winning walk */
+  picked: number[];
   /** Where the hero stopped after walking (grid units, feet position) */
   heroAt: { x: number; y: number; flip: boolean } | null;
   cheer: boolean;
@@ -86,8 +95,8 @@ export const freshProgress = (): Progress => ({
   tokens: 0,
   owned: STARTERS.slice(),
   pair: [STARTERS[0], STARTERS[1]],
-  unlocked: 0,
-  clears: ZONES.map(() => 0),
+  open: [ZONES[0].id],
+  clears: Object.fromEntries(ZONES.map((Z) => [Z.id, 0])),
   sound: true,
   music: true,
   seen: [],
@@ -104,6 +113,7 @@ const freshUi = (): Ui => ({
   coach: false,
   bubble: null,
   walking: null,
+  picked: [],
   heroAt: null,
   cheer: false,
   shake: null,
@@ -112,25 +122,56 @@ const freshUi = (): Ui => ({
   pulled: null,
 });
 
+/** Zone order before v0.5: progress was saved as arrays in this order */
+const LEGACY_ZONES = ['naha', 'yomitan', 'motobu', 'shuri'];
+
+const zoneIndex = (id: unknown): number => ZONES.findIndex((Z) => Z.id === id);
+
+function normalizeRun(raw: unknown): Run | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Partial<Run>;
+  const zi = zoneIndex(typeof r.zone === 'string' ? r.zone : typeof r.zi === 'number' ? LEGACY_ZONES[r.zi] : null);
+  if (zi < 0 || typeof r.si !== 'number') return null;
+  // Levels saved before star sand existed have no stars
+  const level = r.level ? { ...r.level, stars: Array.isArray(r.level.stars) ? r.level.stars : [] } : null;
+  return { ...(r as Run), zone: ZONES[zi].id, zi, level };
+}
+
 /** Repairs anything missing or invalid in saved progress so old saves keep loading */
 export function normalizeProgress(raw: unknown): Progress {
   const base = freshProgress();
   if (!raw || typeof raw !== 'object') return base;
-  const p = raw as Partial<Progress>;
+  const p = raw as Partial<Omit<Progress, 'clears'>> & { clears?: unknown; unlocked?: unknown };
   const owned = Array.isArray(p.owned) ? p.owned.filter((id) => VARIANT_BY_ID[id]) : base.owned;
   for (const id of STARTERS) if (!owned.includes(id)) owned.push(id);
   const pair: [string, string] =
     Array.isArray(p.pair) && p.pair.length === 2 && p.pair.every((id) => owned.includes(id)) && p.pair[0] !== p.pair[1] ? [p.pair[0], p.pair[1]] : base.pair;
+  const legacy = Array.isArray(p.clears);
+  const clears: Record<string, number> = {};
+  for (const Z of ZONES) {
+    const v = legacy ? (p.clears as unknown[])[LEGACY_ZONES.indexOf(Z.id)] : (p.clears as Record<string, unknown> | undefined)?.[Z.id];
+    clears[Z.id] = typeof v === 'number' && v >= 0 ? v : 0;
+  }
+  const open = legacy
+    ? LEGACY_ZONES.slice(0, (typeof p.unlocked === 'number' ? p.unlocked : 0) + 1)
+    : Array.isArray(p.open)
+      ? p.open.filter((id) => zoneIndex(id) >= 0)
+      : [];
+  // Finishing a zone opens the next one; this also opens zones added after a save was made
+  ZONES.forEach((Z, i) => {
+    if (clears[Z.id] > 0 && i + 1 < ZONES.length) open.push(ZONES[i + 1].id);
+  });
+  open.unshift(ZONES[0].id);
   return {
     tokens: typeof p.tokens === 'number' && p.tokens >= 0 ? p.tokens : 0,
     owned,
     pair,
-    unlocked: typeof p.unlocked === 'number' ? Math.max(0, Math.min(ZONES.length - 1, p.unlocked)) : 0,
-    clears: ZONES.map((_, i) => (Array.isArray(p.clears) && typeof p.clears[i] === 'number' ? p.clears[i] : 0)),
+    open: ZONES.map((Z) => Z.id).filter((id) => open.includes(id)),
+    clears,
     sound: typeof p.sound === 'boolean' ? p.sound : true,
     music: typeof p.music === 'boolean' ? p.music : true,
     seen: Array.isArray(p.seen) ? p.seen.filter((s) => typeof s === 'string') : [],
-    run: p.run && typeof p.run === 'object' && typeof p.run.zi === 'number' ? (p.run as Run) : null,
+    run: normalizeRun(p.run),
   };
 }
 
@@ -139,7 +180,9 @@ export const useGame = create<GameState>()(
     immer(() => ({ progress: freshProgress(), ui: freshUi() })),
     {
       name: 'shisa-reunion',
-      version: 1,
+      version: 2,
+      // normalizeProgress reads every older save shape, so migrating just hands the data through
+      migrate: (persisted) => persisted as GameState,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ progress: s.progress }),
       merge: (persisted, current) => ({ ...current, progress: normalizeProgress((persisted as { progress?: unknown } | undefined)?.progress) }),

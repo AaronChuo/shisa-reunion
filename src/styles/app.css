@@ -614,6 +614,43 @@ h1 {
   width: 120px;
   height: 130px;
 }
+.aboutArt {
+  width: 220px;
+  height: 120px;
+}
+/* A shisa's story, written to be read aloud to a child */
+.tale {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+  border: 2px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.sheet .tale p {
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.75;
+  text-align: start;
+}
+.readBtn.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.dexIntro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin-block: 8px 0;
+}
+.dexIntro .foot {
+  margin: 0;
+}
 .paths {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -789,10 +826,15 @@ h1 {
 @media (max-width: 760px) {
   .series {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .sBtn {
     justify-content: center;
+    padding-inline: 6px;
+    white-space: nowrap;
+  }
+  .sBtn .sfx {
+    display: none;
   }
   .machineWrap {
     grid-template-columns: minmax(0, 1fr);
@@ -1042,6 +1084,23 @@ h1 {
   transform-box: fill-box;
   transform-origin: 50% 50%;
 }
+/* star sand glints while waiting and floats away once the hero scoops it up */
+.starSand {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition:
+    transform 0.5s ease-out,
+    opacity 0.5s ease-out;
+}
+.starSand.taken {
+  transform: translateY(-40px) scale(0.6);
+  opacity: 0;
+}
+.starGlint {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: twinkle 1.4s ease-in-out infinite;
+}
 @keyframes drop {
   from {
     transform: translateY(-40px);
@@ -1160,6 +1219,7 @@ h1 {
   .ghostLine,
   .rise,
   .twinkle,
+  .starGlint,
   .sheet,
   .bigCoin,
   .wave path {

@@ -3,7 +3,8 @@ import { CardIcon, CoinIcon, ConchIcon, Icon, ShellIcon, Stamp } from '../art/Ic
 import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
-import { SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
+import { useReadAloud } from '../audio/speech';
+import { ABOUT_SHISA, SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
 import { CARDS, stageCfg, ZONES } from '../content/zones';
 import { sizeOf } from '../engine';
@@ -19,6 +20,22 @@ function Sheet({ children, wide, label }: { children: ReactNode; wide?: boolean;
   return (
     <div ref={ref} className={wide ? 'sheet wide' : 'sheet'} role="dialog" aria-modal="true" aria-label={label}>
       {children}
+    </div>
+  );
+}
+
+/** A story paragraph with a "念給我聽" button that reads it aloud */
+function Story({ text }: { text: string }) {
+  const { supported, speaking, toggle } = useReadAloud(text);
+  return (
+    <div className="tale">
+      <p>{text}</p>
+      {supported && (
+        <button type="button" className={speaking ? 'iconBtn readBtn on' : 'iconBtn readBtn'} data-read aria-pressed={speaking} onClick={toggle}>
+          <Icon name={speaking ? 'soundOff' : 'soundOn'} />
+          <span>{speaking ? '停下來' : '念給我聽'}</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -209,6 +226,7 @@ function Reveal({ id, seriesId }: { id: string; seriesId: string }) {
             {v.note}
             {v.rare && <span className="rare">　稀有！</span>}
           </p>
+          <Story text={v.story} />
           <div className="btns">
             <button type="button" className="iconBtn primary big" data-use onClick={() => finishReveal('use')}>
               <span>換上去玩</span>
@@ -230,22 +248,51 @@ function Reveal({ id, seriesId }: { id: string; seriesId: string }) {
   );
 }
 
+/** A collected shisa: its story, read-aloud, and which of the pair it plays */
 function Role({ id }: { id: string }) {
   const v = VARIANT_BY_ID[id];
+  const pair = useGame((s) => s.progress.pair);
+  const series = SERIES.find((x) => x.id === v.series);
   return (
-    <Sheet label="選擇出場">
-      <ShisaIcon v={v} open className="roleArt" />
+    <Sheet label={v.name}>
+      <div className="eyebrow">
+        {series?.name}
+        {v.rare ? '・稀有' : ''}
+      </div>
+      <ShisaIcon v={v} open={pair[1] !== id} className="roleArt" />
       <h2>{v.name}</h2>
-      <p>{v.note}</p>
+      <Story text={v.story} />
       <div className="btns column">
-        <button type="button" className="iconBtn primary big" data-role="0" data-focus onClick={() => chooseRole(id, 0)}>
-          當出發的獅子（張嘴）
+        <button type="button" className="iconBtn primary big" data-role="0" data-focus disabled={pair[0] === id} onClick={() => chooseRole(id, 0)}>
+          {pair[0] === id ? '正在當出發的獅子' : '當出發的獅子（張嘴）'}
         </button>
-        <button type="button" className="iconBtn big teal" data-role="1" onClick={() => chooseRole(id, 1)}>
-          當等待的獅子（閉嘴）
+        <button type="button" className="iconBtn big teal" data-role="1" disabled={pair[1] === id} onClick={() => chooseRole(id, 1)}>
+          {pair[1] === id ? '正在當等待的獅子' : '當等待的獅子（閉嘴）'}
         </button>
         <button type="button" className="iconBtn" data-cancel onClick={closeModal}>
-          先不要
+          關起來
+        </button>
+      </div>
+    </Sheet>
+  );
+}
+
+function About() {
+  return (
+    <Sheet label={ABOUT_SHISA.title}>
+      <svg className="aboutArt" viewBox="-100 -104 200 108" aria-hidden="true">
+        <g transform="translate(-40,0)">
+          <ShisaArt v={VARIANT_BY_ID.terracotta} open />
+        </g>
+        <g transform="translate(40,0)">
+          <ShisaArt v={VARIANT_BY_ID.celadon} open={false} />
+        </g>
+      </svg>
+      <h2>{ABOUT_SHISA.title}</h2>
+      <Story text={ABOUT_SHISA.story} />
+      <div className="btns">
+        <button type="button" className="iconBtn primary big" data-focus onClick={closeModal}>
+          知道了
         </button>
       </div>
     </Sheet>
@@ -326,6 +373,9 @@ export function ModalHost() {
       break;
     case 'role':
       body = <Role id={m.id} />;
+      break;
+    case 'about':
+      body = <About />;
       break;
     case 'audio':
       body = <AudioSettings />;

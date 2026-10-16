@@ -14,7 +14,7 @@ it.describe('a full journey', () => {
     await expect(page.locator('#modal[data-kind="done"]')).toBeVisible();
     let p = await progress(page);
     expect(p.tokens).toBe(5);
-    expect(p.unlocked).toBe(1);
+    expect(p.open).toEqual(['naha', 'yomitan']);
     expect(p.run).toBeNull();
 
     await page.locator('#modal [data-g]').click();

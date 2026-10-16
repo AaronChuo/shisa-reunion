@@ -1,5 +1,5 @@
 import { makeGrid, placementsFor } from './grid';
-import { findPath } from './path';
+import { findRoute } from './path';
 import { DEFS } from './pieces';
 import type { Level, PieceType, Placement } from './types';
 
@@ -17,7 +17,7 @@ export function solve(lv: Level, cap = 400): { sols: Placement[][]; nodes: numbe
     seen.add(key);
     nodes++;
     const g = makeGrid(lv, placed);
-    if (findPath(g, lv.hero, lv.goal)) {
+    if (findRoute(g, lv.hero, lv.goal, lv.stars)) {
       sols.push(placed.slice());
       return;
     }

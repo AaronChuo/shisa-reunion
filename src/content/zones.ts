@@ -1,7 +1,7 @@
 import type { SongId } from '../audio/songs';
 import type { GenConfig, Move, PieceType } from '../engine';
 
-export type CardKey = 'calm' | 'easy' | 'hard' | 'urchin' | 'tide' | 'gate' | 'ladder' | 'spring' | 'long';
+export type CardKey = 'calm' | 'easy' | 'hard' | 'urchin' | 'tide' | 'gate' | 'ladder' | 'spring' | 'long' | 'slide' | 'star' | 'vine';
 
 export interface Reward {
   shell?: number;
@@ -15,6 +15,7 @@ interface Mods {
   urchin?: number;
   tide?: boolean;
   gate?: boolean;
+  stars?: number;
 }
 
 export interface Card extends Mods {
@@ -39,13 +40,13 @@ export interface Zone {
   cards: CardKey[];
   /** Background music for this zone's journey */
   bgm: SongId;
-  boss: { name: string; k: number; must?: PieceType[]; need?: Move; urchin?: number; tide?: boolean; gate?: boolean; maxSols: number };
+  boss: { name: string; k: number; maxSols: number } & Omit<Mods, 'k'>;
 }
 
 /** Stages per run; the last one is the zone's final stop */
 export const STAGES = 5;
 
-const ALL: Partial<Record<PieceType, number>> = { stair: 3, cube: 2, tower: 1, bridge: 1, ladder: 1, spring: 1, long: 1 };
+const ALL: Partial<Record<PieceType, number>> = { stair: 3, cube: 2, tower: 1, bridge: 1, ladder: 1, spring: 1, long: 1, slide: 1, vine: 1 };
 
 export const ZONES: Zone[] = [
   {
@@ -89,21 +90,66 @@ export const ZONES: Zone[] = [
     first: { must: ['spring'], need: 'jump' },
     ks: [2, 3, 3, 3],
     cards: ['calm', 'urchin', 'tide', 'spring', 'long', 'hard'],
-    bgm: 'asadoya',
+    bgm: 'toshin',
     boss: { name: '大浪灘', k: 3, must: ['spring'], need: 'jump', tide: true, maxSols: 3 },
+  },
+  {
+    id: 'kouri',
+    name: '古宇利島',
+    tag: '進階',
+    stars: 3,
+    color: '#E0628A',
+    w: 6,
+    line: '過了跨海大橋，海邊有溜滑梯',
+    pool: { stair: 2, cube: 2, tower: 1, bridge: 1, slide: 2, ladder: 1 },
+    first: { must: ['slide'], need: 'slide' },
+    ks: [2, 2, 3, 3],
+    cards: ['calm', 'urchin', 'slide', 'ladder', 'hard', 'easy'],
+    bgm: 'hana',
+    boss: { name: '心形岩', k: 3, must: ['slide'], need: 'slide', urchin: 1, maxSols: 3 },
+  },
+  {
+    id: 'taketomi',
+    name: '竹富島',
+    tag: '高手',
+    stars: 4,
+    color: '#17A2A6',
+    w: 6,
+    line: '白沙小路上，要先撿閃亮的星砂',
+    pool: { stair: 2, cube: 2, tower: 1, bridge: 1, long: 1, spring: 1, slide: 1 },
+    first: { stars: 1 },
+    ks: [2, 3, 3, 3],
+    cards: ['calm', 'star', 'urchin', 'spring', 'long', 'hard'],
+    bgm: 'asadoya',
+    boss: { name: '星砂海灘', k: 2, stars: 2, maxSols: 3 },
+  },
+  {
+    id: 'iriomote',
+    name: '西表島',
+    tag: '高手',
+    stars: 4,
+    color: '#6B8F2A',
+    w: 7,
+    line: '紅樹林的大樹上，垂著長長的藤蔓',
+    pool: { stair: 2, cube: 2, tower: 1, bridge: 1, vine: 2, ladder: 1, spring: 1 },
+    first: { must: ['vine'], need: 'hang' },
+    ks: [3, 3, 3, 3],
+    cards: ['calm', 'vine', 'tide', 'urchin', 'spring', 'hard'],
+    bgm: 'densa',
+    boss: { name: '紅樹林', k: 3, must: ['vine'], need: 'hang', urchin: 1, maxSols: 3 },
   },
   {
     id: 'shuri',
     name: '首里城',
     tag: '大師',
-    stars: 4,
+    stars: 5,
     color: '#8C56AA',
     w: 7,
     line: '城門有機關，要先壓住壓板',
     pool: ALL,
     first: { gate: true },
     ks: [3, 3, 3, 3],
-    cards: ['urchin', 'tide', 'gate', 'ladder', 'spring', 'hard'],
+    cards: ['urchin', 'tide', 'gate', 'ladder', 'spring', 'slide', 'star', 'vine', 'hard'],
     bgm: 'akata',
     boss: { name: '守禮之門', k: 3, gate: true, urchin: 1, maxSols: 2 },
   },
@@ -120,6 +166,9 @@ export const CARDS: Record<CardKey, Card> = {
   ladder: { name: '竹林小徑', line: '一定要爬竹梯', must: ['ladder'], need: 'climb' },
   spring: { name: '貝殼灣', line: '一定要用跳跳貝', must: ['spring'], need: 'jump' },
   long: { name: '石橋河', line: '一定要用石拱橋', must: ['long'] },
+  slide: { name: '滑梯坡', line: '一定要溜溜滑梯', must: ['slide'], need: 'slide' },
+  star: { name: '星砂灘', line: '先撿星砂，再去找朋友', stars: 1, reward: { shell: 1 } },
+  vine: { name: '藤蔓林', line: '一定要攀藤蔓', must: ['vine'], need: 'hang' },
 };
 
 const TIDE = { every: 2, max: 1 };
@@ -139,10 +188,11 @@ export function stageCfg(zi: number, si: number, card: CardKey | null): GenConfi
       urchin: B.urchin ?? 0,
       tide: B.tide ? TIDE : null,
       gate: !!B.gate,
+      stars: B.stars ?? 0,
       obs: [0, 2],
     };
   }
-  const cfg: GenConfig = { w: Z.w, k: Z.ks[si], pool: Z.pool, must: [], need: null, maxSols: 8, urchin: 0, tide: null, gate: false, obs: [0, 2] };
+  const cfg: GenConfig = { w: Z.w, k: Z.ks[si], pool: Z.pool, must: [], need: null, maxSols: 8, urchin: 0, tide: null, gate: false, stars: 0, obs: [0, 2] };
   const mods: Mods = si === 0 ? (Z.first ?? {}) : card ? CARDS[card] : {};
   if (mods.k) cfg.k = Math.max(1, Math.min(4, cfg.k + mods.k));
   if (mods.must) cfg.must = mods.must.slice();
@@ -150,6 +200,7 @@ export function stageCfg(zi: number, si: number, card: CardKey | null): GenConfi
   if (mods.urchin) cfg.urchin = mods.urchin + (zi >= 2 ? 1 : 0);
   if (mods.tide) cfg.tide = TIDE;
   if (mods.gate) cfg.gate = true;
+  if (mods.stars) cfg.stars = mods.stars;
   if (cfg.must.length > cfg.k) cfg.k = cfg.must.length;
   return cfg;
 }
@@ -161,10 +212,12 @@ export function relax(cfg: GenConfig, step: number): GenConfig {
   if (step >= 2) {
     c.need = null;
     c.urchin = Math.min(c.urchin, 1);
+    c.stars = Math.min(c.stars, 1);
   }
   if (step >= 3) {
     c.gate = false;
     c.tide = null;
+    c.stars = 0;
   }
   if (step >= 4) {
     c.k = Math.max(1, c.k - 1);

@@ -1,4 +1,4 @@
-import { cellsOf, H, MASS, SUPPORT, sizeOf } from './pieces';
+import { cellsOf, H, HANG_FROM, MASS, SUPPORT, sizeOf } from './pieces';
 import type { Cell, Grid, Level, PieceType, Placement } from './types';
 
 export const WALL: Cell = { k: 'wall' };
@@ -13,7 +13,8 @@ export function makeGrid(lv: Level, placed: readonly Placement[], moves = placed
   pieces.forEach((p, i) => {
     for (const [dx, dy, k] of cellsOf(p.t, p.o)) cells[(p.x + dx) * H + p.y + dy] = { i, k };
   });
-  [lv.hero, lv.goal].forEach((c, ci) => {
+  // Star sand keeps its spot clear like the figures do, so no block can bury it
+  [lv.hero, lv.goal, ...lv.stars].forEach((c, ci) => {
     if (c.y < H) cells[c.x * H + c.y] = { c: ci, k: 'char' };
   });
   let gateOpen = false;
@@ -43,6 +44,11 @@ export function fits(g: Grid, t: PieceType, o: number, x: number, y: number): bo
 
 /** A piece stands if its centre of mass lies over the cells resting on a flat top (or the tray) */
 export function stable(g: Grid, t: PieceType, o: number, x: number, y: number): boolean {
+  // A vine doesn't stand: it holds if a block with a flat underside sits right above its top
+  if (t === 'vine') {
+    const above = at(g, x, y + sizeOf(t, o).h);
+    return !!above && HANG_FROM.has(above.k);
+  }
   const cells = cellsOf(t, o);
   const own = new Set(cells.map(([dx, dy]) => `${dx},${dy}`));
   let lo = Number.POSITIVE_INFINITY;
@@ -69,6 +75,14 @@ export function stable(g: Grid, t: PieceType, o: number, x: number, y: number): 
 export function restY(g: Grid, t: PieceType, o: number, x: number, y: number): number | null {
   const { w, h } = sizeOf(t, o);
   if (x < 0 || x + w > g.w) return null;
+  if (t === 'vine') {
+    // Hang from the nearest block above or below the drop point
+    let best: number | null = null;
+    for (let cy = 0; cy + h <= H; cy++) {
+      if (fits(g, t, o, x, cy) && stable(g, t, o, x, cy) && (best === null || Math.abs(cy - y) < Math.abs(best - y))) best = cy;
+    }
+    return best;
+  }
   let ry = Math.max(0, Math.min(y, H - h));
   if (!fits(g, t, o, x, ry)) {
     while (ry + h <= H && !fits(g, t, o, x, ry)) ry++;
@@ -86,7 +100,7 @@ export function placementsFor(g: Grid, t: PieceType, o: number): Placement[] {
   for (let x = 0; x + w <= g.w; x++) {
     for (let y = 0; y + h <= H; y++) {
       if (!fits(g, t, o, x, y)) continue;
-      if (y > 0 && fits(g, t, o, x, y - 1)) continue;
+      if (t !== 'vine' && y > 0 && fits(g, t, o, x, y - 1)) continue;
       if (!stable(g, t, o, x, y)) continue;
       out.push({ t, o, x, y });
     }
@@ -100,8 +114,12 @@ export function canLift(lv: Level, placed: readonly Placement[], i: number): boo
   const pi = lv.fixed.length + i;
   const p = placed[i];
   for (const [dx, dy] of cellsOf(p.t, p.o)) {
-    const c = at(g, p.x + dx, p.y + dy + 1);
+    // A vine's top touches the block it hangs from, which isn't resting on it
+    const c = p.t === 'vine' ? null : at(g, p.x + dx, p.y + dy + 1);
     if (c && c !== WALL && c.i !== pi && (c.i !== undefined || c.k === 'char')) return false;
+    // ...nor a vine hanging from it
+    const below = at(g, p.x + dx, p.y + dy - 1);
+    if (below && below !== WALL && below.k === 'vine' && below.i !== pi) return false;
   }
   return true;
 }

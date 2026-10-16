@@ -1,7 +1,7 @@
 import { Icon } from '../art/Icons';
 import { ShisaIcon } from '../art/Shisa';
 import { SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
-import { askRole, go } from '../game/actions';
+import { askRole, go, openAbout } from '../game/actions';
 import { useGame } from '../state/store';
 
 export function Dex() {
@@ -42,9 +42,12 @@ export function Dex() {
           </div>
         </div>
       </div>
-      <p className="foot" style={{ marginBlock: '8px 0' }}>
-        點一隻收集到的獅子，選牠出場。場上永遠只有兩隻獅子。
-      </p>
+      <div className="dexIntro">
+        <p className="foot">點一隻收集到的獅子，聽聽牠的故事，也可以選牠出場。場上永遠只有兩隻獅子。</p>
+        <button type="button" className="iconBtn" id="aboutBtn" onClick={openAbout}>
+          <span>風獅爺是什麼？</span>
+        </button>
+      </div>
       {SERIES.map((se) => (
         <section key={se.id} className="dexSeries" style={{ ['--sc' as string]: se.color }}>
           <h3>

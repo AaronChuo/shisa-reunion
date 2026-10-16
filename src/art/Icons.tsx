@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { CardKey } from '../content/zones';
 import { C, M, Y0 } from '../game/geometry';
 import { PieceArt } from './PieceArt';
-import { GateArt, Sun, Urchin } from './Scene';
+import { GateArt, StarSand, Sun, Urchin } from './Scene';
 import { Star4 } from './Shisa';
 
 const STROKE = { fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
@@ -165,6 +165,12 @@ export function CardIcon({ k, className }: { k: CardIconKey; className?: string 
       return box('-8 -8 116 116', <PieceArt t="spring" o={0} />);
     case 'long':
       return box('-8 -30 316 160', <PieceArt t="long" o={0} />);
+    case 'slide':
+      return box('-8 -30 216 160', <PieceArt t="slide" o={0} />);
+    case 'vine':
+      return box('-50 -10 200 220', <PieceArt t="vine" o={0} />);
+    case 'star':
+      return box('0 0 92 70', <StarSand cx={46} cy={58} />);
     case 'hard':
       return box(
         '0 0 92 70',

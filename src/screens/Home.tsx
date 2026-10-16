@@ -74,38 +74,81 @@ const ISLAND: [number, number][] = [
   [114, 506],
   [110, 526],
 ];
-const PINS: [number, number, 'L' | 'R'][] = [
+// Yaeyama islands, far to the south-west, drawn in an inset in the open sea at the top left
+const IRIOMOTE: [number, number][] = [
+  [62, 86],
+  [70, 72],
+  [86, 66],
+  [104, 68],
+  [120, 76],
+  [126, 92],
+  [118, 108],
+  [100, 116],
+  [80, 114],
+  [66, 104],
+];
+const ISHIGAKI: [number, number][] = [
+  [178, 96],
+  [186, 82],
+  [196, 72],
+  [204, 54],
+  [211, 46],
+  [214, 56],
+  [208, 70],
+  [206, 86],
+  [198, 102],
+  [186, 106],
+];
+
+type Side = 'L' | 'R' | 'B';
+/** Map pin per zone (same order as ZONES) and which side its name goes on */
+const PINS: [number, number, Side][] = [
   [134, 478, 'L'],
   [186, 384, 'L'],
   [190, 232, 'L'],
+  [206, 170, 'L'],
+  [160, 100, 'B'],
+  [94, 90, 'B'],
   [176, 462, 'R'],
 ];
 const ISLAND_PATH = smooth(ISLAND);
+const P = (i: number) => `${PINS[i][0]},${PINS[i][1]}`;
+// Up the main island to Kouri, a ferry to Yaeyama, and the long way back to Shuri for the finale
+const ROUTE = `M${P(0)} Q150,430 ${P(1)} Q160,300 ${P(2)} Q178,200 ${P(3)} Q206,128 ${P(4)} Q128,124 ${P(5)} Q52,330 ${P(6)}`;
 
 function IslandMap() {
-  const unlocked = useGame((s) => s.progress.unlocked);
+  const open = useGame((s) => s.progress.open);
   const clears = useGame((s) => s.progress.clears);
+  const font = 'LXGW WenKai TC, PingFang TC, sans-serif';
   return (
-    <svg viewBox="40 0 340 560" role="img" aria-label="沖繩本島地圖">
+    <svg viewBox="40 0 340 560" role="img" aria-label="沖繩地圖">
       <rect x={40} y={0} width={340} height={560} fill="#BFE6EE" />
       {[40, 110, 180, 250, 320, 390, 460, 530].map((y) => (
         <path key={y} d={`M${50 + (y % 140)},${y} q10,-6 20,0 t20,0`} stroke="#E6F7FA" strokeWidth={3} fill="none" strokeLinecap="round" />
       ))}
       <path d={ISLAND_PATH} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={10} strokeLinejoin="round" />
       <path d={ISLAND_PATH} fill="#9CCF8C" />
-      <path
-        d={`M${PINS[0][0]},${PINS[0][1]} Q150,430 ${PINS[1][0]},${PINS[1][1]} Q160,300 ${PINS[2][0]},${PINS[2][1]} Q250,330 ${PINS[3][0]},${PINS[3][1]}`}
-        stroke="#C8452F"
-        strokeWidth={3}
-        strokeDasharray="2 8"
-        strokeLinecap="round"
-        fill="none"
-        opacity={0.75}
-      />
+      <path d="M210,176 L214,194" stroke="#8C7F6B" strokeWidth={3} strokeLinecap="round" />
+      <ellipse cx={206} cy={170} rx={11} ry={7.5} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={4} />
+      <g>
+        <rect x={48} y={12} width={174} height={144} rx={14} fill="#CBEEF3" stroke="#8FC9D3" strokeWidth={2.5} strokeDasharray="6 6" />
+        <text x={60} y={34} fontSize={12} fontWeight={700} fill="#3F7480" fontFamily={font}>
+          八重山（在很南邊）
+        </text>
+        {[IRIOMOTE, ISHIGAKI].map((pts) => (
+          <path key={pts[0][0]} d={smooth(pts)} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke" />
+        ))}
+        <circle cx={160} cy={104} r={7} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={3} />
+        <text x={198} y={124} textAnchor="middle" fontSize={11} fill="#5E7F86" fontFamily={font}>
+          石垣島
+        </text>
+      </g>
+      <path d={ROUTE} stroke="#C8452F" strokeWidth={3} strokeDasharray="2 8" strokeLinecap="round" fill="none" opacity={0.75} />
       {ZONES.map((Z, i) => {
         const [x, y, side] = PINS[i];
-        const locked = i > unlocked;
-        const lx = side === 'L' ? x - 20 : x + 20;
+        const locked = !open.includes(Z.id);
+        const [lx, ly, anchor] =
+          side === 'L' ? ([x - 20, y + 6, 'end'] as const) : side === 'R' ? ([x + 20, y + 6, 'start'] as const) : ([x, y + 36, 'middle'] as const);
         return (
           // biome-ignore lint/a11y/noStaticElementInteractions: the zone list below offers the same action as real buttons
           <g key={Z.id} data-zone={i} style={{ cursor: locked ? 'default' : 'pointer' }} onClick={() => !locked && requestRun(i)}>
@@ -115,19 +158,19 @@ function IslandMap() {
             </text>
             <text
               x={lx}
-              y={y + 6}
-              textAnchor={side === 'L' ? 'end' : 'start'}
-              fontSize={17}
+              y={ly}
+              textAnchor={anchor}
+              fontSize={side === 'B' ? 15 : 17}
               fontWeight={700}
               fill="#173944"
               stroke="#F4FBF9"
               strokeWidth={5}
               paintOrder="stroke"
-              fontFamily="LXGW WenKai TC, PingFang TC, sans-serif"
+              fontFamily={font}
             >
               {Z.name}
             </text>
-            {clears[i] > 0 && <Stamp label="" mark="過" x={x + (side === 'L' ? 12 : -36)} y={y - 38} size={26} />}
+            {clears[Z.id] > 0 && <Stamp label="" mark="過" x={x + (side === 'R' ? -36 : 12)} y={y - 38} size={26} />}
           </g>
         );
       })}
@@ -203,8 +246,9 @@ export function Home() {
             </div>
           )}
           {ZONES.map((Z, i) => {
-            const locked = i > p.unlocked;
-            const status = locked ? `先走完${ZONES[i - 1].name}才會打開` : p.clears[i] ? `走完 ${p.clears[i]} 次` : '還沒走過';
+            const locked = !p.open.includes(Z.id);
+            const n = p.clears[Z.id] ?? 0;
+            const status = locked ? `先走完${ZONES[i - 1].name}才會打開` : n ? `走完 ${n} 次` : '還沒走過';
             return (
               <div key={Z.id} className={locked ? 'zone locked' : 'zone'} style={{ ['--zc' as string]: Z.color }}>
                 <span className="stripe" />

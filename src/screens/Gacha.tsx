@@ -114,7 +114,10 @@ export function Gacha() {
               onClick={() => setSeries(x.id)}
             >
               <i />
-              {x.name}{' '}
+              <span>
+                {x.name.replace('系列', '')}
+                <span className="sfx">系列</span>
+              </span>{' '}
               <small>
                 {n}/{total}
               </small>

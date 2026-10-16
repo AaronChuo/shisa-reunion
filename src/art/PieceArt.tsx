@@ -10,6 +10,8 @@ export const PALETTE: Record<PieceType, { fill: string; dark: string; light: str
   ladder: { fill: '#B8CB6A', dark: '#5F7A24', light: '#E3EFAE' },
   spring: { fill: '#F4E9D6', dark: '#A88E67', light: '#43B4C8', accent: '#1E7F95' },
   long: { fill: '#D9CFBD', dark: '#8C7F6B', light: '#F1EBDF' },
+  slide: { fill: '#F08BA8', dark: '#A8405E', light: '#FFD3DF', accent: '#FFD45E' },
+  vine: { fill: '#5FA84A', dark: '#2F6B2A', light: '#A8DB8A', accent: '#8A5A2B' },
 };
 
 function steps(x0: number, x1: number, yb: number, yt: number): [number, number][] {
@@ -118,6 +120,49 @@ export function PieceArt({ t, o }: { t: PieceType; o: number }) {
           />
         </g>
       );
+    case 'slide': {
+      // Platform on the high side, a smooth chute curving down to the floor on the other
+      const body = (
+        <>
+          <path
+            d="M15,3 H100 C128,3 146,24 160,52 C172,76 182,92 197,92 V97 H3 V15 Q3,3 15,3 Z"
+            fill={p.fill}
+            stroke={p.dark}
+            strokeWidth={4}
+            strokeLinejoin="round"
+          />
+          <path d="M100,10 C126,10 142,30 154,56 C166,80 178,88 192,88" stroke={p.accent} strokeWidth={9} fill="none" strokeLinecap="round" />
+          <path d="M100,10 C126,10 142,30 154,56 C166,80 178,88 192,88" stroke="#fff" strokeWidth={2.5} fill="none" strokeLinecap="round" opacity={0.7} />
+          {[24, 50, 76].map((y) => (
+            <path key={y} d={`M14,${y + 8} H86`} stroke={p.light} strokeWidth={4} strokeLinecap="round" opacity={0.8} />
+          ))}
+          <path d="M104,97 V40 M132,97 V36 M160,97 V64" stroke={p.dark} strokeWidth={2.5} opacity={0.35} strokeLinecap="round" />
+        </>
+      );
+      return o === 1 ? <g transform="translate(200,0) scale(-1,1)">{body}</g> : <g>{body}</g>;
+    }
+    case 'vine': {
+      // Hangs from the block above: a knotted root at the top, two twisting stems and leaves
+      const stem = (x: number, k: number) => `M${x},6 C${x + 16 * k},40 ${x - 16 * k},80 ${x},110 S${x + 14 * k},170 ${x - 4 * k},194`;
+      const leaves: [number, number, number][] = [
+        [30, 40, -30],
+        [70, 62, 30],
+        [26, 100, -40],
+        [72, 128, 35],
+        [30, 160, -30],
+        [66, 186, 40],
+      ];
+      return (
+        <g>
+          <path d={stem(42, 1)} stroke={p.accent} strokeWidth={7} fill="none" strokeLinecap="round" />
+          <path d={stem(58, -1)} stroke={p.dark} strokeWidth={6} fill="none" strokeLinecap="round" />
+          {leaves.map(([x, y, r]) => (
+            <ellipse key={y} cx={x} cy={y} rx={14} ry={7.5} transform={`rotate(${r} ${x} ${y})`} fill={p.fill} stroke={p.dark} strokeWidth={2.5} />
+          ))}
+          <rect x={24} y={2} width={52} height={10} rx={5} fill={p.accent} stroke="#5A3A1A" strokeWidth={2.5} />
+        </g>
+      );
+    }
     case 'stair': {
       const horiz = o === 0 || o === 3;
       const mirror = o === 2 || o === 3;

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { PieceArt } from '../art/PieceArt';
-import { Background, GateArt, Plate, TrayBase, Urchin, Water } from '../art/Scene';
+import { Background, GateArt, Plate, StarSand, TrayBase, Urchin, Water } from '../art/Scene';
 import { ShisaArt } from '../art/Shisa';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { cellsOf, makeGrid, type Placement, sizeOf } from '../engine';
 import { useGame } from '../state/store';
-import { bad, canLiftPiece, place, say, shake, walkDone } from './actions';
+import { bad, canLiftPiece, pickStar, place, say, shake, walkDone } from './actions';
 import { beginDrag, clearPreview, hoverPreview, useDrag } from './drag';
 import { boardViewBox, C, landingAt, M, Y0 } from './geometry';
 import { animateWalk, heroTransform } from './walk';
@@ -82,7 +82,7 @@ export function Board() {
 
   useEffect(() => {
     if (!ui.walking || !lv) return;
-    return animateWalk(heroRef.current, ui.walking, lv, walkDone);
+    return animateWalk(heroRef.current, ui.walking, lv, walkDone, pickStar);
   }, [ui.walking, lv]);
 
   if (!run || !lv || !g) return <svg id="board" ref={svgRef} viewBox={boardViewBox(6)} />;
@@ -173,6 +173,9 @@ export function Board() {
           </g>
         );
       })}
+      {lv.stars.map((p, i) => (
+        <StarSand key={`s${p.x},${p.y}`} cx={M + (p.x + 0.5) * C} cy={Y0 - p.y * C} taken={ui.picked.includes(i)} />
+      ))}
       {ui.hint?.type === 'put' && <Ghost p={ui.hint.p} color="#E2703A" opacity={0.5} />}
       {lv.tide && <Water w={lv.w} level={g.water} rise={rise} />}
       <g id="goal" transform={`translate(${M + (lv.goal.x + 0.5) * C},${Y0 - lv.goal.y * C})`}>

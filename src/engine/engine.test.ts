@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canLift, findPath, makeGrid, restY, solve, stable } from '.';
+import { canLift, findPath, findRoute, fits, makeGrid, restY, solve, stable } from '.';
 import type { Level, Placement } from './types';
 
 const level = (over: Partial<Level>): Level => ({
@@ -9,6 +9,7 @@ const level = (over: Partial<Level>): Level => ({
   goal: { x: 5, y: 0 },
   inv: [],
   urchin: [],
+  stars: [],
   tide: null,
   gate: null,
   ...over,
@@ -119,5 +120,74 @@ describe('walking', () => {
     const g = makeGrid(lv, [{ t: 'bridge', o: 0, x: 1, y: 0 }]);
     expect(g.gateOpen).toBe(true);
     expect(findPath(g, lv.hero, lv.goal)).not.toBeNull();
+  });
+});
+
+describe('slides', () => {
+  const placed: Placement[] = [{ t: 'slide', o: 0, x: 1, y: 0 }];
+  const fixed: Placement[] = [{ t: 'cube', o: 0, x: 0, y: 0 }];
+
+  it('carries the hero downhill from the platform to the floor', () => {
+    const lv = level({ fixed, hero: { x: 0, y: 1 }, goal: { x: 5, y: 0 } });
+    const path = findPath(makeGrid(lv, placed), lv.hero, lv.goal);
+    expect(path?.some((p) => p.via === 'slide')).toBe(true);
+  });
+
+  it('never lets anyone climb back up', () => {
+    const lv = level({ fixed, hero: { x: 5, y: 0 }, goal: { x: 0, y: 1 } });
+    expect(findPath(makeGrid(lv, placed), lv.hero, lv.goal)).toBeNull();
+  });
+});
+
+describe('vines', () => {
+  // A block floating at (2, 3) stands in for any block with open space beneath it
+  const roof: Placement = { t: 'cube', o: 0, x: 2, y: 3 };
+
+  it('hangs from the underside of a block and nowhere else', () => {
+    const g = makeGrid(level({}), [roof]);
+    expect(stable(g, 'vine', 0, 2, 1)).toBe(true);
+    expect(stable(g, 'vine', 0, 2, 0)).toBe(false);
+    expect(stable(g, 'vine', 0, 4, 1)).toBe(false);
+    expect(restY(g, 'vine', 0, 2, 0)).toBe(1);
+  });
+
+  it('lets the hero climb up from the floor and step onto a ledge', () => {
+    const lv = level({ fixed: [{ t: 'tower', o: 0, x: 3, y: 0 }], hero: { x: 0, y: 0 }, goal: { x: 3, y: 2 } });
+    const path = findPath(makeGrid(lv, [roof, { t: 'vine', o: 0, x: 2, y: 1 }]), lv.hero, lv.goal);
+    expect(path?.filter((p) => p.via === 'hang').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('keeps the block a vine hangs from in place', () => {
+    const placed: Placement[] = [roof, { t: 'vine', o: 0, x: 2, y: 1 }];
+    expect(canLift(level({}), placed, 0)).toBe(false);
+    expect(canLift(level({}), placed, 1)).toBe(true);
+  });
+});
+
+describe('star sand', () => {
+  it('sends the hero over every star before the goal', () => {
+    const lv = level({
+      hero: { x: 0, y: 0 },
+      goal: { x: 5, y: 0 },
+      stars: [
+        { x: 1, y: 0 },
+        { x: 4, y: 0 },
+      ],
+    });
+    const route = findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars);
+    const xs = route?.map((p) => p.s.x) ?? [];
+    expect(xs).toContain(1);
+    expect(xs).toContain(4);
+    expect(xs[xs.length - 1]).toBe(5);
+  });
+
+  it('keeps blocks from burying a star', () => {
+    const lv = level({ stars: [{ x: 2, y: 0 }] });
+    expect(fits(makeGrid(lv, []), 'cube', 0, 2, 0)).toBe(false);
+  });
+
+  it('refuses a route that has to walk through the goal to reach a star', () => {
+    const lv = level({ hero: { x: 0, y: 0 }, goal: { x: 3, y: 0 }, stars: [{ x: 5, y: 0 }] });
+    expect(findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)).toBeNull();
   });
 });

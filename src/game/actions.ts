@@ -1,8 +1,8 @@
 import { sfx } from '../audio/sfx';
-import { drawFromSeries, VARIANT_BY_ID } from '../content/shisa';
+import { drawFromSeries, type Series, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { CARDS, type CardKey, pickCards, STAGES, stageCfg, ZONES } from '../content/zones';
-import { canLift, findPath, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, rng, solve, stable, waterAt } from '../engine';
+import { canLift, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, rng, solve, stable, waterAt } from '../engine';
 import { getState, mut, type Run, type Screen } from '../state/store';
 import { generateLevel } from './generator';
 
@@ -103,6 +103,7 @@ export function requestRun(zi: number): void {
 export function startRun(zi: number): void {
   mut((s) => {
     s.progress.run = {
+      zone: ZONES[zi].id,
       zi,
       si: 0,
       seed: Math.floor(Math.random() * 1e9),
@@ -141,7 +142,7 @@ async function buildStage(): Promise<void> {
   const cfg = stageCfg(r.zi, r.si, r.card);
   hush();
   mut((s) => {
-    Object.assign(s.ui, { busy: true, screen: 'play', walking: null, cheer: false, heroAt: null, hint: null, sel: -1 });
+    Object.assign(s.ui, { busy: true, screen: 'play', walking: null, picked: [], cheer: false, heroAt: null, hint: null, sel: -1 });
   });
   const loading = setTimeout(
     () =>
@@ -170,6 +171,7 @@ function enterStage(): void {
       busy: false,
       justPlaced: -1,
       walking: null,
+      picked: [],
       heroAt: null,
       cheer: false,
       coach: !s.progress.seen.includes('coach'),
@@ -187,6 +189,7 @@ function introQueue(): IntroKey[] {
   if (lv.urchin.length && !seen.includes('urchin')) q.push('urchin');
   if (lv.tide && !seen.includes('tide')) q.push('tide');
   if (lv.gate && !seen.includes('gate')) q.push('gate');
+  if (lv.stars.length && !seen.includes('star')) q.push('star');
   return q;
 }
 
@@ -200,9 +203,11 @@ function showNextIntro(): void {
   }
   closeModal();
   const r = run();
-  if (getState().ui.coach) say(`把積木拖進來，幫${heroName()}走到${goalName()}身邊`, 0);
-  else if (r.si === STAGES - 1) say(`最後一站：${ZONES[r.zi].boss.name}`, 2000);
-  else say(`這站要用 ${r.level?.inv.length ?? 0} 塊積木`, 1600);
+  const stars = r.level?.stars.length ?? 0;
+  const starLine = stars ? `，要先撿${stars > 1 ? ` ${stars} 堆` : ''}星砂` : '';
+  if (getState().ui.coach) say(`把積木拖進來，幫${heroName()}${stars ? '先撿星砂，再' : ''}走到${goalName()}身邊`, 0);
+  else if (r.si === STAGES - 1) say(`最後一站：${ZONES[r.zi].boss.name}${starLine}`, stars ? 2600 : 2000);
+  else say(`這站要用 ${r.level?.inv.length ?? 0} 塊積木${starLine}`, stars ? 2400 : 1600);
 }
 
 export function ackIntro(key: IntroKey): void {
@@ -350,7 +355,7 @@ export function reset(): void {
 function checkWin(): void {
   const r = run();
   if (!r.level) return;
-  const path = findPath(gridNow(), r.level.hero, r.level.goal);
+  const path = findRoute(gridNow(), r.level.hero, r.level.goal, r.level.stars);
   if (!path) return;
   mut((s) => {
     s.ui.busy = true;
@@ -363,6 +368,14 @@ function checkWin(): void {
       }),
     380,
   );
+}
+
+/** Called by the board as the hero scoops up a star sand on the way */
+export function pickStar(i: number): void {
+  mut((s) => {
+    if (!s.ui.picked.includes(i)) s.ui.picked.push(i);
+  });
+  sfx.star();
 }
 
 /** Called by the board once the hero has walked over to the goal */
@@ -389,8 +402,10 @@ function onWin(): void {
     if (reward?.conch) cur.conch += reward.conch;
     cur.phase = last ? 'done' : 'branch';
     if (last) {
-      s.progress.clears[cur.zi] += 1;
-      if (cur.zi === s.progress.unlocked && s.progress.unlocked < ZONES.length - 1) s.progress.unlocked += 1;
+      s.progress.clears[cur.zone] = (s.progress.clears[cur.zone] ?? 0) + 1;
+      const next = ZONES[cur.zi + 1]?.id;
+      cur.opened = next && !s.progress.open.includes(next) ? next : null;
+      if (cur.opened) s.progress.open.push(cur.opened);
     }
     s.ui.modal = { kind: 'win', reward, last };
   });
@@ -429,12 +444,11 @@ export function chooseCard(card: CardKey | 'boss'): void {
 
 function finishRun(): void {
   const r = run();
-  const st = getState().progress;
-  const firstClear = st.clears[r.zi] === 1 && st.unlocked === r.zi + 1;
+  const opened = r.opened ? ZONES.findIndex((Z) => Z.id === r.opened) : -1;
   mut((s) => {
     s.progress.run = null;
     s.ui.busy = false;
-    s.ui.modal = { kind: 'done', zi: r.zi, earned: r.earned, unlocked: firstClear ? r.zi + 1 : null };
+    s.ui.modal = { kind: 'done', zi: r.zi, earned: r.earned, unlocked: opened >= 0 ? opened : null };
   });
 }
 
@@ -547,10 +561,16 @@ export function finishReveal(next: 'keep' | 'again' | 'use'): void {
   if (next === 'again') pull();
 }
 
-export function setSeries(id: 'trad' | 'sea' | 'food' | 'fest'): void {
+export function setSeries(id: Series['id']): void {
   if (getState().ui.pull !== 'idle') return;
   mut((s) => {
     s.ui.gseries = id;
+  });
+}
+
+export function openAbout(): void {
+  mut((s) => {
+    s.ui.modal = { kind: 'about' };
   });
 }
 

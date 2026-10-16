@@ -54,6 +54,28 @@ export const sfx = {
       pluck('sfx', 'classic', n, t + i * 0.09, 0.12, { vel: 0.6 });
     });
   },
+  /** Swinging along a vine: two soft notes leaning up */
+  hang() {
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'soft', 'F4', t, 0.18, { vel: 0.55, slide: -1 });
+    pluck('sfx', 'soft', 'G4', t + 0.12, 0.22, { vel: 0.6, slide: -1 });
+  },
+  /** Whoosh down the slide: one long note gliding down */
+  slide() {
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'classic', 'C5', t, 0.6, { vel: 0.75, bend: -7, bendTime: 0.45 });
+  },
+  /** Star sand picked up: a quick sparkle of high notes */
+  star() {
+    const t = at();
+    if (t === null) return;
+    ['G5', 'B5', 'E6'].forEach((n, i) => {
+      pluck('sfx', 'soft', n, t + i * 0.06, 0.2, { vel: 0.6 });
+    });
+    sanba('sfx', t, 0.4);
+  },
   /** A luck coin: clapper rattle and two bright notes */
   coin() {
     const t = at();
