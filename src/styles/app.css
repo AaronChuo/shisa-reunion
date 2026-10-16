@@ -112,6 +112,154 @@ fieldset {
   font-size: 18px;
   border-radius: 18px;
 }
+/* The one main next step on a screen: big, warm, gently breathing, a picture in a white circle */
+.cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 66px;
+  padding: 0 26px 0 11px;
+  border-radius: 24px;
+  border: 3px solid var(--accent-dark);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 5px 0 var(--accent-dark);
+  font-size: 22px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* The button itself never moves (a moving target is hard to tap): a halo breathes around it and the picture bobs */
+.cta::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: halo 1.8s ease-in-out infinite;
+}
+.cta .ci {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--accent);
+  overflow: hidden;
+  animation: bobIcon 1.8s ease-in-out infinite;
+}
+.cta .ci > svg {
+  width: 28px;
+  height: 28px;
+}
+/* A shisa portrait fills the circle instead of a small icon */
+.cta .ci > svg[viewBox^="-46"] {
+  width: 44px;
+  height: 46px;
+  margin-top: 4px;
+}
+.cta:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--accent-dark);
+}
+.cta:disabled::before,
+.cta:disabled .ci {
+  animation: none;
+}
+.cta:disabled {
+  opacity: 0.45;
+  filter: grayscale(0.5);
+  cursor: default;
+}
+.cta.wide {
+  width: 100%;
+}
+.tapHand {
+  position: absolute;
+  right: -6px;
+  bottom: -30px;
+  width: 50px;
+  height: 50px;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.2));
+  animation:
+    handIn 0.3s ease-out,
+    tap 0.9s 0.3s ease-in-out infinite;
+}
+@keyframes halo {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  60% {
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+@keyframes bobIcon {
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes tap {
+  50% {
+    transform: translate(-5px, -8px) rotate(-6deg);
+  }
+}
+@keyframes handIn {
+  from {
+    opacity: 0;
+    transform: translate(10px, 14px);
+  }
+}
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: #d9443a;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+}
+/* Coins in the pocket: the gacha icon wiggles now and then to say "come spend them" */
+.iconBtn.hasCoins {
+  border-color: var(--accent);
+}
+.iconBtn.hasCoins svg,
+.iconBtn.nudge svg {
+  animation: wiggle 3.2s ease-in-out infinite;
+}
+@keyframes wiggle {
+  0%,
+  84%,
+  100% {
+    transform: none;
+  }
+  88% {
+    transform: rotate(-5deg) scale(1.06);
+  }
+  92% {
+    transform: rotate(5deg) scale(1.06);
+  }
+  96% {
+    transform: rotate(-3deg) scale(1.03);
+  }
+}
+/* Stuck for a while: the hint shell asks to be pressed */
+.iconBtn.nudge {
+  border-color: var(--accent);
+  background: #fff4de;
+}
+.iconBtn.nudge svg {
+  animation-duration: 1.6s;
+}
 .coin {
   display: inline-flex;
   align-items: center;
@@ -247,25 +395,29 @@ h1 {
   display: grid;
   gap: 12px;
 }
-.resume {
+.goCard {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
-  padding: 12px 14px;
-  border-radius: 18px;
-  background: #fff4de;
-  border: 2px solid #f1d29a;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--zc) 14%, var(--card));
+  border: 3px solid var(--zc);
 }
-.resume .t {
-  flex: 1 1 200px;
+.goCard .t {
+  flex: 1 1 180px;
+  font-size: 19px;
   font-weight: 700;
 }
-.resume .t small {
+.goCard .t small {
   display: block;
   font-weight: 400;
   color: var(--muted);
   font-size: 14px;
+}
+.goCard .cta {
+  margin-bottom: 6px;
 }
 .zone {
   display: grid;
@@ -312,6 +464,25 @@ h1 {
 }
 .zone.locked {
   opacity: 0.6;
+}
+.zone.here {
+  border-color: var(--zc);
+}
+/* The map pin of the next zone to play pulses */
+.pinRing {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: ring 1.6s ease-out infinite;
+}
+@keyframes ring {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
 .foot {
   color: var(--muted);
@@ -614,6 +785,107 @@ h1 {
   width: 120px;
   height: 130px;
 }
+.gains {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.gain {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 6px;
+  border-radius: 999px;
+  background: #fff4de;
+  border: 2px solid #f1d29a;
+  font-weight: 700;
+}
+.gain svg {
+  width: 30px;
+  height: 30px;
+}
+.blocks {
+  width: auto;
+  height: 12px;
+}
+.mini .blocks {
+  width: auto;
+  height: 12px;
+}
+/* Which job a shisa does, shown by its mouth: open sets out, closed waits */
+.roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+.roleCard {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 6px 12px;
+  border-radius: 20px;
+  border: 3px solid var(--line);
+  background: var(--bg);
+  box-shadow: 0 4px 0 var(--line);
+  cursor: pointer;
+}
+.roleCard:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--line);
+}
+.roleCard svg {
+  width: 92px;
+  height: 100px;
+}
+.roleCard .rn {
+  font-size: 21px;
+  font-weight: 700;
+}
+.roleCard small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.roleCard.on {
+  border-color: var(--accent);
+  background: #fff4de;
+  box-shadow: 0 4px 0 var(--accent-dark);
+}
+.roleOn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+}
+.roleOn svg {
+  width: 20px;
+  height: 20px;
+}
+.switchIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--line);
+}
+.switchIcon svg {
+  width: 24px;
+  height: 24px;
+}
+.switch .switchText {
+  flex: 1;
+}
 .aboutArt {
   width: 220px;
   height: 120px;
@@ -816,6 +1088,13 @@ h1 {
   display: flex;
   justify-content: center;
   min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+#machineBox:disabled {
+  cursor: default;
 }
 .machine {
   display: block;
@@ -880,6 +1159,19 @@ h1 {
   background: none;
   border-radius: 50%;
   cursor: pointer;
+}
+/* A shut capsule rocks to say "open me" */
+.capsuleBtn.shut .reveal {
+  animation: wiggle 1.6s ease-in-out infinite;
+}
+.capsuleHand {
+  width: 56px;
+  height: 56px;
+  margin-top: -64px;
+  margin-left: 120px;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.2));
+  animation: tap 0.9s ease-in-out infinite;
 }
 .reveal {
   display: block;
@@ -962,6 +1254,17 @@ h1 {
 }
 .slot small {
   color: var(--muted);
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  .slot {
+    gap: 6px;
+    padding: 8px;
+  }
+  .slot svg {
+    width: 52px;
+    height: 56px;
+  }
 }
 .dexSeries {
   margin-top: 16px;
@@ -1083,6 +1386,76 @@ h1 {
   animation: twinkle 1.6s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: 50% 50%;
+}
+/* A finger acting out the drag a hint asks for: press the block, carry it, let go */
+.dragDemo {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+}
+.demoHand,
+.demoPiece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  animation: carry 2.6s ease-in-out infinite;
+}
+.demoHand {
+  width: 58px;
+  height: 58px;
+  /* the fingertip sits at (21, 4) of the 58px drawing */
+  margin: -4px 0 0 -21px;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.25));
+}
+.demoPiece {
+  opacity: 0;
+  animation-name: carryPiece;
+}
+@keyframes carry {
+  0% {
+    transform: translate(var(--x0), var(--y0)) scale(1.1);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(var(--x0), var(--y0)) scale(1.1);
+    opacity: 1;
+  }
+  22% {
+    transform: translate(var(--x0), var(--y0)) scale(0.92);
+  }
+  72% {
+    transform: translate(var(--x1), var(--y1)) scale(0.92);
+    opacity: 1;
+  }
+  82% {
+    transform: translate(var(--x1), var(--y1)) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x1), var(--y1)) scale(1.1);
+    opacity: 0;
+  }
+}
+@keyframes carryPiece {
+  0%,
+  18% {
+    transform: translate(var(--x0), var(--y0));
+    opacity: 0;
+  }
+  24% {
+    transform: translate(var(--x0), var(--y0));
+    opacity: 0.75;
+  }
+  72% {
+    transform: translate(var(--x1), var(--y1));
+    opacity: 0.75;
+  }
+  84%,
+  100% {
+    transform: translate(var(--x1), var(--y1));
+    opacity: 0;
+  }
 }
 /* star sand glints while waiting and floats away once the hero scoops it up */
 .starSand {
@@ -1220,9 +1593,27 @@ h1 {
   .rise,
   .twinkle,
   .starGlint,
+  .cta::before,
+  .cta .ci,
+  .tapHand,
+  .capsuleHand,
+  .capsuleBtn.shut .reveal,
+  .iconBtn.hasCoins svg,
+  .iconBtn.nudge svg,
+  .pinRing,
   .sheet,
   .bigCoin,
   .wave path {
     animation: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .demoHand,
+  .demoPiece {
+    animation: none;
+    transform: translate(var(--x0), var(--y0));
+  }
+  .demoPiece {
+    opacity: 0;
   }
 }

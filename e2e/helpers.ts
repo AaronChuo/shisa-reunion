@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { type Level, sizeOf, solve } from '../src/engine';
+import { DEFS, type Level, sizeOf, solve } from '../src/engine';
 import type { Progress } from '../src/state/store';
 
 const C = 100;
@@ -38,10 +38,14 @@ export async function waitForLevel(page: Page): Promise<Level> {
 export async function solveByDragging(page: Page, lv: Level): Promise<void> {
   const [sol] = solve(lv, 1).sols;
   const used = new Set<number>();
+  // A hint (or the first-stage demonstration) may already have turned a card, so turn from where it is now
+  const orient = (await progress(page)).run?.orient ?? [];
   for (const p of sol) {
     const k = lv.inv.findIndex((t, i) => t === p.t && !used.has(i));
     used.add(k);
-    for (let r = 0; r < p.o; r++) await page.click(`.card[data-k="${k}"] .rot`);
+    const n = DEFS[p.t].orients.length;
+    const turns = (p.o - (orient[k] ?? 0) + n) % n;
+    for (let r = 0; r < turns; r++) await page.click(`.card[data-k="${k}"] .rot`);
     const card = page.locator(`.card[data-k="${k}"]`);
     const bb = await card.boundingBox();
     if (!bb) throw new Error('card not visible');

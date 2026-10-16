@@ -8,9 +8,9 @@ const noSidewaysScroll = (page: Page) =>
   });
 
 it.describe('phone layout', () => {
-  it('shows the first zone button without scrolling', async ({ page }) => {
+  it('shows the big go button without scrolling', async ({ page }) => {
     await page.goto('/');
-    const bb = await page.locator('.zone [data-zone="0"]').boundingBox();
+    const bb = await page.locator('#goBtn').boundingBox();
     const vh = page.viewportSize()?.height ?? 0;
     expect(bb && bb.y + bb.height).toBeLessThanOrEqual(vh);
     expect(await noSidewaysScroll(page)).toBe(true);

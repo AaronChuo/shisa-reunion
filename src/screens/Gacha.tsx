@@ -1,8 +1,9 @@
 import { CoinArt, CoinIcon, Icon } from '../art/Icons';
 import { ShisaArt } from '../art/Shisa';
 import { SERIES, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
-import { go, pull, setSeries } from '../game/actions';
+import { go, goPlay, pull, setSeries } from '../game/actions';
 import { useGame } from '../state/store';
+import { Cta } from '../ui/Cta';
 
 const CAPSULE_SPOTS: [number, number][] = [
   [100, 190],
@@ -86,6 +87,7 @@ export function Gacha() {
   const series = SERIES.find((x) => x.id === gseries) ?? SERIES[0];
   const all = VARIANTS.filter((v) => v.series === series.id);
   const left = all.filter((v) => !owned.includes(v.id)).length;
+  const canPull = tokens > 0 && left > 0 && phase === 'idle';
   return (
     <section id="gacha" className="screen">
       <header className="bar">
@@ -126,9 +128,10 @@ export function Gacha() {
         })}
       </fieldset>
       <div className="machineWrap">
-        <div id="machineBox">
+        {/* Tapping the machine (its crank, its coin slot) pulls too, the way a child would try it */}
+        <button type="button" id="machineBox" aria-label="轉扭蛋" disabled={!canPull} onClick={pull}>
           <Machine series={series} phase={phase} pulled={pulled} />
-        </div>
+        </button>
         <div className="gPanel">
           {left ? (
             <p>
@@ -139,10 +142,16 @@ export function Gacha() {
               <b>這台的 {all.length} 隻都收集到了！</b>
             </p>
           )}
-          <button type="button" className="iconBtn primary big" id="pullBtn" disabled={tokens < 1 || !left || phase !== 'idle'} onClick={pull}>
-            <CoinIcon />
-            <span>投 1 枚福氣幣</span>
-          </button>
+          {tokens > 0 || !left ? (
+            <Cta icon={<CoinIcon />} id="pullBtn" disabled={!canPull} onClick={pull}>
+              投 1 枚福氣幣
+            </Cta>
+          ) : (
+            // Out of coins: the main button now leads back to playing, where coins come from
+            <Cta icon={<Icon name="play" />} id="playBtn" onClick={goPlay}>
+              去玩，拿福氣幣
+            </Cta>
+          )}
           <p id="tokenLine">
             {tokens < 1 ? (
               '過一站就能拿到 1 枚福氣幣'

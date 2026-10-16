@@ -20,12 +20,13 @@ it.describe('a full journey', () => {
     await page.locator('#modal [data-g]').click();
     await page.locator('#pullBtn').click();
     await page.locator('#capsule').click();
+    // One tap sends the new shisa out as the one that sets out; no second question
     await page.locator('#modal [data-use]').click();
-    await page.locator('#modal [data-role="1"]').click();
+    await expect(page.locator('#modal')).toHaveCount(0);
     p = await progress(page);
     expect(p.tokens).toBe(4);
     expect(p.owned).toHaveLength(3);
-    expect(p.pair[1]).toBe(p.owned[2]);
+    expect(p.pair[0]).toBe(p.owned[2]);
   });
 
   it('keeps an unfinished journey so it can be resumed after leaving', async ({ page }) => {

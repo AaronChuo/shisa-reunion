@@ -3,7 +3,8 @@ import { ShisaArt } from '../art/Shisa';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { STAGES, ZONES } from '../content/zones';
 import { go, openAudioSettings, requestRun, resumeRun } from '../game/actions';
-import { useGame } from '../state/store';
+import { type Progress, useGame } from '../state/store';
+import { Cta } from '../ui/Cta';
 import { UpdatePrompt } from '../ui/UpdatePrompt';
 
 const f1 = (v: number) => +v.toFixed(1);
@@ -116,7 +117,14 @@ const P = (i: number) => `${PINS[i][0]},${PINS[i][1]}`;
 // Up the main island to Kouri, a ferry to Yaeyama, and the long way back to Shuri for the finale
 const ROUTE = `M${P(0)} Q150,430 ${P(1)} Q160,300 ${P(2)} Q178,200 ${P(3)} Q206,128 ${P(4)} Q128,124 ${P(5)} Q52,330 ${P(6)}`;
 
-function IslandMap() {
+/** Where "go" takes a child: the unfinished journey, else the first open zone not yet finished, else the furthest one */
+export function nextZone(p: Progress): number {
+  if (p.run && p.run.phase !== 'done') return p.run.zi;
+  const open = ZONES.map((Z, i) => ({ Z, i })).filter(({ Z }) => p.open.includes(Z.id));
+  return (open.find(({ Z }) => !(p.clears[Z.id] > 0)) ?? open[open.length - 1]).i;
+}
+
+function IslandMap({ here }: { here: number }) {
   const open = useGame((s) => s.progress.open);
   const clears = useGame((s) => s.progress.clears);
   const font = 'LXGW WenKai TC, PingFang TC, sans-serif';
@@ -151,7 +159,14 @@ function IslandMap() {
           side === 'L' ? ([x - 20, y + 6, 'end'] as const) : side === 'R' ? ([x + 20, y + 6, 'start'] as const) : ([x, y + 36, 'middle'] as const);
         return (
           // biome-ignore lint/a11y/noStaticElementInteractions: the zone list below offers the same action as real buttons
-          <g key={Z.id} data-zone={i} style={{ cursor: locked ? 'default' : 'pointer' }} onClick={() => !locked && requestRun(i)}>
+          <g
+            key={Z.id}
+            data-zone={i}
+            className={i === here ? 'pin here' : 'pin'}
+            style={{ cursor: locked ? 'default' : 'pointer' }}
+            onClick={() => !locked && requestRun(i)}
+          >
+            {i === here && <circle className="pinRing" cx={x} cy={y} r={17} fill="none" stroke={Z.color} strokeWidth={4} />}
             <circle cx={x} cy={y} r={17} fill={locked ? '#B9C4C2' : Z.color} stroke="#fff" strokeWidth={4} />
             <text x={x} y={y + 6} textAnchor="middle" fontSize={17} fontWeight={700} fill="#fff" fontFamily="Fredoka, sans-serif">
               {i + 1}
@@ -190,6 +205,7 @@ export function Home() {
   const hero = VARIANT_BY_ID[p.pair[0]];
   const goal = VARIANT_BY_ID[p.pair[1]];
   const run = p.run && p.run.phase !== 'done' ? p.run : null;
+  const here = nextZone(p);
   return (
     <section id="home" className="screen scroll">
       <UpdatePrompt />
@@ -213,8 +229,10 @@ export function Home() {
             <CoinIcon />
             <b className="num">{p.tokens}</b>
           </span>
-          <button type="button" className="iconBtn primary" data-go="gacha" onClick={() => go('gacha')}>
+          <button type="button" className={p.tokens > 0 ? 'iconBtn hasCoins' : 'iconBtn'} data-go="gacha" onClick={() => go('gacha')}>
+            <Icon name="gacha" />
             <span>扭蛋機</span>
+            {p.tokens > 0 && <span className="badge num">{p.tokens}</span>}
           </button>
           <button type="button" className="iconBtn" data-go="dex" onClick={() => go('dex')}>
             <Icon name="book" />
@@ -227,30 +245,39 @@ export function Home() {
       </header>
       <div className="homeBody">
         <div className="islandWrap">
-          <IslandMap />
+          <IslandMap here={here} />
         </div>
         <div className="zones">
-          {run && (
-            <div className="resume">
-              <div className="t">
-                旅程還沒走完：{ZONES[run.zi].name}
-                <small>
-                  第 <span className="num">{run.si + 1}</span> / <span className="num">{STAGES}</span> 站，這趟拿到 <span className="num">{run.earned}</span>{' '}
-                  枚福氣幣
-                </small>
-              </div>
-              <button type="button" className="iconBtn primary big" data-resume onClick={resumeRun}>
-                <span>繼續旅程</span>
-                <Icon name="next" />
-              </button>
+          {/* The one big button: carry on, or set out for the next zone to play */}
+          <div className="goCard" style={{ ['--zc' as string]: ZONES[here].color }}>
+            <div className="t">
+              {run ? '旅程還沒走完' : '下一站'}：{ZONES[here].name}
+              <small>
+                {run ? (
+                  <>
+                    第 <span className="num">{run.si + 1}</span> / <span className="num">{STAGES}</span> 站，這趟拿到 <span className="num">{run.earned}</span>{' '}
+                    枚福氣幣
+                  </>
+                ) : (
+                  ZONES[here].line
+                )}
+              </small>
             </div>
-          )}
+            <Cta
+              icon={<Icon name="play" />}
+              id="goBtn"
+              data={run ? { 'data-resume': true } : { 'data-start': true }}
+              onClick={() => (run ? resumeRun() : requestRun(here))}
+            >
+              {run ? '繼續' : '出發'}
+            </Cta>
+          </div>
           {ZONES.map((Z, i) => {
             const locked = !p.open.includes(Z.id);
             const n = p.clears[Z.id] ?? 0;
             const status = locked ? `先走完${ZONES[i - 1].name}才會打開` : n ? `走完 ${n} 次` : '還沒走過';
             return (
-              <div key={Z.id} className={locked ? 'zone locked' : 'zone'} style={{ ['--zc' as string]: Z.color }}>
+              <div key={Z.id} className={locked ? 'zone locked' : i === here ? 'zone here' : 'zone'} style={{ ['--zc' as string]: Z.color }}>
                 <span className="stripe" />
                 <div>
                   <div className="zt">
@@ -264,15 +291,9 @@ export function Home() {
                     {Z.line} · {status}
                   </div>
                 </div>
-                <button type="button" className={locked ? 'iconBtn' : 'iconBtn primary'} data-zone={i} disabled={locked} onClick={() => requestRun(i)}>
-                  {locked ? (
-                    <>
-                      <Icon name="lock" />
-                      <span>未開放</span>
-                    </>
-                  ) : (
-                    <span>出發</span>
-                  )}
+                <button type="button" className="iconBtn" data-zone={i} disabled={locked} onClick={() => requestRun(i)}>
+                  <Icon name={locked ? 'lock' : 'play'} />
+                  <span>{locked ? '未開放' : '出發'}</span>
                 </button>
               </div>
             );

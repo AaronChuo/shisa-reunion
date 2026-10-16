@@ -1,15 +1,16 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { CardIcon, CoinIcon, ConchIcon, Icon, ShellIcon, Stamp } from '../art/Icons';
+import { Blocks, CardIcon, CoinIcon, ConchIcon, Icon, ShellIcon, Stamp, TapHand } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
-import { ABOUT_SHISA, SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
+import { ABOUT_SHISA, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
 import { CARDS, stageCfg, ZONES } from '../content/zones';
 import { sizeOf } from '../engine';
 import { ackIntro, afterWin, chooseCard, chooseRole, closeModal, finishReveal, go, goHome, startRun, toggleMusic, toggleSound } from '../game/actions';
 import { type Modal, useGame } from '../state/store';
+import { Cta } from '../ui/Cta';
 
 function Sheet({ children, wide, label }: { children: ReactNode; wide?: boolean; label: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -58,11 +59,11 @@ function Intro({ k }: { k: IntroKey }) {
       <div className="eyebrow">{isPiece(k) ? '新積木' : '新機關'}</div>
       <IntroArt k={k} />
       <h2>{isPiece(k) ? PIECE_NAMES[k] : MECHANISM_NAMES[k]}</h2>
-      <p>{RULES[k]}</p>
+      <Story text={RULES[k]} />
       <div className="btns">
-        <button type="button" className="iconBtn primary big" data-ok data-focus onClick={() => ackIntro(k)}>
+        <Cta icon={<Icon name="check" />} data={{ 'data-ok': true, 'data-focus': true }} onClick={() => ackIntro(k)}>
           知道了
-        </button>
+        </Cta>
       </div>
     </Sheet>
   );
@@ -77,16 +78,28 @@ function Win({ m }: { m: Extract<Modal, { kind: 'win' }> }) {
       <h2>
         {VARIANT_BY_ID[pair[0]].name}回到{VARIANT_BY_ID[pair[1]].name}身邊了！
       </h2>
-      <p>
-        福氣幣 +1
-        {rw?.shell ? `，還拿到提示貝 ×${rw.shell}` : ''}
-        {rw?.conch ? `，還拿到換題海螺 ×${rw.conch}` : ''}
-      </p>
+      <div className="gains">
+        <span className="gain">
+          <CoinIcon />
+          福氣幣 <b className="num">+1</b>
+        </span>
+        {rw?.shell ? (
+          <span className="gain">
+            <ShellIcon />
+            提示貝 <b className="num">+{rw.shell}</b>
+          </span>
+        ) : null}
+        {rw?.conch ? (
+          <span className="gain">
+            <ConchIcon />
+            換題海螺 <b className="num">+{rw.conch}</b>
+          </span>
+        ) : null}
+      </div>
       <div className="btns">
-        <button type="button" className="iconBtn primary big" data-next data-focus onClick={afterWin}>
-          <span>{m.last ? '走完這趟旅程' : '選下一條路'}</span>
-          <Icon name="next" />
-        </button>
+        <Cta icon={<Icon name={m.last ? 'check' : 'next'} />} data={{ 'data-next': true, 'data-focus': true }} onClick={afterWin}>
+          {m.last ? '走完了' : '下一站'}
+        </Cta>
       </div>
     </Sheet>
   );
@@ -113,7 +126,8 @@ function Branch() {
                 <span className="pl">最後一站，比較難</span>
                 <span className="pc">
                   <span className="mini">
-                    積木 <b className="num">{Z.boss.k}</b> 塊
+                    <Blocks n={Z.boss.k} />
+                    <b className="num">{Z.boss.k}</b> 塊
                   </span>
                 </span>
               </button>
@@ -128,7 +142,8 @@ function Branch() {
               <span className="pl">{c.line}</span>
               <span className="pc">
                 <span className="mini">
-                  積木 <b className="num">{cfg.k}</b> 塊
+                  <Blocks n={cfg.k} />
+                  <b className="num">{cfg.k}</b> 塊
                 </span>
                 {c.reward?.shell && (
                   <span className="mini">
@@ -161,14 +176,14 @@ function Done({ m }: { m: Extract<Modal, { kind: 'done' }> }) {
         這趟一共拿到 <b className="num">{m.earned}</b> 枚福氣幣{m.unlocked !== null ? `，${ZONES[m.unlocked].name}打開了` : ''}。
       </p>
       <div className="btns">
-        <button type="button" className="iconBtn primary big" data-g data-focus onClick={() => go('gacha')}>
-          <span>去扭蛋機</span>
-        </button>
-        <button type="button" className="iconBtn big" data-h onClick={goHome}>
-          <Icon name="map" />
-          <span>地圖</span>
-        </button>
+        <Cta icon={<Icon name="gacha" />} data={{ 'data-g': true, 'data-focus': true }} onClick={() => go('gacha')}>
+          去扭蛋機
+        </Cta>
       </div>
+      <button type="button" className="iconBtn" data-h onClick={goHome}>
+        <Icon name="map" />
+        <span>地圖</span>
+      </button>
     </Sheet>
   );
 }
@@ -180,29 +195,27 @@ function ConfirmRun({ zi }: { zi: number }) {
       <h2>換一條旅程？</h2>
       <p>{run ? ZONES[run.zi].name : ''}的旅程會結束，已經拿到的福氣幣會留著。</p>
       <div className="btns">
-        <button type="button" className="iconBtn primary big" data-y onClick={() => startRun(zi)}>
-          <span>出發去{ZONES[zi].name}</span>
-        </button>
-        <button type="button" className="iconBtn big" data-n data-focus onClick={closeModal}>
-          先不要
-        </button>
+        <Cta icon={<Icon name="play" />} data={{ 'data-y': true }} onClick={() => startRun(zi)}>
+          去{ZONES[zi].name}
+        </Cta>
       </div>
+      <button type="button" className="iconBtn" data-n data-focus onClick={closeModal}>
+        <Icon name="close" />
+        <span>先不要</span>
+      </button>
     </Sheet>
   );
 }
 
 function Reveal({ id, seriesId }: { id: string; seriesId: string }) {
   const [open, setOpen] = useState(false);
-  const tokens = useGame((s) => s.progress.tokens);
-  const owned = useGame((s) => s.progress.owned);
   const v = VARIANT_BY_ID[id];
   const series = SERIES.find((s) => s.id === seriesId) ?? SERIES[0];
   const col = Array.isArray(v.mane) ? v.mane[0] : v.body;
-  const canAgain = tokens > 0 && VARIANTS.some((x) => x.series === series.id && !owned.includes(x.id));
   return (
     <Sheet label="扭蛋">
       <div className="eyebrow">{series.name}</div>
-      <button type="button" className="capsuleBtn" id="capsule" aria-label="打開扭蛋" data-focus onClick={() => setOpen(true)}>
+      <button type="button" className={open ? 'capsuleBtn' : 'capsuleBtn shut'} id="capsule" aria-label="打開扭蛋" data-focus onClick={() => setOpen(true)}>
         <svg className={open ? 'reveal open' : 'reveal'} viewBox="-110 -130 220 220" aria-hidden="true">
           <g className="who">
             <g transform="translate(0,60) scale(1.7)">
@@ -228,21 +241,21 @@ function Reveal({ id, seriesId }: { id: string; seriesId: string }) {
           </p>
           <Story text={v.story} />
           <div className="btns">
-            <button type="button" className="iconBtn primary big" data-use onClick={() => finishReveal('use')}>
-              <span>換上去玩</span>
-            </button>
-            {canAgain && (
-              <button type="button" className="iconBtn big" data-again onClick={() => finishReveal('again')}>
-                <span>再轉一次</span>
-              </button>
-            )}
-            <button type="button" className="iconBtn big" data-keep onClick={() => finishReveal('keep')}>
-              收下
-            </button>
+            <Cta icon={<ShisaIcon v={v} open />} data={{ 'data-use': true }} onClick={() => finishReveal('use')}>
+              換牠出場
+            </Cta>
           </div>
+          <button type="button" className="iconBtn" data-keep onClick={() => finishReveal('keep')}>
+            <Icon name="check" />
+            <span>先收著</span>
+          </button>
         </div>
       ) : (
-        <p>點一下打開扭蛋</p>
+        <>
+          {/* The capsule itself is the button; a finger shows where to tap */}
+          <TapHand className="capsuleHand" />
+          <p>點一下打開扭蛋</p>
+        </>
       )}
     </Sheet>
   );
@@ -259,20 +272,38 @@ function Role({ id }: { id: string }) {
         {series?.name}
         {v.rare ? '・稀有' : ''}
       </div>
-      <ShisaIcon v={v} open={pair[1] !== id} className="roleArt" />
       <h2>{v.name}</h2>
       <Story text={v.story} />
-      <div className="btns column">
-        <button type="button" className="iconBtn primary big" data-role="0" data-focus disabled={pair[0] === id} onClick={() => chooseRole(id, 0)}>
-          {pair[0] === id ? '正在當出發的獅子' : '當出發的獅子（張嘴）'}
-        </button>
-        <button type="button" className="iconBtn big teal" data-role="1" disabled={pair[1] === id} onClick={() => chooseRole(id, 1)}>
-          {pair[1] === id ? '正在當等待的獅子' : '當等待的獅子（閉嘴）'}
-        </button>
-        <button type="button" className="iconBtn" data-cancel onClick={closeModal}>
-          關起來
-        </button>
+      {/* The two jobs as pictures: the open mouth sets out walking, the closed mouth waits at home */}
+      <div className="roles">
+        {([0, 1] as const).map((role) => {
+          const on = pair[role] === id;
+          return (
+            <button
+              key={role}
+              type="button"
+              className={on ? 'roleCard on' : 'roleCard'}
+              data-role={role}
+              data-focus={role === 0 ? true : undefined}
+              aria-pressed={on}
+              onClick={() => chooseRole(id, role)}
+            >
+              <ShisaIcon v={v} open={role === 0} />
+              <span className="rn">{role === 0 ? '出發' : '等待'}</span>
+              <small>{role === 0 ? '張嘴，去找朋友' : '閉嘴，等朋友來'}</small>
+              {on && (
+                <span className="roleOn">
+                  <Icon name="check" />
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
+      <button type="button" className="iconBtn" data-cancel onClick={closeModal}>
+        <Icon name="close" />
+        <span>關起來</span>
+      </button>
     </Sheet>
   );
 }
@@ -291,17 +322,18 @@ function About() {
       <h2>{ABOUT_SHISA.title}</h2>
       <Story text={ABOUT_SHISA.story} />
       <div className="btns">
-        <button type="button" className="iconBtn primary big" data-focus onClick={closeModal}>
+        <Cta icon={<Icon name="check" />} data={{ 'data-focus': true }} onClick={closeModal}>
           知道了
-        </button>
+        </Cta>
       </div>
     </Sheet>
   );
 }
 
-function Switch({ id, on, label, detail, onToggle }: { id: string; on: boolean; label: string; detail: string; onToggle: () => void }) {
+function Switch({ id, on, icon, label, detail, onToggle }: { id: string; on: boolean; icon: ReactNode; label: string; detail: string; onToggle: () => void }) {
   return (
     <button type="button" className={on ? 'switch on' : 'switch'} id={id} role="switch" aria-checked={on} onClick={onToggle}>
+      <span className="switchIcon">{icon}</span>
       <span className="switchText">
         <b>{label}</b>
         <small>{detail}</small>
@@ -321,14 +353,21 @@ function AudioSettings() {
     <Sheet label="聲音設定">
       <h2>聲音</h2>
       <div className="switches">
-        <Switch id="sfxSwitch" on={sound} label="音效" detail="三線、太鼓、三板" onToggle={toggleSound} />
-        <Switch id="musicSwitch" on={music} label="背景音樂" detail={song ? `現在播放：${song}` : '三線彈的沖繩民謠'} onToggle={toggleMusic} />
+        <Switch id="sfxSwitch" on={sound} icon={<Icon name={sound ? 'soundOn' : 'soundOff'} />} label="音效" detail="三線、太鼓、三板" onToggle={toggleSound} />
+        <Switch
+          id="musicSwitch"
+          on={music}
+          icon={<Icon name="music" />}
+          label="背景音樂"
+          detail={song ? `現在播放：${song}` : '三線彈的沖繩民謠'}
+          onToggle={toggleMusic}
+        />
       </div>
       <p className="small">iPhone、iPad 開著靜音模式時，網頁不會發出聲音。</p>
       <div className="btns">
-        <button type="button" className="iconBtn primary big" data-focus onClick={closeModal}>
+        <Cta icon={<Icon name="check" />} data={{ 'data-focus': true }} onClick={closeModal}>
           好了
-        </button>
+        </Cta>
       </div>
     </Sheet>
   );

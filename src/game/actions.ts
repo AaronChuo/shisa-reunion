@@ -205,8 +205,11 @@ function showNextIntro(): void {
   const r = run();
   const stars = r.level?.stars.length ?? 0;
   const starLine = stars ? `，要先撿${stars > 1 ? ` ${stars} 堆` : ''}星砂` : '';
-  if (getState().ui.coach) say(`把積木拖進來，幫${heroName()}${stars ? '先撿星砂，再' : ''}走到${goalName()}身邊`, 0);
-  else if (r.si === STAGES - 1) say(`最後一站：${ZONES[r.zi].boss.name}${starLine}`, stars ? 2600 : 2000);
+  if (getState().ui.coach) {
+    // The very first stage shows a finger dragging the right block to the right spot
+    hint(true);
+    say(`把積木拖進來，幫${heroName()}${stars ? '先撿星砂，再' : ''}走到${goalName()}身邊`, 0);
+  } else if (r.si === STAGES - 1) say(`最後一站：${ZONES[r.zi].boss.name}${starLine}`, stars ? 2600 : 2000);
   else say(`這站要用 ${r.level?.inv.length ?? 0} 塊積木${starLine}`, stars ? 2400 : 1600);
 }
 
@@ -455,10 +458,12 @@ function finishRun(): void {
 // ---------- hint & reroll ----------
 let solCache: { level: unknown; sols: ReturnType<typeof solve>['sols'] } | null = null;
 
-export function hint(): void {
+/** Shows the next step of a solution. `free` is the first-level demonstration, which costs no hint shell. */
+export function hint(free = false): void {
   const st = getState();
   const r = st.progress.run;
-  if (st.ui.busy || !r?.level || r.shell <= 0) return;
+  if (st.ui.busy || !r?.level || (!free && r.shell <= 0)) return;
+  const cost = free ? 0 : 1;
   const lv = r.level;
   if (solCache?.level !== lv) solCache = { level: lv, sols: solve(lv, 60).sols };
   const sols = solCache.sols;
@@ -483,7 +488,7 @@ export function hint(): void {
   if (wrong.length) {
     const pi = wrong.find((i) => canLift(lv, r.placed, i)) ?? wrong[0];
     mut((s) => {
-      if (s.progress.run) s.progress.run.shell -= 1;
+      if (s.progress.run) s.progress.run.shell -= cost;
       s.ui.hint = { type: 'lift', pi };
     });
     say('先把發亮的這塊拿下來', 2400);
@@ -498,7 +503,7 @@ export function hint(): void {
   mut((s) => {
     const cur = s.progress.run;
     if (!cur) return;
-    cur.shell -= 1;
+    cur.shell -= cost;
     if (k >= 0) cur.orient[k] = p.o;
     s.ui.hint = { type: 'put', p, k };
   });
@@ -552,13 +557,21 @@ export function pull(): void {
   );
 }
 
-export function finishReveal(next: 'keep' | 'again' | 'use'): void {
+/** After a capsule opens: keep the new shisa, or send it out right away as the one that sets out */
+export function finishReveal(next: 'keep' | 'use'): void {
   const id = getState().ui.pulled;
   mut((s) => {
     s.ui.pull = 'idle';
-    s.ui.modal = next === 'use' && id ? { kind: 'role', id } : null;
+    s.ui.modal = null;
   });
-  if (next === 'again') pull();
+  if (next === 'use' && id) chooseRole(id, 0);
+}
+
+/** Back to playing: carry on the unfinished journey, or open the map to pick one */
+export function goPlay(): void {
+  const r = getState().progress.run;
+  if (r && r.phase !== 'done') resumeRun();
+  else goHome();
 }
 
 export function setSeries(id: Series['id']): void {

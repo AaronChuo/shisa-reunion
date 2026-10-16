@@ -3,6 +3,7 @@ import { STAGES, ZONES } from '../content/zones';
 import { makeGrid } from '../engine';
 import { goHome, openAudioSettings } from '../game/actions';
 import { Board } from '../game/Board';
+import { DragDemo } from '../game/DragDemo';
 import { useDragController } from '../game/drag';
 import { Tray } from '../game/Tray';
 import { useGame } from '../state/store';
@@ -90,6 +91,7 @@ export function Play() {
         </div>
         <Tray />
       </div>
+      <DragDemo />
     </section>
   );
 }

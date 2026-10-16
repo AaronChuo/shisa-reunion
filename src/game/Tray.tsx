@@ -4,8 +4,12 @@ import { PieceArt } from '../art/PieceArt';
 import { PIECE_NAMES } from '../content/text';
 import { DEFS, sizeOf } from '../engine';
 import { useGame } from '../state/store';
+import { useIdle } from '../ui/useIdle';
 import { hint, reroll, reset, rotate, selectCard, undo } from './actions';
 import { beginDrag, useDrag } from './drag';
+
+/** Idle time on a stage before the hint button starts asking to be pressed */
+const STUCK_MS = 25_000;
 
 export function Tray() {
   const run = useGame((s) => s.progress.run);
@@ -14,6 +18,8 @@ export function Tray() {
   const busy = useGame((s) => s.ui.busy);
   const drag = useDrag((s) => (s.moved ? s.info : null));
   const listRef = useRef<HTMLDivElement>(null);
+  // Sitting still for a while usually means stuck: the hint shell starts to wiggle
+  const stuck = useIdle(STUCK_MS, run?.level);
   if (!run?.level) return <aside className="tray" />;
   const lv = run.level;
   const used = new Set(run.placed.map((p) => p.k));
@@ -77,7 +83,13 @@ export function Tray() {
           <Icon name="reset" />
           <span>重來</span>
         </button>
-        <button type="button" className="iconBtn" id="hintBtn" onClick={hint} disabled={run.shell <= 0}>
+        <button
+          type="button"
+          className={stuck && !busy && !hintState && run.shell > 0 ? 'iconBtn nudge' : 'iconBtn'}
+          id="hintBtn"
+          onClick={() => hint()}
+          disabled={run.shell <= 0}
+        >
           <ShellIcon />
           <span>
             提示 <b>{run.shell}</b>

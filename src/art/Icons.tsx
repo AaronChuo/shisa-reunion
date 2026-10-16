@@ -64,6 +64,24 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M4 19V5M9 7h6" />
     </>
   ),
+  play: <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />,
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" strokeWidth={3} />,
+  close: <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" strokeWidth={2.8} />,
+  refresh: (
+    <>
+      <path d="M20 12a8 8 0 1 1-2.3-5.7" />
+      <path d="M20 4v5h-5" />
+    </>
+  ),
+  // A capsule machine: the dome full of capsules on top of the coin box
+  gacha: (
+    <>
+      <circle cx="12" cy="9" r="6.5" />
+      <path d="M8.5 9.5a2 2 0 0 1 3 0M12.5 7a2 2 0 0 1 3 0" />
+      <rect x="6" y="14.5" width="12" height="7" rx="2" />
+      <circle cx="12" cy="18" r="1.4" fill="currentColor" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof ICONS;
@@ -72,6 +90,34 @@ export function Icon({ name }: { name: IconName }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" {...STROKE}>
       {ICONS[name]}
+    </svg>
+  );
+}
+
+/** A cartoon finger that taps, pointing at the one button to press; place it inside a positioned parent */
+export function TapHand({ className = 'tapHand' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
+      <path
+        d="M14,26 V8 a4.5,4.5 0 0 1 9,0 V20 l3,-1 a4,4 0 0 1 5,2.5 l3,-0.5 a4,4 0 0 1 4.5,3.5 V33 a11,11 0 0 1 -11,11 h-6 a11,11 0 0 1 -9.5,-5.5 L7,32 a3.6,3.6 0 0 1 5.5,-4.5 Z"
+        fill="#FFFFFF"
+        stroke="#173944"
+        strokeWidth={2.6}
+        strokeLinejoin="round"
+      />
+      <path d="M23,20 V27 M31,21.5 V28" stroke="#173944" strokeWidth={2.2} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** A row of little blocks, one per piece, so the count can be seen without reading the number */
+export function Blocks({ n }: { n: number }) {
+  const colors = ['#F3A83F', '#2D8FD0', '#CD4A31', '#8C56AA'];
+  return (
+    <svg className="blocks" viewBox={`0 0 ${n * 13 - 2} 11`} aria-hidden="true">
+      {Array.from({ length: n }, (_, i) => (
+        <rect key={i} x={i * 13} y={0} width={11} height={11} rx={2.5} fill={colors[i % colors.length]} />
+      ))}
     </svg>
   );
 }

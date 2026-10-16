@@ -22,7 +22,8 @@ export function Dex() {
             {owned.length}/{VARIANTS.length}
           </span>
         </div>
-        <button type="button" className="iconBtn primary" data-go="gacha" onClick={() => go('gacha')}>
+        <button type="button" className="iconBtn" data-go="gacha" onClick={() => go('gacha')}>
+          <Icon name="gacha" />
           <span>扭蛋機</span>
         </button>
       </header>
@@ -30,14 +31,14 @@ export function Dex() {
         <div className="slot">
           <ShisaIcon v={hero} open />
           <div>
-            <small>出發的獅子（張嘴）</small>
+            <small>出發（張嘴）</small>
             <b>{hero.name}</b>
           </div>
         </div>
         <div className="slot">
           <ShisaIcon v={goal} open={false} />
           <div>
-            <small>等待的獅子（閉嘴）</small>
+            <small>等待（閉嘴）</small>
             <b>{goal.name}</b>
           </div>
         </div>
