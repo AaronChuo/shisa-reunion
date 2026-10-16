@@ -74,7 +74,19 @@ export function toggleSound(): void {
   mut((s) => {
     s.progress.sound = !s.progress.sound;
   });
-  if (getState().progress.sound) sfx.place();
+  if (getState().progress.sound) setTimeout(() => sfx.hello(), 60);
+}
+
+export function toggleMusic(): void {
+  mut((s) => {
+    s.progress.music = !s.progress.music;
+  });
+}
+
+export function openAudioSettings(): void {
+  mut((s) => {
+    s.ui.modal = { kind: 'audio' };
+  });
 }
 
 // ---------- runs ----------
@@ -229,7 +241,7 @@ export function rotate(k: number): void {
     r.orient[k] = (r.orient[k] + 1) % n;
     if (s.ui.hint?.type === 'put' && s.ui.hint.k === k) s.ui.hint = null;
   });
-  sfx.lift();
+  sfx.rotate();
 }
 
 export function shake(target: string): void {
@@ -288,13 +300,16 @@ export function place(k: number, t: PieceType, o: number, x: number, y: number, 
     }
   });
   hush();
-  sfx.place();
+  sfx.place(y);
   const after = gridNow();
   if (after.gateOpen && !before.gateOpen) {
     sfx.gate();
     say('石門打開了！', 1500);
   }
-  if (after.water > before.water) say('海水漲上來了！', 1500);
+  if (after.water > before.water) {
+    sfx.tide();
+    say('海水漲上來了！', 1500);
+  }
   checkWin();
 }
 
@@ -401,7 +416,7 @@ export function showBranch(): void {
 }
 
 export function chooseCard(card: CardKey | 'boss'): void {
-  sfx.place();
+  sfx.hello();
   mut((s) => {
     const r = s.progress.run;
     if (!r) return;
@@ -554,5 +569,5 @@ export function chooseRole(id: string, role: 0 | 1): void {
     pair[role] = id;
     s.ui.modal = null;
   });
-  sfx.place();
+  sfx.hello();
 }

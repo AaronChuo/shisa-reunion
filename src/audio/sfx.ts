@@ -1,109 +1,114 @@
 import { useGame } from '../state/store';
+import { audioCtx, duckMusic, pluck, sanba, taiko } from './context';
 
-// Tiny synthesized sound effects. Audio starts only after the first user gesture (browser rule).
-let ac: AudioContext | null = null;
+// Sound effects played on the sanshin, with taiko drum and sanba clappers for accents.
 
-const soundOn = () => useGame.getState().progress.sound;
+/** Ryukyu scale (do mi fa sol ti), climbing as blocks are placed higher */
+const RISE = ['C4', 'E4', 'F4', 'G4', 'B4', 'C5', 'E5'];
 
-const wake = (ctx: AudioContext) => {
-  if (ctx.state !== 'running') ctx.resume().catch(() => {});
-};
-
-/**
- * Creates or wakes the audio context. Only works inside a gesture the browser counts as user activation:
- * on touch screens that is the finger lifting (pointerup / touchend / click), not the finger going down.
- */
-export function ensureAudio(): void {
-  if (!soundOn()) return;
-  try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!ac && Ctx) ac = new Ctx();
-    if (!ac || ac.state === 'running') return;
-    wake(ac);
-    // iOS Safari only unlocks audio once something has actually played inside a gesture
-    const blip = ac.createBufferSource();
-    blip.buffer = ac.createBuffer(1, 1, 22050);
-    blip.connect(ac.destination);
-    blip.start(0);
-  } catch {
-    ac = null;
-  }
+/** Current audio time, or null when sound effects are off or audio isn't running yet */
+function at(): number | null {
+  const ctx = audioCtx();
+  if (ctx?.state !== 'running' || !useGame.getState().progress.sound) return null;
+  return ctx.currentTime + 0.01;
 }
-
-/**
- * Keeps trying to start audio on every gesture until it runs. Stays installed because iOS suspends
- * audio again when the app goes to the background.
- */
-export function installAudioUnlock(): () => void {
-  const events = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const;
-  const handler = () => {
-    if (ac?.state !== 'running') ensureAudio();
-  };
-  for (const e of events) window.addEventListener(e, handler, { capture: true, passive: true });
-  return () => {
-    for (const e of events) window.removeEventListener(e, handler, { capture: true });
-  };
-}
-
-function tone(f: number, d: number, type: OscillatorType = 'triangle', v = 0.12, wait = 0, f2?: number): void {
-  if (!soundOn() || !ac) return;
-  try {
-    wake(ac);
-    const t = ac.currentTime + wait;
-    const o = ac.createOscillator();
-    const g = ac.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(f, t);
-    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(v, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    o.connect(g);
-    g.connect(ac.destination);
-    o.start(t);
-    o.stop(t + d + 0.02);
-  } catch {
-    // audio is optional
-  }
-}
-
-/** Ryukyu scale: do mi fa sol ti do */
-const RYUKYU = [523, 659, 698, 784, 988, 1047];
 
 export const sfx = {
-  place() {
-    tone(392, 0.12, 'triangle', 0.14);
-    tone(587, 0.1, 'sine', 0.07, 0.05);
+  /** A block lands: a pluck that rises with the height it lands at, plus a light wooden knock */
+  place(height = 0) {
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'classic', RISE[Math.min(Math.max(height, 0), RISE.length - 1)], t, 0.3, { vel: 0.9 });
+    sanba('sfx', t, 0.35);
   },
+  /** A block is picked up */
   lift() {
-    tone(700, 0.07, 'sine', 0.08);
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'classic', 'C5', t, 0.12, { vel: 0.55, slide: -2 });
   },
+  /** A stair is turned */
+  rotate() {
+    const t = at();
+    if (t === null) return;
+    sanba('sfx', t, 0.6);
+  },
+  /** Can't go there: the note sags down and the drum gives a soft thud */
   bad() {
-    tone(200, 0.16, 'square', 0.04);
-    tone(150, 0.2, 'square', 0.04, 0.08);
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'classic', 'E4', t, 0.45, { vel: 0.8, bend: -3, bendTime: 0.25 });
+    taiko('sfx', t, 0.35);
   },
+  /** Bouncing off the clam: the note swoops up */
   boing() {
-    tone(220, 0.3, 'sine', 0.13, 0, 660);
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'classic', 'G4', t, 0.45, { vel: 0.9, bend: 5, bendTime: 0.22 });
   },
+  /** Climbing the ladder: three quick steps up */
   climb() {
-    tone(880, 0.05, 'sine', 0.05);
-  },
-  coin() {
-    tone(1319, 0.08, 'square', 0.05);
-    tone(1760, 0.18, 'square', 0.05, 0.07);
-  },
-  gate() {
-    tone(130, 0.4, 'sawtooth', 0.05, 0, 90);
-  },
-  win() {
-    RYUKYU.forEach((f, i) => {
-      tone(f, 0.3, 'triangle', 0.12, i * 0.11);
+    const t = at();
+    if (t === null) return;
+    ['E4', 'F4', 'G4'].forEach((n, i) => {
+      pluck('sfx', 'classic', n, t + i * 0.09, 0.12, { vel: 0.6 });
     });
   },
-  crank() {
-    for (let i = 0; i < 6; i++) tone(300 + i * 40, 0.05, 'square', 0.04, i * 0.12);
+  /** A luck coin: clapper rattle and two bright notes */
+  coin() {
+    const t = at();
+    if (t === null) return;
+    sanba('sfx', t, 0.9, 3);
+    pluck('sfx', 'classic', 'C5', t + 0.02, 0.2, { vel: 0.8 });
+    pluck('sfx', 'classic', 'E5', t + 0.1, 0.3, { vel: 0.9 });
   },
+  /** The stone gate opens: two drum beats under a low note */
+  gate() {
+    const t = at();
+    if (t === null) return;
+    taiko('sfx', t, 0.9);
+    taiko('sfx', t + 0.22, 0.6);
+    pluck('sfx', 'classic', 'C4', t + 0.05, 0.9, { vel: 0.8 });
+  },
+  /** The tide rises: three notes sinking */
+  tide() {
+    const t = at();
+    if (t === null) return;
+    ['G4', 'E4', 'C4'].forEach((n, i) => {
+      pluck('sfx', 'classic', n, t + i * 0.12, 0.2, { vel: 0.55 });
+    });
+  },
+  /** Reunited: a Ryukyu-scale run up to a ringing do, with drum and clappers */
+  win() {
+    const t = at();
+    if (t === null) return;
+    duckMusic(2.4);
+    ['C4', 'E4', 'F4', 'G4', 'B4'].forEach((n, i) => {
+      pluck('sfx', 'classic', n, t + i * 0.085, 0.15, { vel: 0.85 });
+    });
+    pluck('sfx', 'classic', 'C5', t + 0.45, 1.2, { vel: 1, slide: -1 });
+    taiko('sfx', t + 0.45, 0.9);
+    sanba('sfx', t + 0.45, 1, 3);
+    taiko('sfx', t + 0.9, 0.6);
+  },
+  /** The gacha crank turns */
+  crank() {
+    const t = at();
+    if (t === null) return;
+    for (let i = 0; i < 6; i++) sanba('sfx', t + i * 0.12, 0.7);
+  },
+  /** A capsule pops out or opens */
   pop() {
-    tone(500, 0.15, 'sine', 0.12, 0, 1200);
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'classic', 'C5', t, 0.25, { vel: 0.8, bend: 7, bendTime: 0.1 });
+    sanba('sfx', t, 0.5);
+  },
+  /** Confirms the sound switch */
+  hello() {
+    const t = at();
+    if (t === null) return;
+    pluck('sfx', 'classic', 'G4', t, 0.2, { vel: 0.7 });
+    pluck('sfx', 'classic', 'C5', t + 0.1, 0.3, { vel: 0.8 });
   },
 };

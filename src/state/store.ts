@@ -33,7 +33,10 @@ export interface Progress {
   pair: [string, string];
   unlocked: number;
   clears: number[];
+  /** Sound effects on/off */
   sound: boolean;
+  /** Background music on/off */
+  music: boolean;
   seen: string[];
   run: Run | null;
 }
@@ -48,7 +51,8 @@ export type Modal =
   | { kind: 'done'; zi: number; earned: number; unlocked: number | null }
   | { kind: 'confirmRun'; zi: number }
   | { kind: 'reveal'; id: string; series: Series['id'] }
-  | { kind: 'role'; id: string };
+  | { kind: 'role'; id: string }
+  | { kind: 'audio' };
 
 export type Hint = { type: 'lift'; pi: number } | { type: 'put'; p: Placement; k: number };
 
@@ -85,6 +89,7 @@ export const freshProgress = (): Progress => ({
   unlocked: 0,
   clears: ZONES.map(() => 0),
   sound: true,
+  music: true,
   seen: [],
   run: null,
 });
@@ -123,6 +128,7 @@ export function normalizeProgress(raw: unknown): Progress {
     unlocked: typeof p.unlocked === 'number' ? Math.max(0, Math.min(ZONES.length - 1, p.unlocked)) : 0,
     clears: ZONES.map((_, i) => (Array.isArray(p.clears) && typeof p.clears[i] === 'number' ? p.clears[i] : 0)),
     sound: typeof p.sound === 'boolean' ? p.sound : true,
+    music: typeof p.music === 'boolean' ? p.music : true,
     seen: Array.isArray(p.seen) ? p.seen.filter((s) => typeof s === 'string') : [],
     run: p.run && typeof p.run === 'object' && typeof p.run.zi === 'number' ? (p.run as Run) : null,
   };

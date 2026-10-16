@@ -675,6 +675,49 @@ h1 {
   width: 18px;
   height: 18px;
 }
+.switches {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 2px solid var(--line);
+  background: var(--bg);
+  cursor: pointer;
+  text-align: left;
+}
+.switchText {
+  display: grid;
+}
+.switchText b {
+  font-size: 19px;
+}
+.switchText small {
+  color: var(--muted);
+  font-size: 14px;
+}
+.knob {
+  flex: none;
+  min-width: 52px;
+  padding: 6px 0;
+  border-radius: 999px;
+  background: #b9c4c2;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+}
+.switch.on .knob {
+  background: var(--accent);
+}
+.sheet p.small {
+  font-size: 14px;
+}
 .wave {
   width: 120px;
   height: 40px;

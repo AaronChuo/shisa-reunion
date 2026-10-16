@@ -1,3 +1,4 @@
+import type { SongId } from '../audio/songs';
 import type { GenConfig, Move, PieceType } from '../engine';
 
 export type CardKey = 'calm' | 'easy' | 'hard' | 'urchin' | 'tide' | 'gate' | 'ladder' | 'spring' | 'long';
@@ -36,6 +37,8 @@ export interface Zone {
   /** Base piece count for stages 1–4 */
   ks: [number, number, number, number];
   cards: CardKey[];
+  /** Background music for this zone's journey */
+  bgm: SongId;
   boss: { name: string; k: number; must?: PieceType[]; need?: Move; urchin?: number; tide?: boolean; gate?: boolean; maxSols: number };
 }
 
@@ -56,6 +59,7 @@ export const ZONES: Zone[] = [
     pool: { stair: 3, cube: 2, tower: 1 },
     ks: [1, 1, 2, 2],
     cards: ['calm', 'urchin', 'hard', 'easy'],
+    bgm: 'tensagu',
     boss: { name: '港口燈塔', k: 2, urchin: 1, maxSols: 2 },
   },
   {
@@ -70,6 +74,7 @@ export const ZONES: Zone[] = [
     first: { must: ['ladder'], need: 'climb' },
     ks: [2, 2, 2, 3],
     cards: ['calm', 'urchin', 'ladder', 'hard', 'easy'],
+    bgm: 'tanchame',
     boss: { name: '殘波岬', k: 3, must: ['ladder'], need: 'climb', urchin: 1, maxSols: 3 },
   },
   {
@@ -84,6 +89,7 @@ export const ZONES: Zone[] = [
     first: { must: ['spring'], need: 'jump' },
     ks: [2, 3, 3, 3],
     cards: ['calm', 'urchin', 'tide', 'spring', 'long', 'hard'],
+    bgm: 'asadoya',
     boss: { name: '大浪灘', k: 3, must: ['spring'], need: 'jump', tide: true, maxSols: 3 },
   },
   {
@@ -98,6 +104,7 @@ export const ZONES: Zone[] = [
     first: { gate: true },
     ks: [3, 3, 3, 3],
     cards: ['urchin', 'tide', 'gate', 'ladder', 'spring', 'hard'],
+    bgm: 'akata',
     boss: { name: '守禮之門', k: 3, gate: true, urchin: 1, maxSols: 2 },
   },
 ];

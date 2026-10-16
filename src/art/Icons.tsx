@@ -45,6 +45,13 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   next: <path d="M5 12h14M13 6l6 6-6 6" />,
+  music: (
+    <>
+      <path d="M9 18V5l11-2v13" />
+      <circle cx="6.5" cy="18" r="2.5" />
+      <circle cx="17.5" cy="16" r="2.5" />
+    </>
+  ),
   lock: (
     <>
       <rect x="5" y="11" width="14" height="10" rx="2" />

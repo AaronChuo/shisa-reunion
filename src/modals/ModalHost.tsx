@@ -2,11 +2,12 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { CardIcon, CoinIcon, ConchIcon, Icon, ShellIcon, Stamp } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
+import { currentSongName } from '../audio/music';
 import { SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
 import { CARDS, stageCfg, ZONES } from '../content/zones';
 import { sizeOf } from '../engine';
-import { ackIntro, afterWin, chooseCard, chooseRole, closeModal, finishReveal, go, goHome, startRun } from '../game/actions';
+import { ackIntro, afterWin, chooseCard, chooseRole, closeModal, finishReveal, go, goHome, startRun, toggleMusic, toggleSound } from '../game/actions';
 import { type Modal, useGame } from '../state/store';
 
 function Sheet({ children, wide, label }: { children: ReactNode; wide?: boolean; label: string }) {
@@ -251,6 +252,41 @@ function Role({ id }: { id: string }) {
   );
 }
 
+function Switch({ id, on, label, detail, onToggle }: { id: string; on: boolean; label: string; detail: string; onToggle: () => void }) {
+  return (
+    <button type="button" className={on ? 'switch on' : 'switch'} id={id} role="switch" aria-checked={on} onClick={onToggle}>
+      <span className="switchText">
+        <b>{label}</b>
+        <small>{detail}</small>
+      </span>
+      <span className="knob" aria-hidden="true">
+        {on ? '開' : '關'}
+      </span>
+    </button>
+  );
+}
+
+function AudioSettings() {
+  const sound = useGame((s) => s.progress.sound);
+  const music = useGame((s) => s.progress.music);
+  const song = currentSongName();
+  return (
+    <Sheet label="聲音設定">
+      <h2>聲音</h2>
+      <div className="switches">
+        <Switch id="sfxSwitch" on={sound} label="音效" detail="三線、太鼓、三板" onToggle={toggleSound} />
+        <Switch id="musicSwitch" on={music} label="背景音樂" detail={song ? `現在播放：${song}` : '三線彈的沖繩民謠'} onToggle={toggleMusic} />
+      </div>
+      <p className="small">iPhone、iPad 開著靜音模式時，網頁不會發出聲音。</p>
+      <div className="btns">
+        <button type="button" className="iconBtn primary big" data-focus onClick={closeModal}>
+          好了
+        </button>
+      </div>
+    </Sheet>
+  );
+}
+
 function Loading() {
   return (
     <Sheet label="準備關卡">
@@ -290,6 +326,9 @@ export function ModalHost() {
       break;
     case 'role':
       body = <Role id={m.id} />;
+      break;
+    case 'audio':
+      body = <AudioSettings />;
       break;
   }
   return (

@@ -1,7 +1,7 @@
 import { CardIcon, CoinIcon, Icon } from '../art/Icons';
 import { STAGES, ZONES } from '../content/zones';
 import { makeGrid } from '../engine';
-import { goHome, toggleSound } from '../game/actions';
+import { goHome, openAudioSettings } from '../game/actions';
 import { Board } from '../game/Board';
 import { useDragController } from '../game/drag';
 import { Tray } from '../game/Tray';
@@ -56,7 +56,7 @@ export function Play() {
   useDragController();
   const run = useGame((s) => s.progress.run);
   const tokens = useGame((s) => s.progress.tokens);
-  const sound = useGame((s) => s.progress.sound);
+  const audible = useGame((s) => s.progress.sound || s.progress.music);
   const busy = useGame((s) => s.ui.busy);
   if (!run) return <section id="play" className="screen" />;
   return (
@@ -78,8 +78,8 @@ export function Play() {
           <CoinIcon />
           <b className="num">{tokens}</b>
         </span>
-        <button type="button" className="iconBtn" aria-label="聲音開關" aria-pressed={sound} onClick={toggleSound}>
-          <Icon name={sound ? 'soundOn' : 'soundOff'} />
+        <button type="button" className="iconBtn" id="audioBtn" aria-label="聲音設定" onClick={openAudioSettings}>
+          <Icon name={audible ? 'soundOn' : 'soundOff'} />
         </button>
       </header>
       <Chips />

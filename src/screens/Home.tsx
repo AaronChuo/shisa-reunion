@@ -2,7 +2,7 @@ import { CoinIcon, Icon, Stamp } from '../art/Icons';
 import { ShisaArt } from '../art/Shisa';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { STAGES, ZONES } from '../content/zones';
-import { go, requestRun, resumeRun, toggleSound } from '../game/actions';
+import { go, openAudioSettings, requestRun, resumeRun } from '../game/actions';
 import { useGame } from '../state/store';
 import { UpdatePrompt } from '../ui/UpdatePrompt';
 
@@ -177,8 +177,8 @@ export function Home() {
             <Icon name="book" />
             <span>圖鑑</span>
           </button>
-          <button type="button" className="iconBtn" aria-label="聲音開關" aria-pressed={p.sound} onClick={toggleSound}>
-            <Icon name={p.sound ? 'soundOn' : 'soundOff'} />
+          <button type="button" className="iconBtn" id="audioBtn" aria-label="聲音設定" onClick={openAudioSettings}>
+            <Icon name={p.sound || p.music ? 'soundOn' : 'soundOff'} />
           </button>
         </div>
       </header>
