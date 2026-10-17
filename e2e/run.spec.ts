@@ -2,7 +2,7 @@ import { expect, test as it } from './fixtures';
 import { dismissIntros, progress, solveByDragging, waitForLevel } from './helpers';
 
 it.describe('a full journey', () => {
-  it('clears all five stops of Naha port by dragging blocks, then pulls a new shisa', async ({ page }) => {
+  it('clears all five stops of Naha by dragging blocks, then pulls a new shisa', async ({ page }) => {
     await page.goto('/');
     await page.click('.zone [data-zone="0"]');
     for (let si = 0; si < 5; si++) {

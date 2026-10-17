@@ -390,6 +390,40 @@ function Hat({ v }: { v: Variant }) {
           <path d="M11,-92 c-3,-4 -9,0 -6,4 c2,2 6,1 5,-2" stroke="#A97E3E" strokeWidth={1.6} fill="none" />
         </>
       );
+    case 'hermit':
+      // The shell itself sits behind the body (see BackHat); up front, a pair of raised claws
+      return [-1, 1].map((k) => (
+        <g key={k} transform={`translate(${k * 22},-12) scale(${k * 1.25},1.25)`}>
+          <path d="M0,0 c8,-2 12,-10 8,-16 l-3,5 l-4,-4 c-1,6 -4,10 -9,12 Z" fill={v.face} stroke={v.dark} strokeWidth={1.8} strokeLinejoin="round" />
+        </g>
+      ));
+    case 'tugrope': {
+      // The giant straw rope of the Naha tug-of-war, held across the belly
+      // A point on the quadratic curve M-40,-20 Q0,-30 40,-18
+      const pt = (t: number) => [f1(-40 + 80 * t), f1(-20 * (1 - t) ** 2 - 60 * t * (1 - t) - 18 * t * t)];
+      return (
+        <>
+          <path d="M-40,-20 Q0,-30 40,-18" stroke="#8C6B3A" strokeWidth={12} fill="none" strokeLinecap="round" />
+          <path d="M-40,-20 Q0,-30 40,-18" stroke="#E2C98C" strokeWidth={8} fill="none" strokeLinecap="round" />
+          {Array.from({ length: 11 }, (_, i) => {
+            const [x, y] = pt(0.04 + i * 0.092);
+            return <path key={i} d={`M${x - 3},${y + 3.5} l6,-7`} stroke="#8C6B3A" strokeWidth={2} strokeLinecap="round" />;
+          })}
+          {[-1, 1].map((k) => (
+            <g key={k}>
+              <path
+                d={`M${k * 42},${k < 0 ? -20 : -18} l${k * 7},-5 m${-k * 7},5 l${k * 8},0 m${-k * 8},0 l${k * 7},5`}
+                stroke="#B09050"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+              />
+              <ellipse cx={k * 15} cy={-27} rx={7} ry={6} fill={v.face} stroke={v.dark} strokeWidth={2.2} />
+              <path d={`M${k * 15 - 2.5},-23 v-3 M${k * 15 + 2.5},-23 v-3`} stroke={v.dark} strokeWidth={1.6} strokeLinecap="round" />
+            </g>
+          ))}
+        </>
+      );
+    }
     case 'pearl':
       return (
         <>
@@ -464,6 +498,25 @@ function Hat({ v }: { v: Variant }) {
   }
 }
 
+/** Things a shisa carries on its back, drawn before the body so they peek out from behind it */
+function BackHat({ v }: { v: Variant }) {
+  if (v.hat !== 'hermit') return null;
+  return (
+    <g transform="translate(-32,-35) rotate(-50) scale(.66)">
+      <path d="M-24,8 C-30,-12 -12,-30 8,-27 C26,-24 32,-6 25,9 C18,23 -17,25 -24,8 Z" fill="#F2D7A6" stroke="#A97E3E" strokeWidth={2.5} />
+      <path d="M8,-27 L14,-40 L19,-23 Z" fill="#E8C690" stroke="#A97E3E" strokeWidth={2.2} strokeLinejoin="round" />
+      <path
+        d="M13,-7 c-5,-10 -21,-8 -21,5 c0,11 15,13 21,5 c4,-6 -2,-12 -9,-9 c-4,2 -3,7 1,7"
+        stroke="#A97E3E"
+        strokeWidth={2.2}
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path d="M-20,-8 q4,2 8,0 M-18,15 q4,-2 8,1 M18,14 q-3,-3 -7,-1" stroke="#D9A866" strokeWidth={2} fill="none" strokeLinecap="round" />
+    </g>
+  );
+}
+
 /**
  * A shisa standing with its feet at (0, 0), about 90 units tall.
  * open = the one that sets out (阿, open mouth); closed = the one waiting (吽).
@@ -479,6 +532,7 @@ export function ShisaArt({ v, open, sil = false }: { v: Variant; open: boolean; 
   return (
     <g transform="scale(.9)">
       <ellipse cx={0} cy={-2} rx={30} ry={6} fill="rgba(0,0,0,.16)" />
+      {!sil && <BackHat v={v} />}
       <path d="M17,-22 q24,-4 18,-27 q-4,-10 -13,-4" fill="none" stroke={manes[0]} strokeWidth={7} strokeLinecap="round" />
       <path d={BODY} fill={body} stroke={dark} strokeWidth={3} />
       {hasPattern && (

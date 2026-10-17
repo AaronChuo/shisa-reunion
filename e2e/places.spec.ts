@@ -23,7 +23,7 @@ it.describe('place postcards', () => {
   it('opens a postcard from a map pin, with a button that sets off for that place', async ({ page }) => {
     await open(page);
     await page.click('.islandWrap [data-zone="0"]');
-    await expect(page.locator('#modal[data-kind="place"] h2')).toHaveText('那霸港');
+    await expect(page.locator('#modal[data-kind="place"] h2')).toHaveText('那霸市');
     await page.click('#modal [data-go-place]');
     await expect.poll(async () => (await progress(page)).run?.zone).toBe('naha');
   });

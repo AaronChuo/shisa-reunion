@@ -21,7 +21,7 @@ export const PLACES: Record<PlaceId, Place> = {
   },
   naha: {
     id: 'naha',
-    name: '那霸港',
+    name: '那霸市',
     sights: ['國際通', '大船和飛機', '坐船去小島'],
     story:
       '那霸是沖繩最大的城市，飛機和大船都從這裡進出。熱鬧的國際通大約有一英里長，兩旁都是賣紅芋塔、西薩和三線的小店。從那霸的港口坐船，就能去附近美麗的小島。',

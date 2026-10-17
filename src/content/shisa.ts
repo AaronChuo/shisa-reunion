@@ -33,7 +33,23 @@ export type Pattern =
   | 'gold'
   | 'plaid'
   | 'kasuri';
-export type Hat = 'starfish' | 'leaf' | 'bean' | 'band' | 'crown' | 'rope' | 'shell' | 'pearl' | 'leaves' | 'flag' | 'hanagasa' | 'ears' | 'claws' | 'spout';
+export type Hat =
+  | 'starfish'
+  | 'leaf'
+  | 'bean'
+  | 'band'
+  | 'crown'
+  | 'rope'
+  | 'shell'
+  | 'hermit'
+  | 'pearl'
+  | 'leaves'
+  | 'flag'
+  | 'hanagasa'
+  | 'ears'
+  | 'claws'
+  | 'spout'
+  | 'tugrope';
 
 export interface Series {
   id: 'trad' | 'sea' | 'food' | 'fest' | 'animal' | 'craft';
@@ -126,9 +142,9 @@ export const VARIANTS: Variant[] = [
   }),
   v('kuro', '黑釉西薩', 'trad', '#3B3A44', '#5C5B68', '#24232B', '#121216', {
     note: '黑得發亮，很威風',
-    story: '沖繩人相信壞東西會從外面跑進來，所以西薩總是面向外面，盯著村子的入口或是對面的路口。一看到壞東西，就張大嘴巴把牠嚇跑。',
+    story: '黑釉是加了很多鐵的釉料，燒好會變成亮亮的黑色。沖繩人相信壞東西會從外面跑進來，所以西薩總是面向外面，一看到壞東西，就張大嘴巴把牠嚇跑。',
   }),
-  v('gold', '金西薩', 'trad', '#E8B83A', '#F6D26B', '#B7871C', '#6E4E0A', {
+  v('gold', '黃金西薩', 'trad', '#E8B83A', '#F6D26B', '#B7871C', '#6E4E0A', {
     rare: true,
     sparkle: true,
     note: '傳說中會帶來好運',
@@ -202,7 +218,7 @@ export const VARIANTS: Variant[] = [
     story: '小丑魚住在海葵裡面。海葵的觸手會刺別的魚，卻不會刺小丑魚，所以海葵就像牠的家，保護牠不被大魚吃掉。',
   }),
   v('yadokari', '寄居蟹西薩', 'sea', '#E36A4E', '#F4977E', '#B3432B', '#5E1E10', {
-    hat: 'shell',
+    hat: 'hermit',
     note: '背著貝殼房子',
     story: '寄居蟹會借貝殼當房子，長大了就換一個更大的殼。沖繩海邊的陸寄居蟹是受保護的天然紀念物，看到牠們，看看就好，不要帶回家喔。',
   }),
@@ -240,7 +256,7 @@ export const VARIANTS: Variant[] = [
     note: '黑糖塊亮晶晶',
     story: '把甘蔗榨出來的汁慢慢煮、一直攪拌，就會變成黑糖。沖繩的波照間島、多良間島這些小島，都有自己做黑糖的工廠。',
   }),
-  v('zenzai', '刨冰西薩', 'food', '#DDF1FA', '#FFFFFF', ['#FF8FB1', '#7CC8F2', '#FFD34E'], '#4B6B80', {
+  v('zenzai', '善哉西薩', 'food', '#DDF1FA', '#FFFFFF', ['#FF8FB1', '#7CC8F2', '#FFD34E'], '#4B6B80', {
     hat: 'bean',
     rare: true,
     sparkle: true,
@@ -296,7 +312,7 @@ export const VARIANTS: Variant[] = [
     note: '夏天祭典的煙火',
     story: '沖繩的夏天有很多祭典，晚上常常會在海邊放煙火。大大的煙火在海上一朵朵開出來，倒映在海面上，好像開了兩次花一樣。',
   }),
-  v('king', '琉球王西薩', 'fest', '#C23A2B', '#E06A55', '#E8B83A', '#5A140D', {
+  v('king', '琉球王國西薩', 'fest', '#C23A2B', '#E06A55', '#E8B83A', '#5A140D', {
     hat: 'crown',
     rare: true,
     sparkle: true,
@@ -310,6 +326,7 @@ export const VARIANTS: Variant[] = [
   }),
   v('tsunahiki', '大綱挽西薩', 'fest', '#D9C089', '#EEDCAE', '#B09050', '#5E4A1E', {
     pattern: 'rope',
+    hat: 'tugrope',
     note: '大家一起拉',
     story: '那霸大綱挽的大繩子有200公尺長、大約40噸重，1995年被金氏世界紀錄認證為世界最大的稻草繩。成千上萬的人一起拉，非常壯觀。',
   }),
@@ -386,12 +403,12 @@ export const VARIANTS: Variant[] = [
     note: '王族穿的布',
     story: '首里織是從前在首里城附近織的布，主要給王族和士族穿。織布的人用不同顏色的線，織出格子和小花紋，每一匹都要花很多工夫。',
   }),
-  v('glass', '琉球玻璃西薩', 'craft', '#6EC3D9', '#B4E6F0', ['#3FA7C9', '#6ED3B8', '#F2C43A'], '#1E6E88', {
+  v('glass', '琉璃西薩', 'craft', '#6EC3D9', '#B4E6F0', ['#3FA7C9', '#6ED3B8', '#F2C43A'], '#1E6E88', {
     pattern: 'bubbles',
     rare: true,
     sparkle: true,
     note: '藏著小氣泡',
-    story: '戰爭結束後，沖繩的人把美軍喝完的汽水和啤酒瓶收集起來，熔化以後重新吹成杯子和碗。玻璃裡面的小氣泡，就是琉球玻璃的特色。',
+    story: '戰爭結束後，沖繩的人把美軍喝完的汽水和啤酒瓶收集起來，熔化以後重新吹成杯子和碗。這種彩色玻璃從前也叫「琉璃」，裡面的小氣泡就是它的特色。',
   }),
 ];
 

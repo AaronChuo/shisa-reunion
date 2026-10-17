@@ -51,17 +51,17 @@ const ALL: Partial<Record<PieceType, number>> = { stair: 3, cube: 2, tower: 1, b
 export const ZONES: Zone[] = [
   {
     id: 'naha',
-    name: '那霸港',
+    name: '那霸市',
     tag: '入門',
     stars: 1,
     color: '#3FA36B',
     w: 6,
-    line: '港口邊的石階，先熱熱身',
+    line: '熱鬧的國際通和海港，先熱熱身',
     pool: { stair: 3, cube: 2, tower: 1 },
     ks: [1, 1, 2, 2],
     cards: ['calm', 'urchin', 'hard', 'easy'],
     bgm: 'tensagu',
-    boss: { name: '港口燈塔', k: 2, urchin: 1, maxSols: 2 },
+    boss: { name: '國際通', k: 2, urchin: 1, maxSols: 2 },
   },
   {
     id: 'yomitan',
