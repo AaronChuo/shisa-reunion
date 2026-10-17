@@ -2,7 +2,7 @@
 
 幫西薩用積木搭一條路回到同伴身邊的益智遊戲。積木有重力、重心沒撐住就會倒，每一站的關卡都當場隨機產生。過關拿福氣幣，拿去扭蛋機收集 50 隻不同造型的西薩，每一隻都附一段可以念給孩子聽的沖繩小故事。
 
-- **玩法**：七個難度分區（那霸港 → 讀谷村 → 美麗海 → 古宇利島 → 竹富島 → 西表島 → 首里城），每趟旅程五站，中間可以選岔路
+- **玩法**：七個難度分區（那霸市 → 讀谷村 → 美麗海 → 古宇利島 → 竹富島 → 西表島 → 首里城），每趟旅程五站，中間可以選岔路
 - **積木與機關**：玻璃石階、赤瓦塔、紅芋拱門、竹梯、跳跳貝、石拱橋、溜滑梯、藤蔓；海膽、漲潮、石門壓板、星砂
 - **地方明信片**：沖繩和每個地區都有一張插畫明信片，介紹當地的風景、文化和典故，去過就收進圖鑑
 - **開場故事**：第一次打開時，用一本會動、會說話的小繪本認識主角西薩（シーサー，沖繩話的「獅子」）
@@ -41,7 +41,7 @@ pnpm build        # 產出 dist/（含 service worker）
 - 玩法靈感來自 SmartGames 的實體桌遊 Camelot Jr.（Raf Peeters 設計）。本作的美術、角色、關卡與文字皆為原創，與 SmartGames 無關
 - 明信片照片（皆來自 Wikimedia Commons，公眾領域或 CC BY）：
   - 沖繩：[2013-07-23 Shisa on roof at Taketomijima.jpg](https://commons.wikimedia.org/wiki/File:2013-07-23_Shisa_on_roof_at_Taketomijima.jpg)，ajari，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
-  - 那霸港：[Naha Tomari Port15n4592.jpg](https://commons.wikimedia.org/wiki/File:Naha_Tomari_Port15n4592.jpg)，663highland，[CC BY 2.5](https://creativecommons.org/licenses/by/2.5)，經裁切縮小
+  - 那霸市：[Naha Tomari Port15n4592.jpg](https://commons.wikimedia.org/wiki/File:Naha_Tomari_Port15n4592.jpg)，663highland，[CC BY 2.5](https://creativecommons.org/licenses/by/2.5)，經裁切縮小
   - 讀谷村：[An awesome sunset at Cape Zanpa.jpg](https://commons.wikimedia.org/wiki/File:An_awesome_sunset_at_Cape_Zanpa.jpg)，Daniel Ramirez，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
   - 美麗海：[Churaumi Aquarium main tank 'Kuroshio Sea'.jpg](https://commons.wikimedia.org/wiki/File:Churaumi_Aquarium_main_tank_%27Kuroshio_Sea%27.jpg)，Megapixie，Public domain，經裁切縮小
   - 古宇利島：[Kouri Bridge (15130568259).jpg](https://commons.wikimedia.org/wiki/File:Kouri_Bridge_(15130568259).jpg)，Takuya ASADA，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
