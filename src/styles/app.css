@@ -373,7 +373,8 @@ h1 {
   border-radius: 24px;
   overflow: hidden;
 }
-.islandWrap svg {
+/* Only the map picture itself; icons inside buttons over the map keep their own size */
+.islandWrap > svg {
   display: block;
   width: 100%;
   height: auto;

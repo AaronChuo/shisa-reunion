@@ -36,6 +36,22 @@ it.describe('place postcards', () => {
     expect((await progress(page)).seen).not.toContain('place:shuri');
   });
 
+  it('keeps every map pin tappable, nothing laid over them', async ({ page }) => {
+    await open(page, { open: ['naha', 'yomitan', 'motobu', 'kouri', 'taketomi', 'iriomote', 'shuri'] });
+    const covered = await page.evaluate(() =>
+      [...document.querySelectorAll<SVGGElement>('.islandWrap [data-zone]')]
+        .filter((g) => {
+          const r = g.querySelector('circle')?.getBoundingClientRect();
+          if (!r) return true;
+          return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('[data-zone]') !== g;
+        })
+        .map((g) => g.dataset.zone),
+    );
+    expect(covered).toEqual([]);
+    const btn = await page.locator('#okinawaBtn').boundingBox();
+    expect(btn?.height).toBeLessThan(70);
+  });
+
   it('has a postcard for Okinawa itself and collects postcards in the collection', async ({ page }) => {
     await open(page);
     await page.click('#okinawaBtn');
