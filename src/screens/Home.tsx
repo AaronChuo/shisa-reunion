@@ -78,30 +78,30 @@ const ISLAND: [number, number][] = [
   [114, 506],
   [110, 526],
 ];
-// Yaeyama islands, far to the south-west, drawn in an inset in the open sea at the top left
+// Yaeyama islands, about 400 km south-west of Naha, drawn in an inset in the sea at the bottom left (their real direction)
 const IRIOMOTE: [number, number][] = [
-  [62, 86],
-  [70, 72],
-  [86, 66],
-  [104, 68],
-  [120, 76],
-  [126, 92],
-  [118, 108],
-  [100, 116],
-  [80, 114],
-  [66, 104],
+  [66, 598],
+  [74, 584],
+  [90, 578],
+  [108, 580],
+  [124, 588],
+  [130, 604],
+  [122, 620],
+  [104, 628],
+  [84, 626],
+  [70, 616],
 ];
 const ISHIGAKI: [number, number][] = [
-  [178, 96],
-  [186, 82],
-  [196, 72],
-  [204, 54],
-  [211, 46],
-  [214, 56],
-  [208, 70],
-  [206, 86],
-  [198, 102],
-  [186, 106],
+  [188, 624],
+  [196, 610],
+  [206, 600],
+  [214, 582],
+  [221, 574],
+  [224, 584],
+  [218, 598],
+  [216, 614],
+  [208, 630],
+  [196, 634],
 ];
 
 type Side = 'L' | 'R' | 'B';
@@ -111,14 +111,14 @@ const PINS: [number, number, Side][] = [
   [186, 384, 'L'],
   [190, 232, 'L'],
   [206, 170, 'L'],
-  [160, 100, 'B'],
-  [94, 90, 'B'],
+  [166, 604, 'B'],
+  [98, 600, 'B'],
   [176, 462, 'R'],
 ];
 const ISLAND_PATH = smooth(ISLAND);
 const P = (i: number) => `${PINS[i][0]},${PINS[i][1]}`;
-// Up the main island to Kouri, a ferry to Yaeyama, and the long way back to Shuri for the finale
-const ROUTE = `M${P(0)} Q150,430 ${P(1)} Q160,300 ${P(2)} Q178,200 ${P(3)} Q206,128 ${P(4)} Q128,124 ${P(5)} Q52,330 ${P(6)}`;
+// Up the main island to Kouri, down the west sea to Yaeyama, and a ferry back round the southern tip to Shuri
+const ROUTE = `M${P(0)} Q150,430 ${P(1)} Q160,300 ${P(2)} Q178,200 ${P(3)} Q60,330 70,520 Q80,600 ${P(4)} Q132,640 ${P(5)} Q180,560 ${P(6)}`;
 
 /** Where "go" takes a child: the unfinished journey, else the first open zone not yet finished, else the furthest one */
 export function nextZone(p: Progress): number {
@@ -132,9 +132,9 @@ function IslandMap({ here }: { here: number }) {
   const clears = useGame((s) => s.progress.clears);
   const font = 'GenSen Rounded TW, PingFang TC, sans-serif';
   return (
-    <svg viewBox="40 0 340 560" role="img" aria-label="沖繩地圖">
-      <rect x={40} y={0} width={340} height={560} fill="#BFE6EE" />
-      {[40, 110, 180, 250, 320, 390, 460, 530].map((y) => (
+    <svg viewBox="40 0 340 660" role="img" aria-label="沖繩地圖">
+      <rect x={40} y={0} width={340} height={660} fill="#BFE6EE" />
+      {[40, 110, 180, 250, 320, 390, 460, 530, 600].map((y) => (
         <path key={y} d={`M${50 + (y % 140)},${y} q10,-6 20,0 t20,0`} stroke="#E6F7FA" strokeWidth={3} fill="none" strokeLinecap="round" />
       ))}
       <path d={ISLAND_PATH} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={10} strokeLinejoin="round" />
@@ -142,15 +142,15 @@ function IslandMap({ here }: { here: number }) {
       <path d="M210,176 L214,194" stroke="#8C7F6B" strokeWidth={3} strokeLinecap="round" />
       <ellipse cx={206} cy={170} rx={11} ry={7.5} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={4} />
       <g>
-        <rect x={48} y={12} width={174} height={144} rx={14} fill="#CBEEF3" stroke="#8FC9D3" strokeWidth={2.5} strokeDasharray="6 6" />
-        <text x={60} y={34} fontSize={12} fontWeight={700} fill="#3F7480" fontFamily={font}>
-          八重山（在很南邊）
+        <rect x={48} y={552} width={226} height={102} rx={14} fill="#CBEEF3" stroke="#8FC9D3" strokeWidth={2.5} strokeDasharray="6 6" />
+        <text x={58} y={571} fontSize={12} fontWeight={700} fill="#3F7480" fontFamily={font}>
+          八重山（本島西南方約 400 公里）
         </text>
         {[IRIOMOTE, ISHIGAKI].map((pts) => (
           <path key={pts[0][0]} d={smooth(pts)} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke" />
         ))}
-        <circle cx={160} cy={104} r={7} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={3} />
-        <text x={198} y={124} textAnchor="middle" fontSize={11} fill="#5E7F86" fontFamily={font}>
+        <circle cx={166} cy={608} r={7} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={3} />
+        <text x={228} y={610} fontSize={11} fill="#5E7F86" fontFamily={font}>
           石垣島
         </text>
       </g>
@@ -192,7 +192,7 @@ function IslandMap({ here }: { here: number }) {
           </g>
         );
       })}
-      <g transform="translate(330,500)">
+      <g transform="translate(80,60)">
         <circle r={20} fill="#fff" opacity={0.7} />
         <path d="M0,-15 L5,0 L0,15 L-5,0 Z" fill="#C8452F" />
         <text y={-22} textAnchor="middle" fontSize={12} fontWeight={700} fill="#173944" fontFamily="Fredoka, sans-serif">
