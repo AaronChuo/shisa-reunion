@@ -56,9 +56,17 @@ it.describe('place postcards', () => {
     await open(page);
     await page.click('#okinawaBtn');
     await expect(page.locator('#modal')).toContainText('琉球王國');
+    // A real photo, with its author and licence credited under it
+    await expect.poll(() => page.locator('#modal img.postcardArt').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    await expect(page.locator('#modal .photoCredit')).toContainText('CC BY');
     await page.click('#modal [data-ok]');
     await page.click('[data-go="dex"]');
     await expect(page.locator('.pcTile:not(.locked)')).toHaveCount(1);
     await expect(page.locator('.pcTile.locked')).toHaveCount(7);
+    // Thumbnails keep the postcard's shape
+    const tile = await page.locator('.pcTile[data-place="okinawa"] img').boundingBox();
+    expect(tile && tile.width / tile.height).toBeCloseTo(5 / 3, 1);
+    await page.click('#creditsBtn');
+    await expect(page.locator('#modal .creditList li')).toHaveCount(8);
   });
 });

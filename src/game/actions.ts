@@ -620,6 +620,12 @@ export function openPlace(id: PlaceId, start: number | null): void {
   });
 }
 
+export function openCredits(): void {
+  mut((s) => {
+    s.ui.modal = { kind: 'credits' };
+  });
+}
+
 /** Done reading: on arrival, carry on into the stage's new-block cards; otherwise just close */
 export function ackPlace(): void {
   const st = getState();

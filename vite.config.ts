@@ -31,8 +31,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precache the whole game (code, worker, fonts, icons) so it runs with no network at all
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],
+        // Precache the whole game (code, worker, fonts, icons, postcard photos) so it runs with no network at all
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,webmanifest}'],
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
       },

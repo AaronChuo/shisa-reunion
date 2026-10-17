@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "fonts": "node scripts/subset-font.mjs",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "photos": "node scripts/photos.mjs"
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
@@ -32,6 +33,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "sharp": "^0.35.5",
     "subset-font": "^2.9.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",

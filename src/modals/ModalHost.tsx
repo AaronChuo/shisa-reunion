@@ -4,6 +4,7 @@ import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
+import { PHOTOS } from '../content/credits';
 import { PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
@@ -24,7 +25,7 @@ import {
   toggleMusic,
   toggleSound,
 } from '../game/actions';
-import { PostcardArt } from '../places/PostcardArt';
+import { PhotoCreditLine, PostcardPicture } from '../places/PostcardPicture';
 import { type Modal, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
 
@@ -385,11 +386,10 @@ function Postcard({ id, start }: { id: PlaceId; start: number | null }) {
   return (
     <Sheet label={`${P.name}明信片`} wide>
       <div className="postcard" style={{ ['--zc' as string]: Z?.color ?? '#2D8FD0' }}>
-        <svg className="postcardArt" viewBox="0 0 400 240" role="img" aria-label={P.sights.join('、')}>
-          <PostcardArt id={id} />
-        </svg>
+        <PostcardPicture id={id} className="postcardArt" />
         <Stamp label={P.name} mark={Z ? '★'.repeat(Z.stars) : '琉'} className="postcardStamp" />
       </div>
+      <PhotoCreditLine id={id} />
       <h2>{P.name}</h2>
       <div className="sights">
         {P.sights.map((t) => (
@@ -417,6 +417,47 @@ function Postcard({ id, start }: { id: PlaceId; start: number | null }) {
           <span>先不要</span>
         </button>
       )}
+    </Sheet>
+  );
+}
+
+/** Every postcard photo with its author, licence and source, as the licences ask */
+function Credits() {
+  return (
+    <Sheet label="照片來源" wide>
+      <h2>照片來源</h2>
+      <p className="small">明信片的照片是自己拍的，或來自 Wikimedia Commons、授權可以自由使用（公眾領域或 CC BY，標示作者即可）；插畫和西薩是遊戲原創。</p>
+      <ul className="creditList">
+        {PHOTOS.map((c) => (
+          <li key={c.place}>
+            <b>{PLACES[c.place].name}</b>
+            <span>
+              〈{c.title}〉，
+              {c.source ? (
+                <a href={c.source} target="_blank" rel="noopener noreferrer">
+                  {c.author}
+                </a>
+              ) : (
+                c.author
+              )}
+              ，
+              {c.licenseUrl ? (
+                <a href={c.licenseUrl} target="_blank" rel="noopener noreferrer">
+                  {c.license}
+                </a>
+              ) : (
+                c.license
+              )}
+              ，經裁切縮小
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="btns">
+        <Cta icon={<Icon name="check" />} data={{ 'data-ok': true, 'data-focus': true }} onClick={closeModal}>
+          知道了
+        </Cta>
+      </div>
     </Sheet>
   );
 }
@@ -509,6 +550,9 @@ export function ModalHost() {
       break;
     case 'place':
       body = <Postcard id={m.id} start={m.start} />;
+      break;
+    case 'credits':
+      body = <Credits />;
       break;
     case 'audio':
       body = <AudioSettings />;

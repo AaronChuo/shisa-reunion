@@ -61,6 +61,7 @@ export type Modal =
   | { kind: 'role'; id: string }
   | { kind: 'about' }
   | { kind: 'place'; id: PlaceId; start: number | null }
+  | { kind: 'credits' }
   | { kind: 'audio' };
 
 export type Hint = { type: 'lift'; pi: number } | { type: 'put'; p: Placement; k: number };

@@ -2,8 +2,8 @@ import { Icon } from '../art/Icons';
 import { ShisaIcon } from '../art/Shisa';
 import { PLACE_ORDER, PLACES, placeSeen } from '../content/places';
 import { SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
-import { askRole, go, openAbout, openPlace } from '../game/actions';
-import { PostcardArt } from '../places/PostcardArt';
+import { askRole, go, openAbout, openCredits, openPlace } from '../game/actions';
+import { PostcardPicture } from '../places/PostcardPicture';
 import { useGame } from '../state/store';
 
 export function Dex() {
@@ -67,9 +67,7 @@ export function Dex() {
           {PLACE_ORDER.map((id) =>
             got.includes(id) ? (
               <button key={id} type="button" className="pcTile" data-place={id} onClick={() => openPlace(id, null)}>
-                <svg viewBox="0 0 400 240" aria-hidden="true">
-                  <PostcardArt id={id} />
-                </svg>
+                <PostcardPicture id={id} />
                 <span>{PLACES[id].name}</span>
               </button>
             ) : (
@@ -80,6 +78,9 @@ export function Dex() {
             ),
           )}
         </div>
+        <button type="button" className="linkBtn" id="creditsBtn" onClick={openCredits}>
+          照片來源
+        </button>
       </section>
       {SERIES.map((se) => (
         <section key={se.id} className="dexSeries" style={{ ['--sc' as string]: se.color }}>
