@@ -37,4 +37,4 @@ pnpm build        # 產出 dist/（含 service worker）
 ## 致謝
 
 - 玩法靈感來自 SmartGames 的實體桌遊 Camelot Jr.（Raf Peeters 設計）。本作的美術、角色、關卡與文字皆為原創，與 SmartGames 無關
-- 字型：[LXGW WenKai TC](https://github.com/lxgw/LxgwWenkaiTC)、[Fredoka](https://fonts.google.com/specimen/Fredoka)，皆為 SIL Open Font License 1.1，授權檔見 `public/fonts/`
+- 字型：[源泉圓體 GenSen Rounded](https://github.com/ButTaiwan/gensen-font)、[Fredoka](https://fonts.google.com/specimen/Fredoka)，皆為 SIL Open Font License 1.1，授權檔見 `public/fonts/`

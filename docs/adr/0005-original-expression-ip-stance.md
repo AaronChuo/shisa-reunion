@@ -20,7 +20,7 @@
 4. **不使用商標**：遊戲名、安裝名、商店頁、宣傳都不出現 Camelot、SmartGames；文件內只做事實性提及
 5. **避免整體視覺近似**：參考美國 *Tetris Holding v. Xio Interactive*（2012）判決，即使規則可以使用，整體外觀太像原作仍可能侵權
 6. **專利**：公開資料查無 Camelot Jr. 的相關專利；Smart NV 有部分實體產品的設計專利，只保護實體外觀。若要商業化，上架前委託專業人士做 FTO（侵權可能性）檢索
-7. **字型**：LXGW WenKai TC 與 Fredoka 皆為 SIL OFL 1.1，授權檔放在 `public/fonts/`
+7. **字型**：源泉圓體（GenSen Rounded TW，v0.8 起；之前是 LXGW WenKai TC）與 Fredoka 皆為 SIL OFL 1.1，授權檔放在 `public/fonts/`
 
 ## 影響
 
