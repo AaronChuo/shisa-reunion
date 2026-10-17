@@ -3,7 +3,7 @@ import type { PieceType } from '../engine';
 export const PIECE_NAMES: Record<PieceType, string> = {
   cube: '紅型方塊',
   tower: '赤瓦塔',
-  stair: '玻璃石階',
+  stair: '琉璃階梯',
   bridge: '紅芋拱門',
   ladder: '竹梯',
   spring: '跳跳貝',
@@ -19,7 +19,7 @@ export const MECHANISM_NAMES: Record<Mechanism, string> = { urchin: '海膽', ti
 
 /** One-line rules shown the first time a piece or mechanism appears */
 export const RULES: Record<IntroKey, string> = {
-  cube: '最基本的積木，上面可以走，也可以再疊東西。',
+  cube: '最基本的積木，上面可以走，也可以再疊東西。「紅型」是沖繩花布的名字，不是紅色喔。',
   tower: '兩格高的塔，上面可以走。',
   stair: '可以一階一階往上走。橫放、直放、轉方向都可以。',
   bridge: '上面可以走，下面也可以鑽過去。',
