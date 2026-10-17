@@ -57,6 +57,8 @@ it.describe('a gacha machine you work by hand', () => {
     expect(p.owned).toHaveLength(3);
     await page.click('#outCap');
     await expect(page.locator('#modal[data-kind="reveal"]')).toBeVisible();
+    // The capsule flies up from the machine's tray rather than just appearing
+    await expect(page.locator('#capsule')).toHaveClass(/flyIn/);
   });
 
   it('refuses to turn without a coin', async ({ page }) => {

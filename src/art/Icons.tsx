@@ -127,7 +127,7 @@ export function CoinArt() {
     <>
       <circle cx={20} cy={20} r={18} fill="#F2B233" stroke="#A9770F" strokeWidth={3} />
       <circle cx={20} cy={20} r={12.5} fill="none" stroke="#FFE39A" strokeWidth={2} />
-      <text x={20} y={26.5} textAnchor="middle" fontSize={17} fontWeight={700} fill="#7A5206" fontFamily="LXGW WenKai TC, PingFang TC, sans-serif">
+      <text x={20} y={26.5} textAnchor="middle" fontSize={17} fontWeight={700} fill="#7A5206" fontFamily="GenSen Rounded TW, PingFang TC, sans-serif">
         福
       </text>
     </>
@@ -172,10 +172,10 @@ export function Stamp({ label, mark, className, x, y, size }: { label: string; m
       <g transform="rotate(-10 60 60)" fill="#C8382B">
         <circle cx={60} cy={60} r={52} fill="none" stroke="#C8382B" strokeWidth={6} />
         <circle cx={60} cy={60} r={43} fill="none" stroke="#C8382B" strokeWidth={2} />
-        <text x={60} y={55} textAnchor="middle" fontSize={22} fontWeight={700} fontFamily="LXGW WenKai TC, PingFang TC, sans-serif">
+        <text x={60} y={55} textAnchor="middle" fontSize={22} fontWeight={700} fontFamily="GenSen Rounded TW, PingFang TC, sans-serif">
           {label}
         </text>
-        <text x={60} y={88} textAnchor="middle" fontSize={26} fontWeight={700} fontFamily="LXGW WenKai TC, PingFang TC, sans-serif">
+        <text x={60} y={88} textAnchor="middle" fontSize={26} fontWeight={700} fontFamily="GenSen Rounded TW, PingFang TC, sans-serif">
           {mark}
         </text>
       </g>

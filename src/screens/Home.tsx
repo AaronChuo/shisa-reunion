@@ -127,7 +127,7 @@ export function nextZone(p: Progress): number {
 function IslandMap({ here }: { here: number }) {
   const open = useGame((s) => s.progress.open);
   const clears = useGame((s) => s.progress.clears);
-  const font = 'LXGW WenKai TC, PingFang TC, sans-serif';
+  const font = 'GenSen Rounded TW, PingFang TC, sans-serif';
   return (
     <svg viewBox="40 0 340 560" role="img" aria-label="沖繩地圖">
       <rect x={40} y={0} width={340} height={560} fill="#BFE6EE" />
@@ -288,7 +288,8 @@ export function Home() {
                     </span>
                   </div>
                   <div className="zl">
-                    {Z.line} · {status}
+                    <span className="zline">{Z.line} · </span>
+                    <span className="zstat">{status}</span>
                   </div>
                 </div>
                 <button type="button" className="iconBtn" data-zone={i} disabled={locked} onClick={() => requestRun(i)}>

@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Blocks, CardIcon, CoinIcon, ConchIcon, Icon, ShellIcon, Stamp, TapHand } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
@@ -12,14 +12,20 @@ import { ackIntro, afterWin, chooseCard, chooseRole, closeModal, finishReveal, g
 import { type Modal, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
 
-function Sheet({ children, wide, label }: { children: ReactNode; wide?: boolean; label: string }) {
+function Sheet({ children, wide, label, enter = 'pop' }: { children: ReactNode; wide?: boolean; label: string; enter?: 'pop' | 'none' }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current?.querySelector<HTMLElement>('[data-focus]') ?? ref.current?.querySelector<HTMLElement>('button');
     el?.focus({ preventScroll: true });
   }, []);
   return (
-    <div ref={ref} className={wide ? 'sheet wide' : 'sheet'} role="dialog" aria-modal="true" aria-label={label}>
+    <div
+      ref={ref}
+      className={['sheet', wide && 'wide', enter === 'none' && 'still'].filter(Boolean).join(' ')}
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+    >
       {children}
     </div>
   );
@@ -213,10 +219,32 @@ function Reveal({ id, seriesId, color }: { id: string; seriesId: string; color: 
   const series = SERIES.find((s) => s.id === seriesId) ?? SERIES[0];
   // The shell is the one that actually rolled out of the machine
   const col = color;
+  const capRef = useRef<HTMLButtonElement>(null);
+  const [fly, setFly] = useState<CSSProperties | null>(null);
+  // The capsule flies out of the machine's tray up to the front of the screen, spinning, before it can be opened
+  useLayoutEffect(() => {
+    const from = document.getElementById('outCap')?.getBoundingClientRect();
+    const to = capRef.current?.getBoundingClientRect();
+    if (!from || !to?.width) return;
+    setFly({
+      '--fx': `${from.left + from.width / 2 - (to.left + to.width / 2)}px`,
+      '--fy': `${from.top + from.height / 2 - (to.top + to.height / 2)}px`,
+      '--fs': `${Math.max(0.12, from.width / to.width)}`,
+    } as CSSProperties);
+  }, []);
   return (
-    <Sheet label="扭蛋">
+    <Sheet label="扭蛋" enter="none">
       <div className="eyebrow">{series.name}</div>
-      <button type="button" className={open ? 'capsuleBtn' : 'capsuleBtn shut'} id="capsule" aria-label="打開扭蛋" data-focus onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        ref={capRef}
+        className={['capsuleBtn', !open && 'shut', fly && !open && 'flyIn'].filter(Boolean).join(' ')}
+        style={fly ?? undefined}
+        id="capsule"
+        aria-label="打開扭蛋"
+        data-focus
+        onClick={() => setOpen(true)}
+      >
         <svg className={open ? 'reveal open' : 'reveal'} viewBox="-110 -130 220 220" aria-hidden="true">
           <g className="who">
             <g transform="translate(0,60) scale(1.7)">

@@ -1,21 +1,21 @@
 import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { CoinArt, TapHand } from '../art/Icons';
-import { ShisaArt } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
-import { type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
+import { type Series, VARIANTS } from '../content/shisa';
 import { rng } from '../engine';
 import { capsuleOut, insertCoin, openCapsule, releaseCapsule } from '../game/actions';
 import { useGame } from '../state/store';
 import { NUDGE_MS } from '../ui/Cta';
 import { useIdle } from '../ui/useIdle';
 import { addBall, agitate, asleep, type Dome, inside, makeWorld, release, STEP, step, type World } from './physics';
+import { Roof } from './Roof';
 
 // Drawing units of the machine (viewBox 0 -12 310 452)
 const VB = { x: 0, y: -12, w: 310, h: 452 };
 const DOME: Dome = { cx: 155, cy: 165, R: 94, r: 18 };
-const CRANK = { x: 112, y: 346, r: 30 };
-const SLOT = { x: 215, y: 342 };
-const OUTLET = { x: 206, y: 398 };
+const CRANK = { x: 106, y: 358, r: 46 };
+const SLOT = { x: 211, y: 338 };
+const OUTLET = { x: 208, y: 401 };
 const PURSE = { x: 284, y: 368 };
 /** Capsule shells come in bright colours that say nothing about what's inside, like a real machine */
 const SHELLS = ['#E2513C', '#F3A83F', '#2D8FD0', '#3FA36B', '#8C56AA', '#FF8FB1', '#F2C43A', '#3DA399', '#E2703A', '#6FA8D6'];
@@ -249,12 +249,6 @@ export function Machine({ series }: { series: Series }) {
             <circle cx={DOME.cx} cy={DOME.cy} r={DOME.R + 3} />
           </clipPath>
         </defs>
-        <path d="M40,74 L74,30 L236,30 L270,74 Z" fill="#CD4A31" stroke="#86281A" strokeWidth={4} strokeLinejoin="round" />
-        <path d={`M58,62${' a8,7 0 0 0 16,0'.repeat(12)}`} fill="none" stroke="#F7E2C7" strokeWidth={3} />
-        <g transform="translate(155,34) scale(.42)">
-          <ShisaArt v={VARIANT_BY_ID.terracotta} open />
-        </g>
-        <rect x={44} y={72} width={222} height={14} rx={6} fill="#F7E2C7" stroke="#86281A" strokeWidth={3} />
         <circle cx={DOME.cx} cy={DOME.cy} r={DOME.R + 6} fill="#EAF7FA" fillOpacity={0.75} />
         {/* The exit hole at the bottom of the dome */}
         <ellipse cx={DOME.cx} cy={DOME.cy + DOME.R - 4} rx={DOME.r + 6} ry={7} fill="#7FB4C0" opacity={0.6} />
@@ -274,14 +268,16 @@ export function Machine({ series }: { series: Series }) {
         </g>
         <circle cx={DOME.cx} cy={DOME.cy} r={DOME.R + 6} fill="none" stroke="#7FB4C0" strokeWidth={6} />
         <path d="M90,108 A80,80 0 0 1 150,80" stroke="#fff" strokeWidth={8} fill="none" strokeLinecap="round" opacity={0.8} />
+        {/* Each machine's roof is in its series' theme; drawn over the dome so the glass tucks under the eave */}
+        <Roof series={series.id} />
         <rect x={48} y={258} width={214} height={168} rx={24} fill={series.color} stroke="#173944" strokeWidth={4} />
-        <rect x={70} y={272} width={170} height={34} rx={10} fill="#fff" opacity={0.92} />
-        <text x={155} y={296} textAnchor="middle" fontSize={20} fontWeight={700} fill="#173944" fontFamily="LXGW WenKai TC, PingFang TC, sans-serif">
+        <rect x={70} y={266} width={170} height={30} rx={10} fill="#fff" opacity={0.92} />
+        <text x={155} y={288} textAnchor="middle" fontSize={18} fontWeight={700} fill="#173944" fontFamily="GenSen Rounded TW, PingFang TC, sans-serif">
           {series.name}
         </text>
         {/* Coin slot; glows while waiting for a coin */}
-        <rect x={198} y={320} width={34} height={44} rx={8} fill="#F7E2C7" stroke="#173944" strokeWidth={3} className={canCoin ? 'slotGlow' : undefined} />
-        <rect x={211} y={328} width={8} height={28} rx={4} fill="#173944" />
+        <rect x={186} y={304} width={50} height={68} rx={10} fill="#F7E2C7" stroke="#173944" strokeWidth={3.5} className={canCoin ? 'slotGlow' : undefined} />
+        <rect x={206} y={314} width={10} height={48} rx={5} fill="#173944" />
         {phase === 'ready' && (
           <g className="coinIn">
             <g transform={`translate(${SLOT.x - 15},${SLOT.y - 30}) scale(.75)`}>
@@ -293,14 +289,17 @@ export function Machine({ series }: { series: Series }) {
         <g transform={`translate(${CRANK.x},${CRANK.y})`}>
           <g key={locked} className={locked ? 'crankLocked' : undefined}>
             <circle r={CRANK.r} fill="#fff" stroke="#173944" strokeWidth={4} className={phase === 'ready' ? 'crankGlow' : undefined} />
+            <circle r={CRANK.r - 9} fill="none" stroke="#C3DCD8" strokeWidth={2} />
+            {/* A wide bar with a red knob at one end: the part to grab and turn */}
             <g transform={`rotate(${angle % 360})`}>
-              <rect x={-8} y={-28} width={16} height={56} rx={8} fill="#E8B83A" stroke="#173944" strokeWidth={3} />
-              <circle cy={-20} r={4} fill="#173944" opacity={0.35} />
+              <rect x={-12} y={-CRANK.r + 6} width={24} height={CRANK.r * 2 - 12} rx={12} fill="#E8B83A" stroke="#173944" strokeWidth={3} />
+              <circle cy={-CRANK.r + 18} r={10} fill="#D9443A" stroke="#173944" strokeWidth={2.5} />
+              <circle cx={-3} cy={-CRANK.r + 15} r={3} fill="#fff" opacity={0.7} />
             </g>
-            <circle r={7} fill="#173944" />
+            <circle r={8} fill="#173944" />
           </g>
         </g>
-        <rect x={168} y={378} width={76} height={40} rx={12} fill="#173944" opacity={0.85} />
+        <rect x={166} y={382} width={84} height={38} rx={12} fill="#173944" opacity={0.85} />
         {phase === 'out' && capColor && (
           <g transform={`translate(${OUTLET.x},${OUTLET.y})`}>
             <g className="outCap">
@@ -336,7 +335,7 @@ export function Machine({ series }: { series: Series }) {
         type="button"
         id="purse"
         className="hit"
-        style={over(PURSE.x, PURSE.y - 8, 48, 60)}
+        style={over(PURSE.x, PURSE.y - 8, 56, 70)}
         aria-label={`福氣幣 ${tokens} 枚，拖進投幣口`}
         disabled={!canCoin}
         onPointerDown={purseDown}
@@ -347,12 +346,12 @@ export function Machine({ series }: { series: Series }) {
           setCoinAt(null);
         }}
       />
-      <button type="button" id="slot" className="hit" style={over(SLOT.x, SLOT.y, 48, 56)} aria-label="投幣口" disabled={!canCoin} onClick={insertCoin} />
+      <button type="button" id="slot" className="hit" style={over(SLOT.x, SLOT.y, 70, 92)} aria-label="投幣口" disabled={!canCoin} onClick={insertCoin} />
       <button
         type="button"
         id="crank"
         className="hit round"
-        style={over(CRANK.x, CRANK.y, CRANK.r * 2 + 24, CRANK.r * 2 + 24)}
+        style={over(CRANK.x, CRANK.y, CRANK.r * 2 + 30, CRANK.r * 2 + 30)}
         aria-label="把手，轉一圈會掉出扭蛋"
         onPointerDown={crankDown}
         onPointerMove={crankMove}
@@ -368,7 +367,7 @@ export function Machine({ series }: { series: Series }) {
         }}
       />
       {phase === 'out' && pulled && (
-        <button type="button" id="outCap" className="hit round" style={over(OUTLET.x, OUTLET.y, 56, 50)} aria-label="打開扭蛋" onClick={openCapsule}>
+        <button type="button" id="outCap" className="hit round" style={over(OUTLET.x, OUTLET.y, 70, 56)} aria-label="打開扭蛋" onClick={openCapsule}>
           {idle && <TapHand />}
         </button>
       )}

@@ -1,12 +1,12 @@
 @font-face {
-  font-family: "LXGW WenKai TC";
-  src: url("/fonts/wenkai-tc-400.woff2") format("woff2");
+  font-family: "GenSen Rounded TW";
+  src: url("/fonts/gensen-tw-400.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
-  font-family: "LXGW WenKai TC";
-  src: url("/fonts/wenkai-tc-700.woff2") format("woff2");
+  font-family: "GenSen Rounded TW";
+  src: url("/fonts/gensen-tw-700.woff2") format("woff2");
   font-weight: 700;
   font-display: swap;
 }
@@ -32,7 +32,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: "LXGW WenKai TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  font-family: "GenSen Rounded TW", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
@@ -47,7 +47,7 @@ fieldset {
   color: inherit;
 }
 .num {
-  font-family: "Fredoka", "LXGW WenKai TC", system-ui, sans-serif;
+  font-family: "Fredoka", "GenSen Rounded TW", system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
 }
 :focus-visible {
@@ -1184,21 +1184,36 @@ h1 {
     opacity: 1;
   }
   70% {
-    transform: translate(215px, 336px);
+    transform: translate(211px, 330px);
     opacity: 1;
   }
   100% {
-    transform: translate(215px, 336px);
+    transform: translate(211px, 330px);
     opacity: 0;
   }
 }
 .crankDemo {
   animation: turn 2s linear infinite;
 }
+/* Steam rising off the soba bowl roof */
+.steam {
+  animation: steam 2.4s ease-in-out infinite;
+}
+@keyframes steam {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(4px);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translateY(-3px);
+  }
+}
 @media (max-width: 760px) {
   .machineFrame {
     width: 100%;
-    max-width: 320px;
+    max-width: 360px;
     height: auto;
   }
   .series {
@@ -1242,6 +1257,43 @@ h1 {
   background: none;
   border-radius: 50%;
   cursor: pointer;
+}
+/* The capsule flies from the machine's tray to the front of the screen, spinning and growing, then bounces into place */
+.capsuleBtn.flyIn {
+  animation: capsuleFly 0.8s cubic-bezier(0.25, 0.9, 0.3, 1.15) both;
+}
+.capsuleBtn.flyIn .reveal {
+  animation: none;
+}
+@keyframes capsuleFly {
+  0% {
+    transform: translate(var(--fx), var(--fy)) scale(var(--fs)) rotate(-300deg);
+  }
+  75% {
+    transform: translate(0, 0) scale(1.12) rotate(12deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+/* The card and its other contents fade in behind the flying capsule, which stays fully visible the whole way */
+.sheet.still {
+  animation: sheetIn 0.45s ease-out both;
+}
+.sheet.still > :not(.capsuleBtn) {
+  animation: fadeIn 0.4s 0.4s ease-out both;
+}
+@keyframes sheetIn {
+  from {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
 }
 /* A shut capsule rocks to say "open me" */
 .capsuleBtn.shut .reveal {
@@ -1678,10 +1730,12 @@ h1 {
   .starGlint,
   .cta::before,
   .cta .ci,
+  .capsuleBtn.flyIn,
   .tapHand,
   .capsuleHand,
   .slotGlow,
   .crankGlow,
+  .steam,
   .coinDemo,
   .crankDemo,
   .capsuleBtn.shut .reveal,
@@ -1702,5 +1756,198 @@ h1 {
   }
   .demoPiece {
     opacity: 0;
+  }
+}
+
+/* ---------- phones: a shorter map page ---------- */
+@media (max-width: 760px) {
+  /* Zone rows drop their description: name, level and a short status are enough to pick one */
+  .zone {
+    padding-block: 8px;
+    gap: 10px;
+  }
+  .zone .zline,
+  .zone.locked .zstat {
+    display: none;
+  }
+  .zone .zn {
+    font-size: 19px;
+  }
+  .zones {
+    gap: 8px;
+  }
+  .homeTools .iconBtn {
+    padding: 0 9px;
+  }
+  .islandWrap {
+    max-width: 280px;
+  }
+  /* The shisa pair sits beside the title, and the go button beside its text */
+  .pairArt {
+    width: 78px;
+    height: 50px;
+  }
+  .homeHead .mh {
+    flex-basis: 200px;
+  }
+  .homeHead h1 {
+    font-size: 30px;
+  }
+  .goCard {
+    padding: 12px;
+    gap: 10px;
+  }
+  .goCard .t {
+    flex-basis: 130px;
+  }
+}
+
+/* ---------- tablets: bigger targets and type for small fingers on a big screen ---------- */
+@media (pointer: coarse) and (min-width: 700px) {
+  body {
+    font-size: 18px;
+  }
+  .iconBtn {
+    min-height: 56px;
+    min-width: 56px;
+    padding: 0 16px;
+    border-radius: 16px;
+    font-size: 18px;
+  }
+  .iconBtn svg {
+    width: 26px;
+    height: 26px;
+  }
+  .iconBtn.big {
+    min-height: 64px;
+    font-size: 20px;
+  }
+  .cta {
+    min-height: 82px;
+    padding: 0 32px 0 13px;
+    border-radius: 28px;
+    font-size: 27px;
+  }
+  .cta .ci {
+    width: 58px;
+    height: 58px;
+  }
+  .cta .ci > svg {
+    width: 34px;
+    height: 34px;
+  }
+  .coin {
+    font-size: 22px;
+  }
+  .coin svg {
+    width: 38px;
+    height: 38px;
+  }
+  .bar .title {
+    font-size: 24px;
+  }
+  h1 {
+    font-size: 42px;
+  }
+  .zone .zn {
+    font-size: 25px;
+  }
+  .zone .zl,
+  .goCard .t small {
+    font-size: 16px;
+  }
+  .goCard .t {
+    font-size: 23px;
+  }
+  .tag {
+    font-size: 15px;
+  }
+  /* Play: bigger blocks in the tray and bigger tools */
+  .card svg.art {
+    width: 108px;
+    height: 90px;
+  }
+  .card .name {
+    font-size: 16px;
+  }
+  .rot {
+    width: 44px;
+    height: 44px;
+  }
+  .rot svg {
+    width: 24px;
+    height: 24px;
+  }
+  .actions .iconBtn {
+    min-height: 68px;
+    font-size: 16px;
+  }
+  .chip {
+    font-size: 17px;
+    padding: 4px 14px 4px 6px;
+  }
+  .chip svg {
+    width: 30px;
+    height: 30px;
+  }
+  .bubble {
+    font-size: 21px;
+    padding: 8px 20px;
+  }
+  /* Gacha: bigger tabs */
+  .sBtn {
+    padding: 10px 16px;
+    font-size: 19px;
+  }
+  /* Modals and the collection */
+  .sheet {
+    width: min(520px, 100%);
+    padding: 26px 28px;
+  }
+  .sheet h2 {
+    font-size: 32px;
+  }
+  .sheet .tale p {
+    font-size: 20px;
+  }
+  .dexTile svg {
+    max-width: 120px;
+  }
+  .dexTile span {
+    font-size: 17px;
+  }
+  .slot svg {
+    width: 88px;
+    height: 88px;
+  }
+  .slot b {
+    font-size: 22px;
+  }
+}
+@media (pointer: coarse) and (min-width: 700px) and (min-aspect-ratio: 1 / 1) {
+  /* Tablet held sideways: a wider tray column beside the board */
+  .stage {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+@media (pointer: coarse) and (min-width: 700px) and (max-aspect-ratio: 1 / 1) {
+  /* Tablet held upright: the tray sits under the board, so give its cards room */
+  .card {
+    flex: 0 0 132px;
+  }
+  /* The gacha machine takes the full width, with its buttons underneath */
+  .series {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sBtn {
+    justify-content: center;
+  }
+  .machineWrap {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .machineFrame {
+    height: min(56vh, 680px);
   }
 }

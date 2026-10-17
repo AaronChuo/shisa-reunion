@@ -14,7 +14,7 @@ function sources(dir: string, out: string[] = []): string[] {
 
 describe('self-hosted font subset', () => {
   it('covers every non-ASCII character used in the game', () => {
-    const glyphs = new Set(readFileSync('public/fonts/wenkai-glyphs.txt', 'utf8'));
+    const glyphs = new Set(readFileSync('public/fonts/font-glyphs.txt', 'utf8'));
     const missing = new Set<string>();
     for (const f of [...sources('src'), 'index.html']) {
       for (const ch of readFileSync(f, 'utf8')) if ((ch.codePointAt(0) ?? 0) > 0x7f && !glyphs.has(ch)) missing.add(ch);
