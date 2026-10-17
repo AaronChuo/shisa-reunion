@@ -1,5 +1,6 @@
 import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
+import { type PlaceId, placeSeen } from '../content/places';
 import { drawFromSeries, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { SHISA_CHEER } from '../content/story';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
@@ -196,6 +197,12 @@ function introQueue(): IntroKey[] {
 }
 
 function showNextIntro(): void {
+  // Arriving somewhere new: its postcard comes first
+  const r0 = run();
+  if (r0.si === 0 && !getState().progress.seen.includes(placeSeen(r0.zone as PlaceId))) {
+    openPlace(r0.zone as PlaceId, null);
+    return;
+  }
   const q = introQueue();
   if (q.length) {
     mut((s) => {
@@ -597,6 +604,34 @@ export function finishReveal(next: 'keep' | 'use'): void {
     s.ui.modal = null;
   });
   if (next === 'use' && id) chooseRole(id, 0);
+}
+
+// ---------- postcards ----------
+/**
+ * Shows a place's postcard. `start` is the zone to set off for from it (opened from the map), or null when it is read
+ * on arrival. Reading it puts it in the collection, except for zones still locked.
+ */
+export function openPlace(id: PlaceId, start: number | null): void {
+  mut((s) => {
+    s.ui.modal = { kind: 'place', id, start };
+    const zone = ZONES.find((Z) => Z.id === id);
+    const locked = zone && !s.progress.open.includes(zone.id);
+    if (!locked && !s.progress.seen.includes(placeSeen(id))) s.progress.seen.push(placeSeen(id));
+  });
+}
+
+/** Done reading: on arrival, carry on into the stage's new-block cards; otherwise just close */
+export function ackPlace(): void {
+  const st = getState();
+  const r = st.progress.run;
+  if (st.ui.screen === 'play' && r?.phase === 'play' && r.level) showNextIntro();
+  else closeModal();
+}
+
+/** "出發" on a postcard opened from the map */
+export function setOffFrom(zi: number): void {
+  closeModal();
+  requestRun(zi);
 }
 
 // ---------- the opening story ----------

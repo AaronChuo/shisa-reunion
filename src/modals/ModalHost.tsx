@@ -4,11 +4,27 @@ import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
+import { PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
 import { CARDS, stageCfg, ZONES } from '../content/zones';
 import { sizeOf } from '../engine';
-import { ackIntro, afterWin, chooseCard, chooseRole, closeModal, finishReveal, go, goHome, startRun, toggleMusic, toggleSound } from '../game/actions';
+import {
+  ackIntro,
+  ackPlace,
+  afterWin,
+  chooseCard,
+  chooseRole,
+  closeModal,
+  finishReveal,
+  go,
+  goHome,
+  setOffFrom,
+  startRun,
+  toggleMusic,
+  toggleSound,
+} from '../game/actions';
+import { PostcardArt } from '../places/PostcardArt';
 import { type Modal, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
 
@@ -359,6 +375,52 @@ function About() {
   );
 }
 
+/** A place's postcard: its picture, a few things to spot, and its story to read aloud */
+function Postcard({ id, start }: { id: PlaceId; start: number | null }) {
+  const P = PLACES[id];
+  const open = useGame((s) => s.progress.open);
+  const zi = ZONES.findIndex((Z) => Z.id === id);
+  const Z = ZONES[zi];
+  const locked = !!Z && !open.includes(Z.id);
+  return (
+    <Sheet label={`${P.name}明信片`} wide>
+      <div className="postcard" style={{ ['--zc' as string]: Z?.color ?? '#2D8FD0' }}>
+        <svg className="postcardArt" viewBox="0 0 400 240" role="img" aria-label={P.sights.join('、')}>
+          <PostcardArt id={id} />
+        </svg>
+        <Stamp label={P.name} mark={Z ? '★'.repeat(Z.stars) : '琉'} className="postcardStamp" />
+      </div>
+      <h2>{P.name}</h2>
+      <div className="sights">
+        {P.sights.map((t) => (
+          <span key={t} className="mini">
+            {t}
+          </span>
+        ))}
+      </div>
+      <Story text={P.story} />
+      {locked && <p className="small">先走完{ZONES[zi - 1]?.name}，這裡才會打開</p>}
+      <div className="btns">
+        {start !== null && !locked ? (
+          <Cta icon={<Icon name="play" />} data={{ 'data-go-place': true, 'data-focus': true }} onClick={() => setOffFrom(start)}>
+            出發去{P.name}
+          </Cta>
+        ) : (
+          <Cta icon={<Icon name="check" />} data={{ 'data-ok': true, 'data-focus': true }} onClick={ackPlace}>
+            知道了
+          </Cta>
+        )}
+      </div>
+      {start !== null && !locked && (
+        <button type="button" className="iconBtn" data-cancel onClick={closeModal}>
+          <Icon name="close" />
+          <span>先不要</span>
+        </button>
+      )}
+    </Sheet>
+  );
+}
+
 function Switch({ id, on, icon, label, detail, onToggle }: { id: string; on: boolean; icon: ReactNode; label: string; detail: string; onToggle: () => void }) {
   return (
     <button type="button" className={on ? 'switch on' : 'switch'} id={id} role="switch" aria-checked={on} onClick={onToggle}>
@@ -444,6 +506,9 @@ export function ModalHost() {
       break;
     case 'about':
       body = <About />;
+      break;
+    case 'place':
+      body = <Postcard id={m.id} start={m.start} />;
       break;
     case 'audio':
       body = <AudioSettings />;

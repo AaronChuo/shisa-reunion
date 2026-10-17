@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { speakable } from '../audio/speech';
+import { PLACE_ORDER, PLACES } from './places';
 import { ABOUT_SHISA, SERIES, VARIANTS } from './shisa';
 import { PIECE_NAMES, RULES } from './text';
 import { CARDS, ZONES } from './zones';
@@ -29,6 +30,19 @@ describe('shisa collection', () => {
 
   it('explains what a shisa is', () => {
     expect(spoken(ABOUT_SHISA.story)).toBeGreaterThan(80);
+  });
+});
+
+describe('place postcards', () => {
+  it('has a postcard for Okinawa and for every zone', () => {
+    expect(PLACE_ORDER).toEqual(['okinawa', ...ZONES.map((z) => z.id)]);
+  });
+
+  it.each(PLACE_ORDER.map((id) => [PLACES[id].name, PLACES[id]]))('tells %s in a short paragraph with a few sights', (_, p) => {
+    expect(spoken(p.story)).toBeGreaterThanOrEqual(60);
+    expect(spoken(p.story)).toBeLessThanOrEqual(110);
+    expect(p.sights.length).toBeGreaterThanOrEqual(2);
+    expect(p.sights.length).toBeLessThanOrEqual(3);
   });
 });
 

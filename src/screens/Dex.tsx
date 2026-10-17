@@ -1,11 +1,16 @@
 import { Icon } from '../art/Icons';
 import { ShisaIcon } from '../art/Shisa';
+import { PLACE_ORDER, PLACES, placeSeen } from '../content/places';
 import { SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
-import { askRole, go, openAbout } from '../game/actions';
+import { askRole, go, openAbout, openPlace } from '../game/actions';
+import { PostcardArt } from '../places/PostcardArt';
 import { useGame } from '../state/store';
 
 export function Dex() {
   const owned = useGame((s) => s.progress.owned);
+  const seen = useGame((s) => s.progress.seen);
+  const clears = useGame((s) => s.progress.clears);
+  const got = PLACE_ORDER.filter((id) => id === 'okinawa' || seen.includes(placeSeen(id)) || (clears[id] ?? 0) > 0);
   const pair = useGame((s) => s.progress.pair);
   const hero = VARIANT_BY_ID[pair[0]];
   const goal = VARIANT_BY_ID[pair[1]];
@@ -49,6 +54,33 @@ export function Dex() {
           <span>西薩是什麼？</span>
         </button>
       </div>
+      {/* Postcards: Okinawa, then each place once it has been visited */}
+      <section className="dexSeries" style={{ ['--sc' as string]: '#2D8FD0' }}>
+        <h3>
+          <i />
+          明信片{' '}
+          <small className="num">
+            {got.length}/{PLACE_ORDER.length}
+          </small>
+        </h3>
+        <div className="pcGrid">
+          {PLACE_ORDER.map((id) =>
+            got.includes(id) ? (
+              <button key={id} type="button" className="pcTile" data-place={id} onClick={() => openPlace(id, null)}>
+                <svg viewBox="0 0 400 240" aria-hidden="true">
+                  <PostcardArt id={id} />
+                </svg>
+                <span>{PLACES[id].name}</span>
+              </button>
+            ) : (
+              <div key={id} className="pcTile locked" data-place={id}>
+                <Icon name="lock" />
+                <span>還沒去過</span>
+              </div>
+            ),
+          )}
+        </div>
+      </section>
       {SERIES.map((se) => (
         <section key={se.id} className="dexSeries" style={{ ['--sc' as string]: se.color }}>
           <h3>

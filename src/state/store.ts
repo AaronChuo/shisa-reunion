@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import type { PlaceId } from '../content/places';
 import { type Series, STARTERS, VARIANT_BY_ID } from '../content/shisa';
 import type { IntroKey } from '../content/text';
 import { type CardKey, type Reward, ZONES } from '../content/zones';
@@ -59,6 +60,7 @@ export type Modal =
   | { kind: 'reveal'; id: string; series: Series['id']; color: string }
   | { kind: 'role'; id: string }
   | { kind: 'about' }
+  | { kind: 'place'; id: PlaceId; start: number | null }
   | { kind: 'audio' };
 
 export type Hint = { type: 'lift'; pi: number } | { type: 'put'; p: Placement; k: number };

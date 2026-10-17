@@ -2,10 +2,11 @@ import { CoinIcon, Icon, Stamp } from '../art/Icons';
 import { ShisaArt } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
+import { type PlaceId, placeSeen } from '../content/places';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { SHISA_HELLO } from '../content/story';
 import { STAGES, ZONES } from '../content/zones';
-import { go, openAudioSettings, openStory, requestRun, resumeRun } from '../game/actions';
+import { go, openAudioSettings, openPlace, openStory, requestRun, resumeRun } from '../game/actions';
 import { type Progress, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
 import { UpdatePrompt } from '../ui/UpdatePrompt';
@@ -155,21 +156,16 @@ function IslandMap({ here }: { here: number }) {
         </text>
       </g>
       <path d={ROUTE} stroke="#C8452F" strokeWidth={3} strokeDasharray="2 8" strokeLinecap="round" fill="none" opacity={0.75} />
+      {/* The next stop's pin pulses; the ring sits outside the pin so the tap target itself never moves */}
+      <circle className="pinRing" cx={PINS[here][0]} cy={PINS[here][1]} r={17} fill="none" stroke={ZONES[here].color} strokeWidth={4} pointerEvents="none" />
       {ZONES.map((Z, i) => {
         const [x, y, side] = PINS[i];
         const locked = !open.includes(Z.id);
         const [lx, ly, anchor] =
           side === 'L' ? ([x - 20, y + 6, 'end'] as const) : side === 'R' ? ([x + 20, y + 6, 'start'] as const) : ([x, y + 36, 'middle'] as const);
         return (
-          // biome-ignore lint/a11y/noStaticElementInteractions: the zone list below offers the same action as real buttons
-          <g
-            key={Z.id}
-            data-zone={i}
-            className={i === here ? 'pin here' : 'pin'}
-            style={{ cursor: locked ? 'default' : 'pointer' }}
-            onClick={() => !locked && requestRun(i)}
-          >
-            {i === here && <circle className="pinRing" cx={x} cy={y} r={17} fill="none" stroke={Z.color} strokeWidth={4} />}
+          // biome-ignore lint/a11y/noStaticElementInteractions: the zone list below offers the same journeys as real buttons
+          <g key={Z.id} data-zone={i} className={i === here ? 'pin here' : 'pin'} style={{ cursor: 'pointer' }} onClick={() => openPlace(Z.id as PlaceId, i)}>
             <circle cx={x} cy={y} r={17} fill={locked ? '#B9C4C2' : Z.color} stroke="#fff" strokeWidth={4} />
             <text x={x} y={y + 6} textAnchor="middle" fontSize={17} fontWeight={700} fill="#fff" fontFamily="Fredoka, sans-serif">
               {i + 1}
@@ -192,7 +188,7 @@ function IslandMap({ here }: { here: number }) {
           </g>
         );
       })}
-      <g transform="translate(80,60)">
+      <g transform="translate(340,612)">
         <circle r={20} fill="#fff" opacity={0.7} />
         <path d="M0,-15 L5,0 L0,15 L-5,0 Z" fill="#C8452F" />
         <text y={-22} textAnchor="middle" fontSize={12} fontWeight={700} fill="#173944" fontFamily="Fredoka, sans-serif">
@@ -261,6 +257,16 @@ export function Home() {
       <div className="homeBody">
         <div className="islandWrap">
           <IslandMap here={here} />
+          {/* Okinawa's own postcard; the icon wiggles until it has been read */}
+          <button
+            type="button"
+            className={p.seen.includes(placeSeen('okinawa')) ? 'iconBtn mapOkinawa' : 'iconBtn mapOkinawa hasCoins'}
+            id="okinawaBtn"
+            onClick={() => openPlace('okinawa', null)}
+          >
+            <Icon name="postcard" />
+            <span>沖繩</span>
+          </button>
         </div>
         <div className="zones">
           {/* The one big button: carry on, or set out for the next zone to play */}

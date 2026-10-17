@@ -2223,3 +2223,86 @@ h1 {
     animation-duration: 0.01s;
   }
 }
+
+/* ---------- postcards ---------- */
+.postcard {
+  position: relative;
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.08),
+    0 0 0 3px var(--zc) inset;
+  transform: rotate(-1.2deg);
+}
+.postcardArt {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.postcardStamp {
+  position: absolute;
+  top: -14px;
+  right: -10px;
+  width: 78px;
+  height: 78px;
+  transform: rotate(8deg);
+}
+.sights {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.islandWrap {
+  position: relative;
+}
+.mapOkinawa {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  min-height: 40px;
+  padding: 0 12px;
+}
+.pcGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 520px) {
+  .pcGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.pcTile {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  min-height: 96px;
+  padding: 6px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--card);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+}
+.pcTile svg {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.pcTile.locked {
+  border-style: dashed;
+  color: var(--muted);
+  background: transparent;
+  cursor: default;
+}
+.pcTile.locked svg {
+  width: 26px;
+  border-radius: 0;
+}
