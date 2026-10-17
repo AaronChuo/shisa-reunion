@@ -16,7 +16,7 @@ export default defineConfig({
       manifest: {
         name: '小獅搭路',
         short_name: '小獅搭路',
-        description: '幫風獅爺用積木搭路回家的益智遊戲',
+        description: '幫西薩用積木搭路回家的益智遊戲',
         lang: 'zh-Hant-TW',
         display: 'standalone',
         orientation: 'any',

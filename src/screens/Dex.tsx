@@ -17,7 +17,7 @@ export function Dex() {
           <span>地圖</span>
         </button>
         <div className="title">
-          獅子圖鑑{' '}
+          西薩圖鑑{' '}
           <span className="num">
             {owned.length}/{VARIANTS.length}
           </span>
@@ -44,9 +44,9 @@ export function Dex() {
         </div>
       </div>
       <div className="dexIntro">
-        <p className="foot">點一隻收集到的獅子，聽聽牠的故事，也可以選牠出場。場上永遠只有兩隻獅子。</p>
+        <p className="foot">點一隻收集到的西薩，聽聽牠的故事，也可以選牠出場。場上永遠只有兩隻西薩。</p>
         <button type="button" className="iconBtn" id="aboutBtn" onClick={openAbout}>
-          <span>風獅爺是什麼？</span>
+          <span>西薩是什麼？</span>
         </button>
       </div>
       {SERIES.map((se) => (

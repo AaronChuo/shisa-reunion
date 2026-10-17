@@ -1,7 +1,7 @@
-import { expect, test as it } from '@playwright/test';
 import { relax, stageCfg, ZONES } from '../src/content/zones';
 import { generate } from '../src/engine';
 import { freshProgress } from '../src/state/store';
+import { expect, test as it } from './fixtures';
 import { dismissIntros, progress, solveByDragging } from './helpers';
 
 const save = (state: unknown) => JSON.stringify({ state: { progress: state }, version: 2 });

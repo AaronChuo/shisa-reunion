@@ -28,8 +28,18 @@ export function stopSpeaking(): void {
   holdMusicDown(false);
 }
 
-/** Reads the text aloud a sentence at a time (some engines cut long utterances short); `done` fires at the end or on stop */
-export function speak(text: string, done: () => void): void {
+/** How a line is said: the calm storyteller, or a shisa itself, higher and livelier */
+export type Voice = 'narrator' | 'shisa';
+const TONE: Record<Voice, { rate: number; pitch: number }> = {
+  narrator: { rate: 0.92, pitch: 1.05 },
+  shisa: { rate: 1.05, pitch: 1.7 },
+};
+
+/**
+ * Reads the text aloud a sentence at a time (some engines cut long utterances short); `done` fires at the end or on
+ * stop. Respects the sound-effects switch only through the caller.
+ */
+export function speak(text: string, done: () => void = () => {}, as: Voice = 'narrator'): void {
   if (!canSpeak()) {
     done();
     return;
@@ -46,8 +56,8 @@ export function speak(text: string, done: () => void): void {
     const u = new SpeechSynthesisUtterance(p);
     u.lang = v?.lang ?? 'zh-TW';
     if (v) u.voice = v;
-    u.rate = 0.92;
-    u.pitch = 1.05;
+    u.rate = TONE[as].rate;
+    u.pitch = TONE[as].pitch;
     const end = () => {
       if (id !== session) return;
       if (i === parts.length - 1) {
@@ -63,6 +73,22 @@ export function speak(text: string, done: () => void): void {
     };
     window.speechSynthesis.speak(u);
   });
+}
+
+let unlocked = false;
+/**
+ * iPhone and iPad only let a page speak after a tap has started speech once; an empty line during the first tap
+ * unlocks it, so later lines (a shisa greeting on a win) can play on their own.
+ */
+export function installSpeechUnlock(): () => void {
+  const unlock = () => {
+    if (unlocked || !canSpeak()) return;
+    unlocked = true;
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    window.removeEventListener('pointerup', unlock, true);
+  };
+  window.addEventListener('pointerup', unlock, true);
+  return () => window.removeEventListener('pointerup', unlock, true);
 }
 
 /** A read-aloud toggle for one text; stops when the text changes or the component goes away */

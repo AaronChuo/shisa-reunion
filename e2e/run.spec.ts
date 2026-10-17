@@ -1,4 +1,4 @@
-import { expect, test as it } from '@playwright/test';
+import { expect, test as it } from './fixtures';
 import { dismissIntros, progress, solveByDragging, waitForLevel } from './helpers';
 
 it.describe('a full journey', () => {

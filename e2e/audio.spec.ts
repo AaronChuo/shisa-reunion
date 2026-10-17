@@ -1,4 +1,5 @@
-import { expect, test as it, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test as it } from './fixtures';
 import { waitForLevel } from './helpers';
 
 // Counts notes and drum hits by watching AudioBufferSourceNode.start / OscillatorNode.start

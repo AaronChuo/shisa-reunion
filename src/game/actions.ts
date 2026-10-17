@@ -1,5 +1,7 @@
 import { sfx } from '../audio/sfx';
+import { speak } from '../audio/speech';
 import { drawFromSeries, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
+import { SHISA_CHEER } from '../content/story';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { CARDS, type CardKey, pickCards, STAGES, stageCfg, ZONES } from '../content/zones';
 import { canLift, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, rng, solve, stable, waterAt } from '../engine';
@@ -413,6 +415,7 @@ function onWin(): void {
     s.ui.modal = { kind: 'win', reward, last };
   });
   sfx.coin();
+  if (getState().progress.sound) speak(SHISA_CHEER, undefined, 'shisa');
 }
 
 export function afterWin(): void {
@@ -594,6 +597,27 @@ export function finishReveal(next: 'keep' | 'use'): void {
     s.ui.modal = null;
   });
   if (next === 'use' && id) chooseRole(id, 0);
+}
+
+// ---------- the opening story ----------
+export function openStory(): void {
+  hush();
+  mut((s) => {
+    s.ui.story = true;
+    s.ui.modal = null;
+  });
+}
+
+/** Leaves the story; `go` sets straight off on the next journey (or carries on the unfinished one) */
+export function closeStory(go: boolean, zi: number): void {
+  mut((s) => {
+    s.ui.story = false;
+    if (!s.progress.seen.includes('story')) s.progress.seen.push('story');
+  });
+  if (!go) return;
+  const r = getState().progress.run;
+  if (r && r.phase !== 'done') resumeRun();
+  else startRun(zi);
 }
 
 /** Back to playing: carry on the unfinished journey, or open the map to pick one */

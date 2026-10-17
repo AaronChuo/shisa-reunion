@@ -92,6 +92,8 @@ export interface Ui {
   capColor: string | null;
   /** Bumped to make the crank turn by itself once (the main button, or the keyboard) */
   spin: number;
+  /** The opening story is showing */
+  story: boolean;
 }
 
 export interface GameState {
@@ -130,6 +132,7 @@ const freshUi = (): Ui => ({
   pulled: null,
   capColor: null,
   spin: 0,
+  story: false,
 });
 
 /** Zone order before v0.5: progress was saved as arrays in this order */

@@ -1,4 +1,4 @@
-import { expect, test as it } from '@playwright/test';
+import { expect, test as it } from './fixtures';
 import { waitForLevel } from './helpers';
 
 it.describe('offline play', () => {

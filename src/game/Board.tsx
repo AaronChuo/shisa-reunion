@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { PieceArt } from '../art/PieceArt';
 import { Background, GateArt, Plate, StarSand, TrayBase, Urchin, Water } from '../art/Scene';
 import { ShisaArt } from '../art/Shisa';
+import { sfx } from '../audio/sfx';
+import { speak } from '../audio/speech';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { cellsOf, makeGrid, type Placement, sizeOf } from '../engine';
 import { useGame } from '../state/store';
@@ -110,6 +112,13 @@ export function Board() {
       }
       const p = run?.placed[idx];
       if (p) beginDrag(e, { src: 'board', k: p.k, idx, t: p.t, o: p.o }, svgRef.current);
+      return;
+    }
+    // Tapping a shisa (with no block picked) makes it say its name
+    const who = target.closest('#hero, #goal');
+    if (who && st.ui.sel < 0) {
+      sfx.hello();
+      if (st.progress.sound) speak('西薩！', undefined, 'shisa');
       return;
     }
     const fixed = target.closest('[data-fixed]');

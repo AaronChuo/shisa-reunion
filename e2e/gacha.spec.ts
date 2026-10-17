@@ -1,5 +1,6 @@
-import { expect, test as it, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { freshProgress } from '../src/state/store';
+import { expect, test as it } from './fixtures';
 import { progress } from './helpers';
 
 const seed = (tokens: number) => JSON.stringify({ state: { progress: { ...freshProgress(), tokens } }, version: 2 });

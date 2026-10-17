@@ -1,8 +1,11 @@
 import { CoinIcon, Icon, Stamp } from '../art/Icons';
 import { ShisaArt } from '../art/Shisa';
+import { sfx } from '../audio/sfx';
+import { speak } from '../audio/speech';
 import { VARIANT_BY_ID } from '../content/shisa';
+import { SHISA_HELLO } from '../content/story';
 import { STAGES, ZONES } from '../content/zones';
-import { go, openAudioSettings, requestRun, resumeRun } from '../game/actions';
+import { go, openAudioSettings, openStory, requestRun, resumeRun } from '../game/actions';
 import { type Progress, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
 import { UpdatePrompt } from '../ui/UpdatePrompt';
@@ -200,6 +203,11 @@ function IslandMap({ here }: { here: number }) {
   );
 }
 
+const hello = () => {
+  sfx.hello();
+  if (useGame.getState().progress.sound) speak(SHISA_HELLO, undefined, 'shisa');
+};
+
 export function Home() {
   const p = useGame((s) => s.progress);
   const hero = VARIANT_BY_ID[p.pair[0]];
@@ -210,18 +218,21 @@ export function Home() {
     <section id="home" className="screen scroll">
       <UpdatePrompt />
       <header className="homeHead">
-        <svg className="pairArt" viewBox="-60 -100 130 104" aria-hidden="true">
-          <g transform="translate(-26,0)">
-            <ShisaArt v={hero} open />
-          </g>
-          <g transform="translate(34,0)">
-            <ShisaArt v={goal} open={false} />
-          </g>
-        </svg>
+        {/* Tap the pair and they say their name */}
+        <button type="button" className="pairBtn" id="pairBtn" aria-label="西薩" onClick={hello}>
+          <svg className="pairArt" viewBox="-60 -100 130 104" aria-hidden="true">
+            <g transform="translate(-26,0)">
+              <ShisaArt v={hero} open />
+            </g>
+            <g transform="translate(34,0)">
+              <ShisaArt v={goal} open={false} />
+            </g>
+          </svg>
+        </button>
         <div className="mh">
           <h1>小獅搭路</h1>
           <p className="story">
-            颱風把屋頂上的風獅爺吹得到處都是。幫{hero.name}搭一條路回到{goal.name}身邊，每過一站拿一枚福氣幣，拿去扭蛋機轉出更多獅子。
+            颱風把屋頂上的西薩吹得到處都是。幫{hero.name}搭一條路回到{goal.name}身邊，每過一站拿一枚福氣幣，拿去扭蛋機轉出更多西薩。
           </p>
         </div>
         <div className="homeTools">
@@ -237,6 +248,10 @@ export function Home() {
           <button type="button" className="iconBtn" data-go="dex" onClick={() => go('dex')}>
             <Icon name="book" />
             <span>圖鑑</span>
+          </button>
+          <button type="button" className="iconBtn" id="storyBtn" onClick={openStory}>
+            <Icon name="tale" />
+            <span>故事</span>
           </button>
           <button type="button" className="iconBtn" id="audioBtn" aria-label="聲音設定" onClick={openAudioSettings}>
             <Icon name={p.sound || p.music ? 'soundOn' : 'soundOff'} />

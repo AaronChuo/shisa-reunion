@@ -65,6 +65,13 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   play: <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />,
+  // An open picture book, for the story
+  tale: (
+    <>
+      <path d="M12 6.5C10 5 6.5 4.5 3 5v13c3.5-.5 7 0 9 1.5 2-1.5 5.5-2 9-1.5V5c-3.5-.5-7 0-9 1.5z" />
+      <path d="M12 6.5v13" />
+    </>
+  ),
   check: <path d="m5 12.5 4.5 4.5L19 7.5" strokeWidth={3} />,
   close: <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" strokeWidth={2.8} />,
   refresh: (

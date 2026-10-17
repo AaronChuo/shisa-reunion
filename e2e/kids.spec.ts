@@ -1,4 +1,4 @@
-import { expect, test as it } from '@playwright/test';
+import { expect, test as it } from './fixtures';
 import { progress, solveByDragging, waitForLevel } from './helpers';
 
 // For children who can't read yet: one big button to press, pictures, and a finger that shows what to do
