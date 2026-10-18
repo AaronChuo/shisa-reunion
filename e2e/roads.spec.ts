@@ -42,7 +42,7 @@ it.describe('wide ground on a narrow screen', () => {
   it.use({ viewport: { width: 250, height: 700 }, hasTouch: true });
 
   it('scrolls the field sideways and pans when empty ground is dragged', async ({ page }) => {
-    const all = ['naha', 'yomitan', 'motobu', 'kouri', 'taketomi', 'iriomote', 'shuri'];
+    const all = ['naha', 'yomitan', 'motobu', 'kouri', 'nakagusuku', 'taketomi', 'iriomote', 'miyako', 'shuri', 'kumejima'];
     const state = {
       ...freshProgress(),
       open: all,
@@ -52,7 +52,7 @@ it.describe('wide ground on a narrow screen', () => {
     await page.addInitScript((s) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', s), save(state));
     await page.goto('/');
     // Taketomi is 8 columns wide: too wide to fit 250 px with fingertip-sized cells
-    await page.click('.zone [data-zone="4"]');
+    await page.click(`.zone [data-zone="${all.indexOf('taketomi')}"]`);
     const box = page.locator('.boardScroll.scrollX');
     await expect(box).toBeVisible({ timeout: 15_000 });
     const { sw, cw } = await box.evaluate((el) => ({ sw: el.scrollWidth, cw: el.clientWidth }));

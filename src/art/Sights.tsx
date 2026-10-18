@@ -3,7 +3,7 @@
 // on the branch choice can both place them.
 
 export type TimeOfDay = 'day' | 'dusk' | 'night';
-export type Sight = 'town' | 'palms' | 'bridge' | 'castle' | 'forest' | 'lighthouse' | 'field' | 'pier' | 'waterfall';
+export type Sight = 'town' | 'palms' | 'bridge' | 'castle' | 'forest' | 'lighthouse' | 'field' | 'pier' | 'waterfall' | 'rocks' | 'cliff';
 
 export interface Palette {
   skyTop: string;
@@ -230,6 +230,42 @@ export function SightArt({ sight, time }: { sight: Sight; time: TimeOfDay }) {
           {[60, 100, 140, 180, 220].map((x) => (
             <rect key={x} x={x} y={-8} width={5} height={10} fill={night ? '#7A8399' : '#BDB3A0'} />
           ))}
+        </g>
+      );
+    case 'rocks':
+      // 疊石: flat five- and six-sided rocks on the shore, like a turtle's shell
+      return (
+        <g>
+          <path d="M-10,0 Q120,-18 250,0 Z" fill={night ? '#5B6A7E' : time === 'dusk' ? '#E5C08F' : '#F3E3B5'} />
+          {[
+            [30, -8],
+            [74, -12],
+            [118, -9],
+            [162, -13],
+            [206, -8],
+            [52, -26],
+            [96, -28],
+            [140, -27],
+            [184, -25],
+          ].map(([x, y]) => (
+            <path
+              key={`${x},${y}`}
+              d={`M${x - 18},${y} l9,-9 h18 l9,9 l-9,9 h-18 Z`}
+              fill={night ? '#5E6578' : '#8C8478'}
+              stroke={night ? '#3D4254' : '#5E574C'}
+              strokeWidth={2.5}
+            />
+          ))}
+        </g>
+      );
+    case 'cliff':
+      // A tall cliff dropping into the sea, with a lookout on top
+      return (
+        <g>
+          <path d="M0,0 V-70 C30,-104 80,-120 130,-118 L150,-118 L170,-60 L200,-30 L240,0 Z" fill={P.land} />
+          <path d="M150,-118 L170,-60 L200,-30 L240,0 H200 L180,-30 L160,-64 Z" fill={night ? '#22383A' : '#5E8F6A'} opacity={0.6} />
+          <rect x={92} y={-140} width={28} height={22} fill={P.wall} />
+          <path d="M86,-140 L106,-154 L126,-140 Z" fill={P.roof} />
         </g>
       );
     case 'waterfall':

@@ -50,6 +50,16 @@
     "position": "centre"
   },
   {
+    "place": "nakagusuku",
+    "title": "Nakagusuku Castle28n3104.jpg",
+    "author": "663highland",
+    "license": "CC BY 2.5",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.5",
+    "source": "https://commons.wikimedia.org/wiki/File:Nakagusuku_Castle28n3104.jpg",
+    "download": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Nakagusuku_Castle28n3104.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "position": "centre"
+  },
+  {
     "place": "taketomi",
     "title": "Taketomi Island Yado.jpg",
     "author": "Kzaral",
@@ -70,6 +80,16 @@
     "position": "centre"
   },
   {
+    "place": "miyako",
+    "title": "Miyako's Irabu Bridge (52204268416).jpg",
+    "author": "Raita Futo from Tokyo, Japan",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Miyako%27s_Irabu_Bridge_(52204268416).jpg",
+    "download": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Miyako%27s_Irabu_Bridge_%2852204268416%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "position": "centre"
+  },
+  {
     "place": "shuri",
     "title": "Shurei-mon.jpeg",
     "author": "nnh",
@@ -78,5 +98,15 @@
     "source": "https://commons.wikimedia.org/wiki/File:Shurei-mon.jpeg",
     "download": "https://upload.wikimedia.org/wikipedia/commons/7/79/Shurei-mon.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "position": "north"
+  },
+  {
+    "place": "kumejima",
+    "title": "Okinawa-kumejima Hatenohama Beach-xl.jpg",
+    "author": "Kumejima93_OKINAWA",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Okinawa-kumejima_Hatenohama_Beach-xl.jpg",
+    "download": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Okinawa-kumejima_Hatenohama_Beach-xl.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "position": "centre"
   }
 ]

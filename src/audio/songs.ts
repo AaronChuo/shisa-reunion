@@ -1,5 +1,5 @@
-// Background music. Seven traditional Okinawan folk songs (public domain, melody only; read from the melody line
-// of mu-tech.org's MIDI files and transposed to C) and two originals in the Ryukyu scale.
+// Background music. Eight traditional Okinawan folk songs (public domain, melody only; read from the melody line
+// of mu-tech.org's MIDI files and transposed to C) and four originals in the Ryukyu scale.
 
 export interface NoteEvent {
   note: string;
@@ -125,6 +125,36 @@ export const SONGS = {
     `r:0.5 C4:0.5 E4:1 F4:3 F4:0.5 B4:0.5 G4:1 G4:1 | F4:2 D4:1 F4:0.5 F4:0.5 | r:1 D4:1 C4:1 D4:0.5 C4:0.5 |
      B3:1 G3:1 B3:1 C4:2 C4:0.5 F4:0.5 D4:1 B3:1 | C4:2 C4:1 B3:1 | C4:1 D4:1 F4:1 B3:1 | C4:2 F4:0.5 F4:0.5 E4:0.5 E4:0.5 |
      F4:0.5 F4:0.5 G4:1 B4:0.5 B4:0.5 E4:0.5 E4:0.5 | F4:2 r:2`,
+  ),
+  // Miyako's harvest song: an old ayagu with no named author. Melody only; the long holds are kept as held notes
+  hounen: song(
+    '豊年の歌',
+    72,
+    'calm',
+    `C4:0.25 C4:0.75 C4:1 F4:1.75 A4:0.25 | G4:1.75 F4:0.25 G4:1 A4:0.75 C5:1 C5:3.25 |
+     C5:0.25 C5:0.75 C5:0.75 D5:0.25 C5:1 A4:0.75 G4:0.25 | F4:1 G4:0.75 A4:0.25 G4:1 F4:0.75 D4:0.25 |
+     C4:0.75 C4:1 A3:0.25 C4:1 D4:0.75 F4:1 F4:2 r:2 G4:1 G4:0.25 G4:0.75 C5:1 A4:1 G4:1 F4:0.25 G4:1 A4:0.75 C5:1 C5:3.25 |
+     C5:1 C5:1 C5:1 A4:0.75 G4:0.25 | F4:1.75 A4:0.25 G4:1 F4:0.75 D4:0.25 | C4:0.75 C4:1 A3:0.25 C4:1 D4:0.75 F4:1 F4:2 r:1.25`,
+  ),
+  // Original, for Nakagusuku: phrases that climb and come back down, like the castle's stone arch
+  arch: song(
+    '石拱門',
+    92,
+    'lively',
+    `C4:1 E4:1 G4:1 B4:1 | C5:2 B4:1 G4:1 | F4:1 G4:.5 F4:.5 E4:1 F4:1 | G4:3 r:1 |
+     C4:1 E4:1 G4:1 B4:1 | C5:1 E5:1 C5:1 B4:1 | G4:1 F4:.5 G4:.5 E4:1 F4:1 | C4:3 r:1 |
+     G4:.5 B4:.5 C5:1 B4:.5 G4:.5 F4:1 | G4:.5 B4:.5 C5:1 E5:2 | C5:.5 B4:.5 G4:1 F4:.5 E4:.5 F4:1 | G4~:3 r:1 |
+     E4:1 F4:.5 G4:.5 B4:1 C5:1 | B4:1 G4:1 F4:1 E4:1 | F4:.5 G4:.5 F4:.5 E4:.5 C4:1 E4:1 | C4:3 r:1`,
+  ),
+  // Original, for Kume: little rising and falling figures, like waves over the white Hatenohama sandbar
+  sandbar: song(
+    '白沙洲',
+    80,
+    'calm',
+    `G4:.5 F4:.5 E4:1 G4:1 C5:1 | B4:1.5 G4:.5 E4:2 | F4:.5 G4:.5 B4:1 G4:.5 F4:.5 E4:1 | F4:3 r:1 |
+     G4:.5 F4:.5 E4:1 G4:1 C5:1 | E5:1.5 C5:.5 B4:2 | G4:.5 B4:.5 C5:1 B4:.5 G4:.5 F4:1 | E4:3 r:1 |
+     C5:1 B4:.5 C5:.5 E5:1 C5:1 | B4:1 G4:1 F4:2 | E4:.5 F4:.5 G4:1 B4:1 G4:1 | C5~:3 r:1 |
+     B4:.5 G4:.5 F4:1 E4:.5 F4:.5 G4:1 | F4:1 E4:1 C4:2 | E4:.5 F4:.5 G4:.5 B4:.5 G4:1 F4:1 | C4:3 r:1`,
   ),
 } satisfies Record<string, Song>;
 

@@ -1,7 +1,7 @@
 // A postcard for Okinawa and for each zone: what the place is like, its culture or its story, in a few sentences a
 // parent can read aloud. Facts here were checked; keep any new ones just as careful.
 
-export type PlaceId = 'okinawa' | 'naha' | 'yomitan' | 'motobu' | 'kouri' | 'taketomi' | 'iriomote' | 'shuri';
+export type PlaceId = 'okinawa' | 'naha' | 'yomitan' | 'motobu' | 'kouri' | 'nakagusuku' | 'taketomi' | 'iriomote' | 'miyako' | 'shuri' | 'kumejima';
 
 export interface Place {
   id: PlaceId;
@@ -47,6 +47,13 @@ export const PLACES: Record<PlaceId, Place> = {
     story:
       '古宇利島要經過將近兩公里長的古宇利大橋才到得了，橋下的海是漂亮的藍綠色。島上流傳著沖繩版「亞當和夏娃」的故事，所以又叫「戀之島」，海邊還有一塊心形的岩石。',
   },
+  nakagusuku: {
+    id: 'nakagusuku',
+    name: '中城城跡',
+    sights: ['彎彎的石牆', '石拱門', '山丘上的古城'],
+    story:
+      '中城城跡是建在高高山丘上的古城，彎彎的石牆像波浪一樣。大約 1440 年，建城高手護佐丸從讀谷村的座喜味城搬來這裡，把城蓋得更大。後來來到沖繩的美國培理艦隊，也稱讚它的石拱門非常精巧。',
+  },
   taketomi: {
     id: 'taketomi',
     name: '竹富島',
@@ -60,6 +67,13 @@ export const PLACES: Record<PlaceId, Place> = {
     story:
       '西表島大約九成都是森林，河口長滿了紅樹林，可以划獨木舟從樹根中間穿過去。島上住著全世界只有這裡才有的西表山貓。2021 年，這裡和沖繩北部的森林一起成為世界自然遺產。',
   },
+  miyako: {
+    id: 'miyako',
+    name: '宮古島',
+    sights: ['伊良部大橋', '宮古藍的海', '岬角上的燈塔'],
+    story:
+      '宮古島在沖繩本島的西南邊，大約 300 公里遠。這裡的海藍得特別漂亮，大家叫它「宮古藍」。2015 年蓋好的伊良部大橋長 3540 公尺，是日本不用付錢就能通過的橋裡最長的一座。',
+  },
   shuri: {
     id: 'shuri',
     name: '首里城',
@@ -67,9 +81,16 @@ export const PLACES: Record<PlaceId, Place> = {
     story:
       '首里城是琉球國王住了大約 450 年的城堡，前面的守禮門還被印在日本的兩千元鈔票上。2019 年一場大火燒掉了紅色的正殿，大家一起努力重建，2026 年秋天又看得到它了。',
   },
+  kumejima: {
+    id: 'kumejima',
+    name: '久米島',
+    sights: ['果之濱的白沙', '疊石', '退潮才看得到'],
+    story:
+      '久米島在沖繩本島的西邊，大約 100 公里遠。島的東南邊海上有一條全是白沙的「果之濱」，長約 7 公里。旁邊奧武島的海邊有「疊石」，退潮時會露出像烏龜殼一樣的五角形、六角形石頭。',
+  },
 };
 
 /** Postcards in collection order: Okinawa first, then the zones as you travel */
-export const PLACE_ORDER: PlaceId[] = ['okinawa', 'naha', 'yomitan', 'motobu', 'kouri', 'taketomi', 'iriomote', 'shuri'];
+export const PLACE_ORDER: PlaceId[] = ['okinawa', 'naha', 'yomitan', 'motobu', 'kouri', 'nakagusuku', 'taketomi', 'iriomote', 'miyako', 'shuri', 'kumejima'];
 
 export const placeSeen = (id: PlaceId) => `place:${id}`;

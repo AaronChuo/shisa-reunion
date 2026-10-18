@@ -67,6 +67,11 @@ export function stable(g: Grid, t: PieceType, o: number, x: number, y: number): 
     }
   }
   if (lo === Number.POSITIVE_INFINITY) return false;
+  // The long stone bridge has one simple rule children can see: both ends must be held up
+  if (t === 'long') {
+    const held = (dx: number) => y === 0 || SUPPORT.has(at(g, x + dx, y - 1)?.k ?? '');
+    return held(0) && held(2);
+  }
   const com = mx / m;
   return com >= lo - 1e-9 && com <= hi + 1e-9;
 }

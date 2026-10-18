@@ -9,7 +9,7 @@ import { PHOTOS } from '../content/credits';
 import { PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES, stopLine } from '../content/text';
-import { isBranch, roadOffer, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
+import { isBranch, lockHint, roadOffer, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { sizeOf } from '../engine';
 import {
   ackIntro,
@@ -389,6 +389,7 @@ function About() {
 function Postcard({ id, start }: { id: PlaceId; start: number | null }) {
   const P = PLACES[id];
   const open = useGame((s) => s.progress.open);
+  const clears = useGame((s) => s.progress.clears);
   const zi = ZONES.findIndex((Z) => Z.id === id);
   const Z = ZONES[zi];
   const locked = !!Z && !open.includes(Z.id);
@@ -408,7 +409,7 @@ function Postcard({ id, start }: { id: PlaceId; start: number | null }) {
         ))}
       </div>
       <Story text={P.story} />
-      {locked && <p className="small">先走完{ZONES[zi - 1]?.name}，這裡才會打開</p>}
+      {locked && <p className="small">{lockHint(zi, clears)}</p>}
       <div className="btns">
         {start !== null && !locked ? (
           <Cta icon={<Icon name="play" />} data={{ 'data-go-place': true, 'data-focus': true }} onClick={() => setOffFrom(start)}>

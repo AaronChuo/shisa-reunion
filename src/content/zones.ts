@@ -46,7 +46,13 @@ const NEW_WEIGHT = 3;
 /** Elements that never share a stop, because levels with both take too long to generate */
 const AVOID: [Element, Element][] = [
   ['gate', 'star'],
+  ['gate', 'tide'],
+  ['gate', 'long'],
+  ['gate', 'vine'],
   ['spring', 'vine'],
+  ['tide', 'vine'],
+  ['long', 'vine'],
+  ['slide', 'vine'],
 ];
 /** At most two special blocks on one stop, and nothing else with two of them, for the same reason */
 const MAX_SPECIAL = 2;
@@ -160,6 +166,24 @@ export const ZONES: Zone[] = [
     ],
   },
   {
+    id: 'nakagusuku',
+    name: '中城城跡',
+    tier: 2,
+    color: '#B07A3E',
+    w: 7,
+    line: '彎彎的石牆和石拱門，學會搭石拱橋',
+    base: PLAIN,
+    intro: 'long',
+    ks: [2, 3, 3, 3],
+    bgm: 'arch',
+    boss: { name: '石拱門', k: 3, maxSols: 3 },
+    roads: [
+      { name: '二之郭的石牆', time: 'day', sight: 'castle' },
+      { name: '中城灣', time: 'dusk', sight: 'pier' },
+      { name: '中村家住宅', time: 'night', sight: 'town' },
+    ],
+  },
+  {
     id: 'taketomi',
     name: '竹富島',
     tier: 3,
@@ -196,6 +220,24 @@ export const ZONES: Zone[] = [
     ],
   },
   {
+    id: 'miyako',
+    name: '宮古島',
+    tier: 3,
+    color: '#1E88C8',
+    w: 8,
+    line: '翻過砂山到海灘，學會溜滑梯',
+    base: PLAIN,
+    intro: 'slide',
+    ks: [2, 3, 3, 3],
+    bgm: 'hounen',
+    boss: { name: '砂山海灘', k: 3, maxSols: 3 },
+    roads: [
+      { name: '伊良部大橋', time: 'day', sight: 'bridge' },
+      { name: '東平安名崎', time: 'dusk', sight: 'lighthouse' },
+      { name: '前濱海灘', time: 'night', sight: 'palms' },
+    ],
+  },
+  {
     id: 'shuri',
     name: '首里城',
     tier: 4,
@@ -211,6 +253,24 @@ export const ZONES: Zone[] = [
       { name: '首里金城町石疊道', time: 'day', sight: 'town' },
       { name: '龍潭', time: 'dusk', sight: 'castle' },
       { name: '首里城夜景', time: 'night', sight: 'castle' },
+    ],
+  },
+  {
+    id: 'kumejima',
+    name: '久米島',
+    tier: 4,
+    color: '#3A9E8F',
+    w: 8,
+    line: '海水會漲會退，西薩要走高的地方',
+    base: PLAIN,
+    intro: 'tide',
+    ks: [2, 3, 3, 3],
+    bgm: 'sandbar',
+    boss: { name: '果之濱', k: 3, maxSols: 3 },
+    roads: [
+      { name: '疊石', time: 'day', sight: 'rocks' },
+      { name: '比屋定斷崖', time: 'dusk', sight: 'cliff' },
+      { name: '久米島的星空', time: 'night', sight: 'palms' },
     ],
   },
 ];
@@ -293,8 +353,8 @@ export function planRun(zi: number, learned: readonly Element[], seed: number): 
     }
     return max;
   };
-  /** n distinct elements, weighted, skipping pairs that must not meet */
-  const draw = (n: number, from: { e: Element; w: number }[]): Element[] => {
+  /** n distinct elements, weighted, that may share a stop with `base` and with each other */
+  const draw = (n: number, from: { e: Element; w: number }[], base: Element[] = []): Element[] => {
     for (let tries = 0; tries < 20; tries++) {
       const left = from.slice();
       const set: Element[] = [];
@@ -307,9 +367,11 @@ export function planRun(zi: number, learned: readonly Element[], seed: number): 
         }
         set.push(left.splice(i, 1)[0].e);
       }
-      if (!avoided(set)) return set;
+      if (!avoided([...base, ...set])) return set;
     }
-    return from.length && n ? [from[0].e] : [];
+    // Rare: no draw fitted, so take the first single element that does, or none
+    const one = from.find((c) => allowed([...base, c.e]));
+    return one && n ? [one.e] : [];
   };
   const weighted = [...(own ? [{ e: own, w: NEW_WEIGHT }] : []), ...older.map((e) => ({ e, w: 1 }))];
   const mid = [0, 1, 2].map(() => draw(Math.min(drawCount(), weighted.length), weighted));
@@ -330,6 +392,7 @@ export function planRun(zi: number, learned: readonly Element[], seed: number): 
     ...draw(
       extra,
       older.map((e) => ({ e, w: 1 })),
+      own ? [own] : [],
     ),
   ];
   const tidy = (set: Element[]) => [...new Set(set)].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));

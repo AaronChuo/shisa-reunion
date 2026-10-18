@@ -48,11 +48,23 @@ describe('physics', () => {
     expect(findPath(g, photo.hero, photo.goal)).not.toBeNull();
   });
 
-  it('balances the long stone bridge on its middle but not on one end', () => {
-    const lv = level({ fixed: [{ t: 'tower', o: 0, x: 2, y: 0 }], hero: { x: 0, y: 0 }, goal: { x: 5, y: 0 } });
-    const g = makeGrid(lv, []);
-    expect(stable(g, 'long', 0, 1, 2)).toBe(true);
-    expect(stable(g, 'long', 0, 2, 2)).toBe(false);
+  it('holds the long stone bridge up only when both ends rest on something', () => {
+    const middle = makeGrid(level({ fixed: [{ t: 'tower', o: 0, x: 2, y: 0 }], hero: { x: 0, y: 0 }, goal: { x: 5, y: 0 } }), []);
+    expect(stable(middle, 'long', 0, 1, 2)).toBe(false);
+    const ends = makeGrid(
+      level({
+        fixed: [
+          { t: 'tower', o: 0, x: 1, y: 0 },
+          { t: 'tower', o: 0, x: 3, y: 0 },
+        ],
+        hero: { x: 0, y: 0 },
+        goal: { x: 5, y: 0 },
+      }),
+      [],
+    );
+    expect(stable(ends, 'long', 0, 1, 2)).toBe(true);
+    expect(stable(ends, 'long', 0, 2, 2)).toBe(false);
+    expect(stable(middle, 'long', 0, 2, 0)).toBe(true);
   });
 
   it('refuses to lift a piece that has another piece on top', () => {

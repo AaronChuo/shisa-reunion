@@ -544,6 +544,14 @@ h1 {
   width: 24px;
   height: 24px;
 }
+.chip .drops {
+  display: inline-flex;
+  gap: 2px;
+}
+.chip .drops svg {
+  width: 12px;
+  height: 16px;
+}
 .stage {
   flex: 1;
   min-height: 0;

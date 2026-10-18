@@ -352,6 +352,87 @@ function Shuri() {
   );
 }
 
+/** 中城城跡: curved stone walls on a green hill, with the stone arch gate the Perry expedition admired */
+function Nakagusuku() {
+  return (
+    <>
+      <rect width={400} height={240} fill="#BFE6EE" />
+      <circle cx={52} cy={40} r={18} fill="#FFD45E" />
+      <path d="M0,170 C90,140 180,132 260,140 C320,146 370,156 400,166 L400,240 L0,240 Z" fill="#7DBE93" />
+      {/* Curved walls, stepping up the hill like waves */}
+      <path d="M30,196 C40,140 90,118 150,116 C210,114 250,124 280,150 L290,200 Z" fill="#D8CFC0" stroke="#8C7F6B" strokeWidth={3} />
+      <path d="M44,170 C70,134 110,126 150,126 M44,186 C80,150 120,142 168,142" stroke="#B7AC97" strokeWidth={2} fill="none" />
+      <path d="M230,200 C236,150 276,120 330,118 C360,118 380,130 392,146 L392,204 Z" fill="#E2D9C8" stroke="#8C7F6B" strokeWidth={3} />
+      {/* Arch gate */}
+      <path
+        d="M150,200 V150 Q150,128 172,128 H196 Q218,128 218,150 V200 H200 V156 Q200,144 184,144 Q168,144 168,156 V200 Z"
+        fill="#CFC5B2"
+        stroke="#6E6354"
+        strokeWidth={3}
+      />
+      <path d="M184,128 l-5,-10 h10 Z" fill="#B7AC97" stroke="#6E6354" strokeWidth={2} />
+      <rect y={200} width={400} height={40} fill="#94CEA6" />
+      <Label x={184} y={224} text="石拱門" size={14} />
+      <Label x={330} y={110} text="彎彎的石牆" size={12} />
+    </>
+  );
+}
+
+/** 宮古: the long Irabu bridge over Miyako-blue sea, and the lighthouse on Higashi-hennazaki */
+function Miyako() {
+  return (
+    <>
+      <Sky sea={150} seaColor="#1E9ED8" />
+      <rect y={176} width={400} height={64} fill="#5FD0E6" opacity={0.7} />
+      {/* Irabu island on the left, Miyako on the right */}
+      <path d="M0,150 C20,132 60,128 84,140 L92,152 L0,156 Z" fill="#7DBE93" />
+      <path d="M330,150 C350,128 384,124 400,132 V156 L326,156 Z" fill="#7DBE93" />
+      {/* The bridge: a long deck that rises in the middle so ships can pass */}
+      <path d="M84,146 C160,146 190,112 220,112 C250,112 270,146 340,146" stroke="#F2EEE6" strokeWidth={7} fill="none" />
+      <path d="M84,146 C160,146 190,112 220,112 C250,112 270,146 340,146" stroke="#B7AC97" strokeWidth={2} fill="none" transform="translate(0,5)" />
+      {[110, 140, 170, 200, 240, 270, 300].map((x) => (
+        <rect key={x} x={x - 2} y={x < 220 ? 146 - (x - 84) * 0.25 : 120 + (x - 240) * 0.3} width={4} height={30} fill="#D8CFC0" />
+      ))}
+      {/* Lighthouse on the cape */}
+      <path d="M352,132 L356,84 H368 L372,132 Z" fill="#FFFFFF" stroke="#8C7F6B" strokeWidth={2} />
+      <rect x={354} y={74} width={16} height={10} fill="#CD4A31" />
+      <Label x={212} y={98} text="伊良部大橋" size={13} />
+      <Label x={200} y={214} text="宮古藍的海" size={13} />
+    </>
+  );
+}
+
+/** 久米: the white Hatenohama sandbar in a turquoise sea, and the turtle-shell rocks of Tatami-ishi at low tide */
+function Kumejima() {
+  return (
+    <>
+      <Sky sea={110} seaColor="#4FC6D8" />
+      <path
+        d="M40,150 C120,134 220,128 300,136 C340,140 370,146 390,152 C340,160 240,162 140,160 C90,158 56,156 40,150 Z"
+        fill="#FFF6DA"
+        stroke="#F0DDA8"
+        strokeWidth={3}
+      />
+      <Label x={214} y={128} text="果之濱" size={14} />
+      <path d="M0,200 Q200,184 400,200 V240 H0 Z" fill="#E8D8B0" />
+      {[
+        [60, 214],
+        [104, 210],
+        [148, 214],
+        [192, 210],
+        [236, 214],
+        [82, 230],
+        [126, 228],
+        [170, 230],
+        [214, 228],
+      ].map(([x, y]) => (
+        <path key={`${x},${y}`} d={`M${x - 18},${y} l9,-8 h18 l9,8 l-9,8 h-18 Z`} fill="#8C8478" stroke="#5E574C" strokeWidth={2.5} />
+      ))}
+      <Label x={320} y={222} text="疊石" size={14} />
+    </>
+  );
+}
+
 export function PostcardArt({ id }: { id: PlaceId }) {
   switch (id) {
     case 'naha':
@@ -362,12 +443,18 @@ export function PostcardArt({ id }: { id: PlaceId }) {
       return <Motobu />;
     case 'kouri':
       return <Kouri />;
+    case 'nakagusuku':
+      return <Nakagusuku />;
     case 'taketomi':
       return <Taketomi />;
     case 'iriomote':
       return <Iriomote />;
+    case 'miyako':
+      return <Miyako />;
     case 'shuri':
       return <Shuri />;
+    case 'kumejima':
+      return <Kumejima />;
     default:
       return <Okinawa />;
   }

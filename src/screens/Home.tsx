@@ -105,6 +105,34 @@ const ISHIGAKI: [number, number][] = [
   [196, 634],
 ];
 
+// Miyako, about 300 km south-west of Naha, on the right of the same inset; Irabu island just west of it
+const MIYAKO: [number, number][] = [
+  [268, 588],
+  [282, 580],
+  [298, 582],
+  [306, 594],
+  [300, 606],
+  [288, 616],
+  [276, 612],
+  [270, 600],
+];
+const IRABU: [number, number][] = [
+  [250, 590],
+  [258, 584],
+  [264, 592],
+  [258, 600],
+];
+// Kume island, about 100 km west of the main island
+const KUME: [number, number][] = [
+  [64, 394],
+  [76, 386],
+  [90, 388],
+  [98, 398],
+  [92, 410],
+  [78, 414],
+  [66, 408],
+];
+
 type Side = 'L' | 'R' | 'B';
 /** Map pin per zone (same order as ZONES) and which side its name goes on */
 const PINS: [number, number, Side][] = [
@@ -112,14 +140,18 @@ const PINS: [number, number, Side][] = [
   [186, 384, 'L'],
   [190, 232, 'L'],
   [206, 170, 'L'],
+  [210, 438, 'R'],
   [166, 604, 'B'],
   [98, 600, 'B'],
+  [286, 598, 'B'],
   [176, 462, 'R'],
+  [80, 400, 'B'],
 ];
 const ISLAND_PATH = smooth(ISLAND);
 const P = (i: number) => `${PINS[i][0]},${PINS[i][1]}`;
-// Up the main island to Kouri, down the west sea to Yaeyama, and a ferry back round the southern tip to Shuri
-const ROUTE = `M${P(0)} Q150,430 ${P(1)} Q160,300 ${P(2)} Q178,200 ${P(3)} Q60,330 70,520 Q80,600 ${P(4)} Q132,640 ${P(5)} Q180,560 ${P(6)}`;
+// Up the main island to Kouri, down the east coast to Nakagusuku, over the sea to Yaeyama and Miyako, back to Shuri
+// and out west to Kume
+const ROUTE = `M${P(0)} Q150,430 ${P(1)} Q160,300 ${P(2)} Q178,200 ${P(3)} Q330,300 ${P(4)} Q250,540 ${P(5)} Q132,640 ${P(6)} Q190,660 ${P(7)} Q262,520 ${P(8)} Q120,400 ${P(9)}`;
 
 /** Where "go" takes a child: the unfinished journey, else the first open zone not yet finished, else the furthest one */
 export function nextZone(p: Progress): number {
@@ -143,11 +175,11 @@ function IslandMap({ here }: { here: number }) {
       <path d="M210,176 L214,194" stroke="#8C7F6B" strokeWidth={3} strokeLinecap="round" />
       <ellipse cx={206} cy={170} rx={11} ry={7.5} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={4} />
       <g>
-        <rect x={48} y={552} width={226} height={102} rx={14} fill="#CBEEF3" stroke="#8FC9D3" strokeWidth={2.5} strokeDasharray="6 6" />
+        <rect x={48} y={552} width={270} height={102} rx={14} fill="#CBEEF3" stroke="#8FC9D3" strokeWidth={2.5} strokeDasharray="6 6" />
         <text x={58} y={571} fontSize={12} fontWeight={700} fill="#3F7480" fontFamily={font}>
-          八重山（本島西南方約 400 公里）
+          八重山・宮古（本島西南方 300–400 公里）
         </text>
-        {[IRIOMOTE, ISHIGAKI].map((pts) => (
+        {[IRIOMOTE, ISHIGAKI, MIYAKO, IRABU].map((pts) => (
           <path key={pts[0][0]} d={smooth(pts)} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke" />
         ))}
         <circle cx={166} cy={608} r={7} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={3} />
@@ -155,6 +187,7 @@ function IslandMap({ here }: { here: number }) {
           石垣島
         </text>
       </g>
+      <path d={smooth(KUME)} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke" />
       <path d={ROUTE} stroke="#C8452F" strokeWidth={3} strokeDasharray="2 8" strokeLinecap="round" fill="none" opacity={0.75} />
       {/* The next stop's pin pulses; the ring sits outside the pin so the tap target itself never moves */}
       <circle className="pinRing" cx={PINS[here][0]} cy={PINS[here][1]} r={17} fill="none" stroke={ZONES[here].color} strokeWidth={4} pointerEvents="none" />
@@ -188,7 +221,7 @@ function IslandMap({ here }: { here: number }) {
           </g>
         );
       })}
-      <g transform="translate(340,612)">
+      <g transform="translate(350,520)">
         <circle r={20} fill="#fff" opacity={0.7} />
         <path d="M0,-15 L5,0 L0,15 L-5,0 Z" fill="#C8452F" />
         <text y={-22} textAnchor="middle" fontSize={12} fontWeight={700} fill="#173944" fontFamily="Fredoka, sans-serif">

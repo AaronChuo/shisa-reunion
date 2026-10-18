@@ -30,14 +30,15 @@ it.describe('place postcards', () => {
 
   it('lets a locked place be read about without setting off or collecting it', async ({ page }) => {
     await open(page);
-    await page.click('.islandWrap [data-zone="6"]');
-    await expect(page.locator('#modal')).toContainText('先走完西表島');
+    // Shuri (大師) opens once two 高手 zones are finished
+    await page.click('.islandWrap [data-zone="8"]');
+    await expect(page.locator('#modal')).toContainText('走完 2 個高手地區才會打開');
     await expect(page.locator('#modal [data-go-place]')).toHaveCount(0);
     expect((await progress(page)).seen).not.toContain('place:shuri');
   });
 
   it('keeps every map pin tappable, nothing laid over them', async ({ page }) => {
-    await open(page, { open: ['naha', 'yomitan', 'motobu', 'kouri', 'taketomi', 'iriomote', 'shuri'] });
+    await open(page, { open: ['naha', 'yomitan', 'motobu', 'kouri', 'nakagusuku', 'taketomi', 'iriomote', 'miyako', 'shuri', 'kumejima'] });
     const covered = await page.evaluate(() =>
       [...document.querySelectorAll<SVGGElement>('.islandWrap [data-zone]')]
         .filter((g) => {
@@ -62,11 +63,11 @@ it.describe('place postcards', () => {
     await page.click('#modal [data-ok]');
     await page.click('[data-go="dex"]');
     await expect(page.locator('.pcTile:not(.locked)')).toHaveCount(1);
-    await expect(page.locator('.pcTile.locked')).toHaveCount(7);
+    await expect(page.locator('.pcTile.locked')).toHaveCount(10);
     // Thumbnails keep the postcard's shape
     const tile = await page.locator('.pcTile[data-place="okinawa"] img').boundingBox();
     expect(tile && tile.width / tile.height).toBeCloseTo(5 / 3, 1);
     await page.click('#creditsBtn');
-    await expect(page.locator('#modal .creditList li')).toHaveCount(8);
+    await expect(page.locator('#modal .creditList li')).toHaveCount(11);
   });
 });

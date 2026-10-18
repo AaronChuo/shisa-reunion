@@ -26,15 +26,16 @@ describe('planning a run', () => {
   });
 
   it('draws no more elements than the tier allows, only learned ones, and never a pair that may not meet', () => {
-    const learned = ['ladder', 'urchin', 'spring'] as const;
+    const learned = ['ladder', 'urchin', 'spring', 'long', 'star', 'vine', 'slide', 'gate', 'tide'] as const;
     for (const Z of ZONES)
       for (const seed of SEEDS) {
         const plan = planRun(zi(Z.id), learned, seed);
         for (const set of plan.slice(1, 4)) {
           expect(set.length).toBeLessThanOrEqual(TIERS[Z.tier].counts.length - 1);
-          for (const e of set) expect([Z.intro, ...learned]).toContain(e);
+          for (const e of set) expect([Z.intro, ...learned] as string[]).toContain(e);
           expect(allowed(set), set.join('+')).toBe(true);
         }
+        expect(allowed(plan[4]), `last stop ${plan[4].join('+')}`).toBe(true);
       }
   });
 
@@ -79,17 +80,29 @@ describe('opening zones', () => {
 
   it('opens every 進階 zone at once when 初級 is finished', () => {
     expect(openFor({ naha: 1 })).toEqual(['naha', 'yomitan']);
-    expect(openFor({ naha: 1, yomitan: 1 })).toEqual(['naha', 'yomitan', 'motobu', 'kouri']);
+    expect(openFor({ naha: 1, yomitan: 1 })).toEqual(['naha', 'yomitan', 'motobu', 'kouri', 'nakagusuku']);
   });
 
   it('opens the next tier once all but one zone of a tier is finished', () => {
-    expect(openFor({ naha: 1, yomitan: 1, kouri: 1 })).toEqual(['naha', 'yomitan', 'motobu', 'kouri', 'taketomi', 'iriomote']);
-    expect(openFor({ naha: 1, yomitan: 1, kouri: 1, iriomote: 1 })).toContain('shuri');
+    // 進階 has three zones: two of them open 高手
+    expect(openFor({ naha: 1, yomitan: 1, kouri: 1 })).not.toContain('taketomi');
+    expect(openFor({ naha: 1, yomitan: 1, kouri: 1, nakagusuku: 1 })).toEqual([
+      'naha',
+      'yomitan',
+      'motobu',
+      'kouri',
+      'nakagusuku',
+      'taketomi',
+      'iriomote',
+      'miyako',
+    ]);
+    expect(openFor({ naha: 1, yomitan: 1, kouri: 1, nakagusuku: 1, iriomote: 1, miyako: 1 })).toEqual(expect.arrayContaining(['shuri', 'kumejima']));
   });
 
   it('says what is left to finish', () => {
     expect(lockHint(zi('yomitan'), {})).toBe('先走完那霸市才會打開');
-    expect(lockHint(zi('taketomi'), {})).toBe('走完 1 個進階地區才會打開');
+    expect(lockHint(zi('taketomi'), {})).toBe('走完 2 個進階地區才會打開');
+    expect(lockHint(zi('taketomi'), { kouri: 1 })).toBe('再走完 1 個進階地區才會打開');
   });
 });
 

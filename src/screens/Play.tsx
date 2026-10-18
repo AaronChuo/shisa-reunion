@@ -27,6 +27,13 @@ function Chips() {
           <CardIcon k="tide" />
           {left ? (
             <>
+              <span className="drops" role="img" aria-label={`還剩 ${left} 塊`}>
+                {Array.from({ length: left }, (_, i) => (
+                  <svg key={i} viewBox="0 0 12 16" aria-hidden="true">
+                    <path d="M6,1 C9,6 11,8.5 11,10.5 A5,5 0 0 1 1,10.5 C1,8.5 3,6 6,1 Z" fill="#2EA6BE" />
+                  </svg>
+                ))}
+              </span>
               再放 <b className="num">{left}</b> 塊，海水就漲
             </>
           ) : (
