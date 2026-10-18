@@ -41,7 +41,7 @@ pnpm build        # 產出 dist/（含 service worker）
 - 玩法靈感來自 SmartGames 的實體桌遊 Camelot Jr.（Raf Peeters 設計）。本作的美術、角色、關卡與文字皆為原創，與 SmartGames 無關
 - 明信片照片（皆來自 Wikimedia Commons，公眾領域或 CC BY）：
   - 沖繩：[2013-07-23 Shisa on roof at Taketomijima.jpg](https://commons.wikimedia.org/wiki/File:2013-07-23_Shisa_on_roof_at_Taketomijima.jpg)，ajari，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
-  - 那霸市：[Naha Tomari Port15n4592.jpg](https://commons.wikimedia.org/wiki/File:Naha_Tomari_Port15n4592.jpg)，663highland，[CC BY 2.5](https://creativecommons.org/licenses/by/2.5)，經裁切縮小
+  - 那霸市：[Kokusai-dori09n4260.jpg](https://commons.wikimedia.org/wiki/File:Kokusai-dori09n4260.jpg)，663highland，[CC BY 2.5](https://creativecommons.org/licenses/by/2.5)，經裁切縮小
   - 讀谷村：[An awesome sunset at Cape Zanpa.jpg](https://commons.wikimedia.org/wiki/File:An_awesome_sunset_at_Cape_Zanpa.jpg)，Daniel Ramirez，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
   - 美麗海：[Churaumi Aquarium main tank 'Kuroshio Sea'.jpg](https://commons.wikimedia.org/wiki/File:Churaumi_Aquarium_main_tank_%27Kuroshio_Sea%27.jpg)，Megapixie，Public domain，經裁切縮小
   - 古宇利島：[Kouri Bridge (15130568259).jpg](https://commons.wikimedia.org/wiki/File:Kouri_Bridge_(15130568259).jpg)，Takuya ASADA，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
