@@ -37,7 +37,7 @@ export const TIERS: Tier[] = [
   { name: '初級', counts: [0.3, 0.7], bossExtra: [0, 0], branches: [2] },
   { name: '進階', counts: [0.15, 0.55, 0.3], bossExtra: [1, 1], branches: [2] },
   { name: '高手', counts: [0.1, 0.45, 0.45], bossExtra: [1, 2], branches: [1, 3] },
-  { name: '大師', counts: [0, 0.3, 0.5, 0.2], bossExtra: [2, 2], branches: [1, 2, 3] },
+  { name: '大師', counts: [0, 0.3, 0.5, 0.2], bossExtra: [1, 1], branches: [1, 2, 3] },
 ];
 
 /** A zone's own element is this many times as likely to be drawn as one learned before */
@@ -48,10 +48,12 @@ const AVOID: [Element, Element][] = [
   ['gate', 'star'],
   ['gate', 'tide'],
   ['gate', 'long'],
+  ['gate', 'slide'],
   ['gate', 'vine'],
   ['spring', 'vine'],
   ['tide', 'vine'],
   ['long', 'vine'],
+  ['long', 'star'],
   ['slide', 'vine'],
 ];
 /** At most two special blocks on one stop, and nothing else with two of them, for the same reason */
@@ -120,7 +122,7 @@ export const ZONES: Zone[] = [
     line: '竹林和紅芋田，學會爬竹梯',
     base: PLAIN,
     intro: 'ladder',
-    ks: [2, 2, 2, 3],
+    ks: [2, 2, 3, 3],
     bgm: 'tanchame',
     boss: { name: '殘波岬', k: 3, maxSols: 3 },
     roads: [
@@ -138,9 +140,9 @@ export const ZONES: Zone[] = [
     line: '海邊的岩石上有海膽，小心別踩到',
     base: { stair: 2, cube: 1, tower: 1, bridge: 1 },
     intro: 'urchin',
-    ks: [2, 3, 3, 3],
+    ks: [2, 3, 3, 4],
     bgm: 'toshin',
-    boss: { name: '珊瑚礁', k: 3, maxSols: 3 },
+    boss: { name: '珊瑚礁', k: 4, maxSols: 3 },
     roads: [
       { name: '翡翠海灘', time: 'day', sight: 'palms' },
       { name: '備瀨福木林道', time: 'dusk', sight: 'forest' },
@@ -156,9 +158,9 @@ export const ZONES: Zone[] = [
     line: '過了跨海大橋，海灘上有會彈人的跳跳貝',
     base: PLAIN,
     intro: 'spring',
-    ks: [2, 2, 3, 3],
+    ks: [2, 3, 3, 4],
     bgm: 'hana',
-    boss: { name: '心形岩', k: 3, maxSols: 3 },
+    boss: { name: '心形岩', k: 4, maxSols: 3 },
     roads: [
       { name: '古宇利大橋', time: 'day', sight: 'bridge' },
       { name: '古宇利海灘', time: 'dusk', sight: 'palms' },
@@ -174,9 +176,9 @@ export const ZONES: Zone[] = [
     line: '彎彎的石牆和石拱門，學會搭石拱橋',
     base: PLAIN,
     intro: 'long',
-    ks: [2, 3, 3, 3],
+    ks: [2, 3, 3, 4],
     bgm: 'arch',
-    boss: { name: '石拱門', k: 3, maxSols: 3 },
+    boss: { name: '石拱門', k: 4, maxSols: 3 },
     roads: [
       { name: '二之郭的石牆', time: 'day', sight: 'castle' },
       { name: '中城灣', time: 'dusk', sight: 'pier' },
@@ -188,13 +190,13 @@ export const ZONES: Zone[] = [
     name: '竹富島',
     tier: 3,
     color: '#17A2A6',
-    w: 8,
+    w: 9,
     line: '白沙小路上，要先撿閃亮的星砂',
     base: PLAIN,
     intro: 'star',
-    ks: [2, 3, 3, 3],
+    ks: [2, 3, 4, 4],
     bgm: 'asadoya',
-    boss: { name: '星砂海灘', k: 3, maxSols: 3 },
+    boss: { name: '星砂海灘', k: 4, maxSols: 3 },
     roads: [
       { name: '白沙小路', time: 'day', sight: 'town' },
       { name: '西棧橋', time: 'dusk', sight: 'pier' },
@@ -206,13 +208,13 @@ export const ZONES: Zone[] = [
     name: '西表島',
     tier: 3,
     color: '#6B8F2A',
-    w: 8,
+    w: 9,
     line: '紅樹林的大樹上，垂著長長的藤蔓',
     base: PLAIN,
     intro: 'vine',
-    ks: [3, 3, 3, 3],
+    ks: [2, 3, 4, 4],
     bgm: 'densa',
-    boss: { name: '紅樹林', k: 3, maxSols: 3 },
+    boss: { name: '紅樹林', k: 4, maxSols: 3 },
     roads: [
       { name: '仲間川', time: 'day', sight: 'forest' },
       { name: '瑪麗伍度瀑布', time: 'dusk', sight: 'waterfall' },
@@ -224,13 +226,13 @@ export const ZONES: Zone[] = [
     name: '宮古島',
     tier: 3,
     color: '#1E88C8',
-    w: 8,
+    w: 9,
     line: '翻過砂山到海灘，學會溜滑梯',
     base: PLAIN,
     intro: 'slide',
-    ks: [2, 3, 3, 3],
+    ks: [2, 3, 4, 4],
     bgm: 'hounen',
-    boss: { name: '砂山海灘', k: 3, maxSols: 3 },
+    boss: { name: '砂山海灘', k: 4, maxSols: 3 },
     roads: [
       { name: '伊良部大橋', time: 'day', sight: 'bridge' },
       { name: '東平安名崎', time: 'dusk', sight: 'lighthouse' },
@@ -242,13 +244,13 @@ export const ZONES: Zone[] = [
     name: '首里城',
     tier: 4,
     color: '#8C56AA',
-    w: 8,
+    w: 10,
     line: '石門有機關，要先壓住壓板',
     base: { stair: 3, cube: 2, tower: 1, bridge: 1 },
     intro: 'gate',
-    ks: [2, 3, 3, 3],
+    ks: [2, 4, 4, 4],
     bgm: 'akata',
-    boss: { name: '守禮之門', k: 3, maxSols: 2 },
+    boss: { name: '守禮之門', k: 4, maxSols: 2 },
     roads: [
       { name: '首里金城町石疊道', time: 'day', sight: 'town' },
       { name: '龍潭', time: 'dusk', sight: 'castle' },
@@ -260,13 +262,13 @@ export const ZONES: Zone[] = [
     name: '久米島',
     tier: 4,
     color: '#3A9E8F',
-    w: 8,
+    w: 10,
     line: '海水會漲會退，西薩要走高的地方',
     base: PLAIN,
     intro: 'tide',
-    ks: [2, 3, 3, 3],
+    ks: [2, 4, 4, 4],
     bgm: 'sandbar',
-    boss: { name: '果之濱', k: 3, maxSols: 3 },
+    boss: { name: '果之濱', k: 4, maxSols: 3 },
     roads: [
       { name: '疊石', time: 'day', sight: 'rocks' },
       { name: '比屋定斷崖', time: 'dusk', sight: 'cliff' },
@@ -311,8 +313,21 @@ export function stageCfg(zi: number, si: number, els: readonly Element[]): GenCo
     else if (e === 'gate') cfg.gate = true;
     else if (e === 'star') cfg.stars = boss ? (Z.boss.stars ?? 1) : 1;
   }
+  // What the generator cannot yet build quickly is kept smaller: a vine (its hanging spot needs set-up that 逆築 does
+  // not find, so it is drawn at random) on at most 8 columns with 3 pieces, the stone gate on at most 9 columns with
+  // 4 pieces, and the tide with 4 pieces (the floor floods after two, which leaves few ways to use a fifth)
+  if (els.includes('vine')) {
+    cfg.w = Math.min(cfg.w, 8);
+    cfg.k = Math.min(cfg.k, 3);
+  }
+  if (cfg.gate) {
+    cfg.w = Math.min(cfg.w, 9);
+    cfg.k = Math.min(cfg.k, 4);
+  }
+  if (cfg.tide) cfg.k = Math.min(cfg.k, 4);
+  cfg.obs = [Math.max(0, cfg.w - 7), cfg.w - 4];
   // The stone gate already takes up a column and the plate another, so it gets fewer fixed blocks
-  if (cfg.gate) cfg.obs = [0, Z.w - 5];
+  if (cfg.gate) cfg.obs = [0, cfg.w - 5];
   cfg.k = Math.max(cfg.k, cfg.must.length);
   return cfg;
 }

@@ -4,7 +4,7 @@
 // it does for a level drawn at random. Building a road costs a handful of cheap walk-checks, where proving that a
 // random draw has no road at all costs a full search; most random draws have none, so this is much faster.
 import { makeGrid, placementsFor } from './grid';
-import { edge, findRoute, surfaces } from './path';
+import { edge, findRoute, type Walkable, walkable } from './path';
 import { cellsOf, DEFS } from './pieces';
 import type { GenConfig, Grid, Level, PathStep, Placement, Pos, Surface } from './types';
 
@@ -38,12 +38,8 @@ function reach(g: Grid, S: Surface[], byCol: number[][], start: number, forward:
  * How far the road still is from done: for the goal and each star sand spot, the shortest step between where the
  * hero can get to and where that spot can be reached from. Zero for every target once they are all joined up.
  */
-export function roadGap(g: Grid, lv: Level): number {
-  const S = surfaces(g);
-  const byCol: number[][] = Array.from({ length: g.w }, () => []);
-  S.forEach((s, i) => {
-    byCol[s.x].push(i);
-  });
+export function roadGap(g: Grid, lv: Level, ws: Walkable = walkable(g)): number {
+  const { S, byCol } = ws;
   const hero = S.findIndex((s) => standsAt(s, lv.hero));
   if (hero < 0) return Number.POSITIVE_INFINITY;
   const from = reach(g, S, byCol, hero, true);
@@ -136,8 +132,9 @@ export function backbuild(r: Rng, lv: Level, cfg: GenConfig, tries = 3): Build |
         const scored: { p: Placement; gap: number }[] = [];
         for (const p of opts.slice(0, SAMPLE)) {
           const g2 = makeGrid(lv, [...placed, p]);
-          if (findRoute(g2, lv.hero, lv.goal, lv.stars)) continue;
-          scored.push({ p, gap: roadGap(g2, lv) });
+          const ws = walkable(g2);
+          if (findRoute(g2, lv.hero, lv.goal, lv.stars, ws)) continue;
+          scored.push({ p, gap: roadGap(g2, lv, ws) });
         }
         if (scored.length) {
           const best = Math.min(...scored.map((x) => x.gap));

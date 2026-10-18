@@ -88,12 +88,41 @@ export const DEFS: Record<PieceType, { orients: PieceCell[][] }> = {
 
 export const cellsOf = (t: PieceType, o: number): PieceCell[] => DEFS[t].orients[o];
 
+/** What the physics needs to know about one orientation of a piece, worked out once */
+export interface Shape {
+  cells: PieceCell[];
+  w: number;
+  h: number;
+  /** Cells with no cell of the same piece right below them: the ones that rest on something */
+  bottoms: PieceCell[];
+  mass: number;
+  /** Mass-weighted sum of the cells' centre offsets, so the centre of mass is x + massX / mass */
+  massX: number;
+}
+
+const SHAPES = Object.fromEntries(
+  (Object.keys(DEFS) as PieceType[]).map((t) => [
+    t,
+    DEFS[t].orients.map((cells): Shape => {
+      let w = 0;
+      let h = 0;
+      let mass = 0;
+      let massX = 0;
+      for (const [dx, dy, k] of cells) {
+        w = Math.max(w, dx + 1);
+        h = Math.max(h, dy + 1);
+        mass += MASS[k];
+        massX += MASS[k] * (dx + 0.5);
+      }
+      const bottoms = cells.filter(([dx, dy]) => !cells.some(([ex, ey]) => ex === dx && ey === dy - 1));
+      return { cells, w, h, bottoms, mass, massX };
+    }),
+  ]),
+) as Record<PieceType, Shape[]>;
+
+export const shapeOf = (t: PieceType, o: number): Shape => SHAPES[t][o];
+
 export function sizeOf(t: PieceType, o: number): { w: number; h: number } {
-  let w = 0;
-  let h = 0;
-  for (const [dx, dy] of cellsOf(t, o)) {
-    w = Math.max(w, dx + 1);
-    h = Math.max(h, dy + 1);
-  }
+  const { w, h } = SHAPES[t][o];
   return { w, h };
 }

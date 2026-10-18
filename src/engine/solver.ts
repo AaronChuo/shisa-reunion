@@ -5,20 +5,36 @@ import type { Level, PieceType, Placement } from './types';
 
 export const placeKey = (p: Placement): string => `${p.t}${p.o}@${p.x},${p.y}`;
 
-/** All winning arrangements reachable from the start, in placement order; a branch stops as soon as it wins */
-export function solve(lv: Level, cap = 400): { sols: Placement[][]; nodes: number } {
+const TYPE_NO = Object.fromEntries((Object.keys(DEFS) as PieceType[]).map((t, i) => [t, i])) as Record<PieceType, number>;
+/** A placement as one small number (type, orientation, x up to 31, y up to 7), so visited sets are cheap to key */
+const placeCode = (p: Placement): number => ((TYPE_NO[p.t] * 4 + p.o) * 32 + p.x) * 8 + p.y;
+/** The same set of placements in any order gives the same key */
+const setKey = (placed: readonly Placement[]): string =>
+  placed
+    .map(placeCode)
+    .sort((a, b) => a - b)
+    .join(',');
+
+/**
+ * All winning arrangements reachable from the start, in placement order; a branch stops as soon as it wins.
+ * With `minLen`, the search stops early (and says `short`) the moment it finds a win using fewer pieces than that:
+ * such a level is rejected anyway, so there is no need to finish the search.
+ */
+export function solve(lv: Level, cap = 400, { minLen = 0 }: { minLen?: number } = {}): { sols: Placement[][]; nodes: number; short: boolean } {
   const seen = new Set<string>();
   const sols: Placement[][] = [];
   let nodes = 0;
+  let short = false;
   function dfs(placed: Placement[], left: PieceType[]) {
-    if (sols.length >= cap) return;
-    const key = placed.map(placeKey).sort().join('|');
+    if (sols.length >= cap || short) return;
+    const key = setKey(placed);
     if (seen.has(key)) return;
     seen.add(key);
     nodes++;
     const g = makeGrid(lv, placed);
     if (findRoute(g, lv.hero, lv.goal, lv.stars)) {
       sols.push(placed.slice());
+      if (placed.length < minLen) short = true;
       return;
     }
     for (const t of new Set(left)) {
@@ -34,7 +50,7 @@ export function solve(lv: Level, cap = 400): { sols: Placement[][]; nodes: numbe
     }
   }
   dfs([], lv.inv.slice());
-  return { sols, nodes };
+  return { sols, nodes, short };
 }
 
 /**
@@ -49,7 +65,7 @@ export function hasSolution(lv: Level, budget: number): boolean | null {
   let cut = false;
   function dfs(placed: Placement[], left: PieceType[]) {
     if (found || cut) return;
-    const key = placed.map(placeKey).sort().join('|');
+    const key = setKey(placed);
     if (seen.has(key)) return;
     seen.add(key);
     if (++nodes > budget) {

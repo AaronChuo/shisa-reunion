@@ -44,7 +44,8 @@ describe('planning a run', () => {
     for (const seed of SEEDS.slice(0, 40)) {
       expect(planRun(zi('yomitan'), learned, seed)[4]).toEqual(['ladder']);
       expect(planRun(zi('kouri'), ['ladder', 'urchin'], seed)[4]).toHaveLength(2);
-      expect(planRun(zi('shuri'), learned, seed)[4]).toHaveLength(3);
+      // 大師: the new element and one learned one, so the last stop's extra difficulty comes from more blocks
+      expect(planRun(zi('shuri'), learned, seed)[4]).toHaveLength(2);
     }
   });
 

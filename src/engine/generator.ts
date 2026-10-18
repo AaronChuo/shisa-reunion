@@ -29,7 +29,9 @@ const stackH = (s: PieceType[]) => s.reduce((a, t) => a + (t === 'tower' ? 2 : 1
 export function drawTerrain(r: Rng, cfg: GenConfig): Level | null {
   const w = cfg.w;
   const pick = <T>(a: T[]): T => a[Math.floor(r() * a.length)];
-  const fixedPool: Partial<Record<PieceType, number>> = { tower: 2, cube: 3, stair: 1, bridge: 1 };
+  // Fixed blocks for the figures' stands and the terrain; wider ground gets more, and from 9 columns a stone bridge too
+  const more = Math.max(0, w - 8);
+  const fixedPool: Partial<Record<PieceType, number>> = { tower: 2 + more, cube: 3 + more, stair: 1 + more, bridge: 1, long: more ? 1 : 0 };
   const takeFixed = (t: PieceType) => {
     if (!fixedPool[t]) return false;
     fixedPool[t] -= 1;
@@ -119,9 +121,9 @@ export function drawTerrain(r: Rng, cfg: GenConfig): Level | null {
  */
 export function judge(lv: Level, cfg: GenConfig): Level | null {
   if (findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)) return null;
-  const { sols } = solve(lv, cfg.maxSols + 1);
-  if (!sols.length || sols.length > cfg.maxSols) return null;
-  if (sols.some((s) => s.length < cfg.k)) return null;
+  // A win with fewer pieces stops the search at once: the level would not need every piece
+  const { sols, short } = solve(lv, cfg.maxSols + 1, { minLen: lv.inv.length });
+  if (short || !sols.length || sols.length > cfg.maxSols) return null;
   for (const sol of sols) {
     const g = makeGrid(lv, sol);
     const path = findRoute(g, lv.hero, lv.goal, lv.stars);

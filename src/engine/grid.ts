@@ -1,4 +1,4 @@
-import { cellsOf, H, HANG_FROM, MASS, SUPPORT, sizeOf } from './pieces';
+import { cellsOf, H, HANG_FROM, SUPPORT, shapeOf, sizeOf } from './pieces';
 import type { Cell, Grid, Level, PieceType, Placement } from './types';
 
 export const WALL: Cell = { k: 'wall' };
@@ -33,7 +33,7 @@ export function at(g: Grid, x: number, y: number): Cell | null {
 }
 
 export function fits(g: Grid, t: PieceType, o: number, x: number, y: number): boolean {
-  for (const [dx, dy] of cellsOf(t, o)) {
+  for (const [dx, dy] of shapeOf(t, o).cells) {
     const cx = x + dx;
     const cy = y + dy;
     if (cx < 0 || cx >= g.w || cy < 0 || cy >= H) return false;
@@ -44,23 +44,17 @@ export function fits(g: Grid, t: PieceType, o: number, x: number, y: number): bo
 
 /** A piece stands if its centre of mass lies over the cells resting on a flat top (or the tray) */
 export function stable(g: Grid, t: PieceType, o: number, x: number, y: number): boolean {
+  const sh = shapeOf(t, o);
   // A vine doesn't stand: it holds if a block with a flat underside sits right above its top
   if (t === 'vine') {
-    const above = at(g, x, y + sizeOf(t, o).h);
+    const above = at(g, x, y + sh.h);
     return !!above && HANG_FROM.has(above.k);
   }
-  const cells = cellsOf(t, o);
-  const own = new Set(cells.map(([dx, dy]) => `${dx},${dy}`));
   let lo = Number.POSITIVE_INFINITY;
   let hi = Number.NEGATIVE_INFINITY;
-  let m = 0;
-  let mx = 0;
-  for (const [dx, dy, k] of cells) {
-    m += MASS[k];
-    mx += MASS[k] * (x + dx + 0.5);
-    if (own.has(`${dx},${dy - 1}`)) continue;
+  for (const [dx, dy] of sh.bottoms) {
     const cy = y + dy;
-    const below = at(g, x + dx, cy - 1);
+    const below = cy === 0 ? null : at(g, x + dx, cy - 1);
     if (cy === 0 || (below && SUPPORT.has(below.k))) {
       lo = Math.min(lo, x + dx);
       hi = Math.max(hi, x + dx + 1);
@@ -72,7 +66,7 @@ export function stable(g: Grid, t: PieceType, o: number, x: number, y: number): 
     const held = (dx: number) => y === 0 || SUPPORT.has(at(g, x + dx, y - 1)?.k ?? '');
     return held(0) && held(2);
   }
-  const com = mx / m;
+  const com = x + sh.massX / sh.mass;
   return com >= lo - 1e-9 && com <= hi + 1e-9;
 }
 

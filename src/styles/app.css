@@ -705,10 +705,23 @@ h1 {
   .trayItems {
     display: flex;
     overflow-x: auto;
-    gap: 8px;
+    gap: 6px;
   }
+  /* Up to five blocks share the row, so a child can see every one without scrolling */
   .card {
-    flex: 0 0 84px;
+    flex: 1 1 0;
+    min-width: 46px;
+    max-width: 96px;
+    padding-inline: 2px;
+  }
+  .card .name {
+    font-size: 12px;
+  }
+  .card svg.art {
+    width: 100%;
+    max-width: 76px;
+    height: auto;
+    aspect-ratio: 76 / 64;
   }
   .actions {
     grid-template-columns: repeat(4, 1fr);
