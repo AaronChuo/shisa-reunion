@@ -3,6 +3,7 @@ import { TapHand } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
 import { type Placement, sizeOf } from '../engine';
 import { useGame } from '../state/store';
+import { revealBoardX } from './boardView';
 import { useDrag } from './drag';
 import { C, M, Y0 } from './geometry';
 
@@ -26,8 +27,13 @@ function measure(): Demo | null {
   const { ui, progress } = useGame.getState();
   const h = ui.hint;
   const board = document.getElementById('board') as SVGSVGElement | null;
-  const ctm = board?.getScreenCTM();
-  if (!h || !ctm || !progress.run?.level) return null;
+  const lv = progress.run?.level;
+  if (!h || !board || !lv) return null;
+  // On a scrolling board, bring the spot the hint is about into view first
+  const spot = h.type === 'put' ? h.p.x + sizeOf(h.p.t, h.p.o).w / 2 : (progress.run?.placed[h.pi]?.x ?? 0) + 0.5;
+  revealBoardX(M + spot * C);
+  const ctm = board.getScreenCTM();
+  if (!ctm) return null;
   if (h.type === 'put') {
     const from = centre(document.querySelector(`.card[data-k="${h.k}"]`));
     if (!from) return null;

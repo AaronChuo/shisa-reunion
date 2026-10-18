@@ -565,6 +565,24 @@ h1 {
   user-select: none;
   -webkit-user-select: none;
 }
+.boardScroll {
+  position: absolute;
+  inset: 0;
+}
+/* Narrow screens: the board keeps finger-sized cells and slides sideways (panning is done by the game) */
+.boardScroll.scrollX {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+.boardScroll.scrollX #board {
+  position: relative;
+  inset: auto;
+  flex: none;
+}
 .tray {
   display: flex;
   flex-direction: column;
@@ -954,6 +972,26 @@ h1 {
 .pathCard svg {
   width: 92px;
   height: 70px;
+}
+.roadLine {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.pathCard.roadCard {
+  padding: 10px;
+}
+.pathCard .roadArt {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  aspect-ratio: 5 / 3;
+  border-radius: 12px;
 }
 .pathCard .elIcons {
   display: flex;

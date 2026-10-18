@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import type { Gate } from '../engine';
 import { boardWidth, C, M, Y0 } from '../game/geometry';
+import { PALETTES, type Sight, SightArt, SkyLight, type TimeOfDay } from './Sights';
 
 const f1 = (v: number) => +v.toFixed(1);
 
@@ -24,9 +25,9 @@ export function Sun({ cx, cy, r, color }: { cx: number; cy: number; r: number; c
   );
 }
 
-function Cloud({ x, y, s }: { x: number; y: number; s: number }) {
+function Cloud({ x, y, s, fill = '#fff' }: { x: number; y: number; s: number; fill?: string }) {
   return (
-    <g transform={`translate(${x},${y}) scale(${s})`} fill="#fff" opacity={0.92}>
+    <g transform={`translate(${x},${y}) scale(${s})`} fill={fill} opacity={0.92}>
       <circle r={26} />
       <circle cx={30} cy={-12} r={32} />
       <circle cx={64} r={24} />
@@ -35,38 +36,47 @@ function Cloud({ x, y, s }: { x: number; y: number; s: number }) {
   );
 }
 
-/** Sky, sun, islands and sea behind the board */
-export function Background({ w }: { w: number }) {
+/** Sky, sun or moon, islands, sea and the road's landmark behind the board */
+export function Background({ w, time = 'day', sight = null }: { w: number; time?: TimeOfDay; sight?: Sight | null }) {
   const id = useId();
   const W2 = boardWidth(w);
+  const P = PALETTES[time];
   return (
     <>
       <defs>
         <linearGradient id={`sky${id}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#93D2E8" />
-          <stop offset=".8" stopColor="#E6F6F3" />
+          <stop offset="0" stopColor={P.skyTop} />
+          <stop offset=".8" stopColor={P.skyBottom} />
         </linearGradient>
         <clipPath id={`clip${id}`}>
           <rect x={0} y={30} width={W2} height={690} rx={26} />
         </clipPath>
       </defs>
-      <g clipPath={`url(#clip${id})`}>
+      <g clipPath={`url(#clip${id})`} data-time={time}>
         <rect x={0} y={30} width={W2} height={690} fill={`url(#sky${id})`} />
-        <circle cx={W2 - 94} cy={112} r={50} fill="#FFF4C9" opacity={0.75} />
-        <circle cx={W2 - 94} cy={112} r={32} fill="#FFD45E" />
-        <Cloud x={110} y={132} s={1} />
-        <Cloud x={W2 * 0.57} y={92} s={0.75} />
-        <path d="M0,604 C70,572 150,566 230,586 C262,594 284,600 304,604 Z" fill="#7DBE93" />
-        <path d={`M${W2 - 180},604 c24,-16 64,-20 96,-9 c22,7 46,9 84,9 Z`} fill="#94CEA6" />
-        <rect x={0} y={602} width={W2} height={118} fill="#3DB0C1" />
+        <SkyLight time={time} W={W2} hy={604} />
+        {time !== 'night' && (
+          <>
+            <Cloud x={110} y={132} s={1} fill={P.cloud} />
+            <Cloud x={W2 * 0.57} y={92} s={0.75} fill={P.cloud} />
+          </>
+        )}
+        <path d="M0,604 C70,572 150,566 230,586 C262,594 284,600 304,604 Z" fill={P.land} />
+        <path d={`M${W2 - 180},604 c24,-16 64,-20 96,-9 c22,7 46,9 84,9 Z`} fill={P.land2} />
+        {sight && (
+          <g transform={`translate(${Math.round(W2 / 2 - 156)},604) scale(1.3)`} data-sight={sight}>
+            <SightArt sight={sight} time={time} />
+          </g>
+        )}
+        <rect x={0} y={602} width={W2} height={118} fill={P.sea} />
         <path
           d={`M20,624 q15,-8 30,0 t30,0 M${W2 * 0.45},624 q15,-8 30,0 t30,0 M${W2 - 140},620 q15,-8 30,0 t30,0`}
-          stroke="#A9E6EC"
+          stroke={P.wave}
           strokeWidth={4}
           fill="none"
           strokeLinecap="round"
         />
-        <rect x={0} y={690} width={W2} height={30} fill="#2B95A8" />
+        <rect x={0} y={690} width={W2} height={30} fill={P.seaDeep} />
       </g>
     </>
   );

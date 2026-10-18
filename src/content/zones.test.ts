@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allowed, learnedFor, lockHint, openFor, planRun, TIERS, ZONES } from './zones';
+import { allowed, isBranch, learnedFor, lockHint, openFor, planRun, roadOffer, STAGES, TIERS, ZONES } from './zones';
 
 const zi = (id: string) => ZONES.findIndex((Z) => Z.id === id);
 const SEEDS = Array.from({ length: 200 }, (_, i) => i * 7717 + 3);
@@ -90,5 +90,34 @@ describe('opening zones', () => {
   it('says what is left to finish', () => {
     expect(lockHint(zi('yomitan'), {})).toBe('先走完那霸市才會打開');
     expect(lockHint(zi('taketomi'), {})).toBe('走完 1 個進階地區才會打開');
+  });
+});
+
+describe('scenery roads', () => {
+  it('gives every zone three named roads, one for each time of day', () => {
+    for (const Z of ZONES) {
+      expect(Z.roads, Z.id).toHaveLength(3);
+      expect(new Set(Z.roads.map((r) => r.time)), Z.id).toEqual(new Set(['day', 'dusk', 'night']));
+      for (const r of Z.roads) expect(r.name.length, Z.id).toBeGreaterThan(1);
+    }
+  });
+
+  it('offers one choice in 入門, 初級 and 進階, two in 高手 and three in 大師, never on the first or last stop', () => {
+    const count = (zi: number) => Array.from({ length: STAGES }, (_, si) => si).filter((si) => isBranch(zi, si)).length;
+    expect(ZONES.map((_, zi) => count(zi))).toEqual(ZONES.map((Z) => [1, 1, 1, 2, 3][Z.tier]));
+    for (let zi = 0; zi < ZONES.length; zi++) {
+      expect(isBranch(zi, 0)).toBe(false);
+      expect(isBranch(zi, STAGES - 1)).toBe(false);
+    }
+  });
+
+  it('offers two different roads, the same ones for the same seed', () => {
+    for (const seed of SEEDS.slice(0, 50))
+      for (const si of [1, 2, 3]) {
+        const [a, b] = roadOffer(0, si, seed);
+        expect(a).not.toBe(b);
+        expect([a, b].every((i) => i >= 0 && i < 3)).toBe(true);
+        expect(roadOffer(0, si, seed)).toEqual([a, b]);
+      }
   });
 });

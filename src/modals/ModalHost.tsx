@@ -2,13 +2,14 @@ import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef,
 import { Blocks, CardIcon, CoinIcon, Icon, Stamp, TapHand } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
+import { RoadScene } from '../art/Sights';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
 import { PHOTOS } from '../content/credits';
 import { PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES, stopLine } from '../content/text';
-import { STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
+import { isBranch, roadOffer, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { sizeOf } from '../engine';
 import {
   ackIntro,
@@ -115,7 +116,12 @@ function Win({ m }: { m: Extract<Modal, { kind: 'win' }> }) {
   );
 }
 
-/** Between stops: one card showing what the next stop has, tapped to set off */
+const TIME_WORD = { day: '白天', dusk: '黃昏', night: '夜晚' } as const;
+
+/**
+ * Between stops: what the next stop has. Most stops show one card to tap; at a branch the child picks one of two
+ * roads, which changes only the scenery.
+ */
 function NextStop() {
   const run = useGame((s) => s.progress.run);
   if (run?.phase !== 'choose') return null;
@@ -123,6 +129,47 @@ function NextStop() {
   const boss = run.si === STAGES - 1;
   const els = run.plan[run.si] ?? [];
   const k = stageCfg(run.zi, run.si, els).k;
+  const blocks = (
+    <span className="mini">
+      <Blocks n={k} />
+      <b className="num">{k}</b> 塊
+    </span>
+  );
+  if (isBranch(run.zi, run.si)) {
+    const offer = roadOffer(run.zi, run.si, run.seed);
+    return (
+      <Sheet wide label="選一條路">
+        <div className="eyebrow">
+          {Z.name} · 第 {run.si + 1} 站
+        </div>
+        <h2>要走哪條路？</h2>
+        <p className="roadLine">
+          {stopLine(els)} · {blocks}
+        </p>
+        <div className="paths">
+          {offer.map((i, n) => {
+            const road = Z.roads[i];
+            return (
+              <button
+                key={i}
+                type="button"
+                className="pathCard roadCard"
+                data-card="road"
+                data-road={i}
+                data-time={road.time}
+                {...(n === 0 ? { 'data-focus': true } : {})}
+                onClick={() => goNextStop(i)}
+              >
+                <RoadScene time={road.time} sight={road.sight} className="roadArt" />
+                <span className="pn">{road.name}</span>
+                <span className="pl">{TIME_WORD[road.time]}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Sheet>
+    );
+  }
   return (
     <Sheet label="下一站">
       <div className="eyebrow">
@@ -130,7 +177,7 @@ function NextStop() {
       </div>
       <h2>{boss ? '最後一站' : '下一站'}</h2>
       <div className="paths">
-        <button type="button" className="pathCard" data-card={boss ? 'boss' : 'next'} data-focus onClick={goNextStop}>
+        <button type="button" className="pathCard" data-card={boss ? 'boss' : 'next'} data-focus onClick={() => goNextStop()}>
           {boss ? (
             <CardIcon k="boss" />
           ) : els.length ? (
@@ -144,17 +191,13 @@ function NextStop() {
           )}
           <span className="pn">{boss ? Z.boss.name : `第 ${run.si + 1} 站`}</span>
           <span className="pl">{boss ? `最後一站，${els.length ? stopLine(els) : '比較難'}` : stopLine(els)}</span>
-          <span className="pc">
-            <span className="mini">
-              <Blocks n={k} />
-              <b className="num">{k}</b> 塊
-            </span>
-          </span>
+          <span className="pc">{blocks}</span>
         </button>
       </div>
     </Sheet>
   );
 }
+
 function Done({ m }: { m: Extract<Modal, { kind: 'done' }> }) {
   const Z = ZONES[m.zi];
   return (

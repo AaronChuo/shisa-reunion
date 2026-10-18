@@ -112,6 +112,7 @@ export function startRun(zi: number): void {
       si: 0,
       seed,
       plan: planRun(zi, learnedFor(zi, s.progress.clears), seed),
+      road: [null, null, null, null, null],
       level: null,
       placed: [],
       moves: 0,
@@ -438,12 +439,13 @@ export function showBranch(): void {
   });
 }
 
-/** Sets off for the stop shown on the "next stop" card */
-export function goNextStop(): void {
+/** Sets off for the stop shown on the "next stop" card, along road `road` when there was a choice */
+export function goNextStop(road: number | null = null): void {
   sfx.hello();
   mut((s) => {
     const r = s.progress.run;
     if (!r) return;
+    r.road[r.si] = road;
     r.rerolls = 0;
     s.ui.modal = null;
   });

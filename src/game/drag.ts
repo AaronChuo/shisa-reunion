@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { PieceType } from '../engine';
 import { getState } from '../state/store';
 import { bad, liftForDrag, place, returnToTray, selectCard } from './actions';
+import { edgeScroll, stopEdgeScroll } from './boardView';
 import { type Landing, landingAt } from './geometry';
 
 export interface DragInfo {
@@ -62,7 +63,13 @@ function onMove(e: PointerEvent): void {
   }
   // On touch screens the piece floats above the finger so it stays visible
   const y = e.clientY - (pointer.touch ? 56 : 0);
-  useDrag.setState({ at: { x: e.clientX, y }, land: landingAt(e.clientX, y, d.info.t, d.info.o) });
+  const x = e.clientX;
+  const info = d.info;
+  useDrag.setState({ at: { x, y }, land: landingAt(x, y, info.t, info.o) });
+  // Near the edge of a scrolling board, the field slides along under the block
+  edgeScroll(x, y, () => {
+    if (useDrag.getState().info === info) useDrag.setState({ land: landingAt(x, y, info.t, info.o) });
+  });
 }
 
 function onUp(e: PointerEvent): void {
@@ -70,6 +77,7 @@ function onUp(e: PointerEvent): void {
   if (!d.info || !pointer || e.pointerId !== pointer.id) return;
   const { info, moved, land } = d;
   pointer = null;
+  stopEdgeScroll();
   useDrag.setState({ info: null, moved: false, at: null, land: null });
   if (!moved) {
     if (info.src === 'tray') selectCard(info.k);
@@ -83,6 +91,7 @@ function onUp(e: PointerEvent): void {
 function onCancel(e: PointerEvent): void {
   if (pointer && e.pointerId === pointer.id) {
     pointer = null;
+    stopEdgeScroll();
     useDrag.setState({ info: null, moved: false, at: null, land: null });
   }
 }

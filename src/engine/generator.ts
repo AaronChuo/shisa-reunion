@@ -1,7 +1,7 @@
 import { makeGrid, placementsFor } from './grid';
 import { findRoute, surfaces } from './path';
 import { cellsOf, DEFS } from './pieces';
-import { solve } from './solver';
+import { hasSolution, solve } from './solver';
 import type { GenConfig, Level, PieceType, Placement, Pos } from './types';
 
 export type Rng = () => number;
@@ -17,6 +17,9 @@ export function rng(seed: number): Rng {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+/** Positions per board column the quick solvability check may visit before giving up on a draw */
+const SEARCH_BUDGET = 20;
 
 const STACKS: PieceType[][] = [[], ['cube'], ['tower'], ['tower', 'cube'], ['cube', 'cube']];
 const stackH = (s: PieceType[]) => s.reduce((a, t) => a + (t === 'tower' ? 2 : 1), 0);
@@ -111,6 +114,8 @@ export function attempt(r: Rng, cfg: GenConfig): Level | null {
   inv.sort();
   lv.inv = inv;
   if (findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)) return null;
+  // Cheap filter first: most draws have no solution, and a solvable one usually shows a solution early
+  if (hasSolution(lv, SEARCH_BUDGET * cfg.w) !== true) return null;
   const { sols } = solve(lv, cfg.maxSols + 1);
   if (!sols.length || sols.length > cfg.maxSols) return null;
   if (sols.some((s) => s.length < cfg.k)) return null;

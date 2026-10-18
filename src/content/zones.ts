@@ -1,3 +1,4 @@
+import type { Sight, TimeOfDay } from '../art/Sights';
 import type { SongId } from '../audio/songs';
 import { type GenConfig, type Move, type PieceType, rng } from '../engine';
 
@@ -27,14 +28,16 @@ export interface Tier {
   bossExtra: [number, number];
   /** Zones of this tier to finish before the next tier opens; all but one when left out */
   need?: number;
+  /** Stops (0-based) that start with a choice of two roads */
+  branches: number[];
 }
 
 export const TIERS: Tier[] = [
-  { name: '入門', counts: [1], bossExtra: [0, 0] },
-  { name: '初級', counts: [0.3, 0.7], bossExtra: [0, 0] },
-  { name: '進階', counts: [0.15, 0.55, 0.3], bossExtra: [1, 1] },
-  { name: '高手', counts: [0.1, 0.45, 0.45], bossExtra: [1, 2] },
-  { name: '大師', counts: [0, 0.3, 0.5, 0.2], bossExtra: [2, 2] },
+  { name: '入門', counts: [1], bossExtra: [0, 0], branches: [2] },
+  { name: '初級', counts: [0.3, 0.7], bossExtra: [0, 0], branches: [2] },
+  { name: '進階', counts: [0.15, 0.55, 0.3], bossExtra: [1, 1], branches: [2] },
+  { name: '高手', counts: [0.1, 0.45, 0.45], bossExtra: [1, 2], branches: [1, 3] },
+  { name: '大師', counts: [0, 0.3, 0.5, 0.2], bossExtra: [2, 2], branches: [1, 2, 3] },
 ];
 
 /** A zone's own element is this many times as likely to be drawn as one learned before */
@@ -47,6 +50,16 @@ const AVOID: [Element, Element][] = [
 ];
 /** At most two special blocks on one stop, and nothing else with two of them, for the same reason */
 const MAX_SPECIAL = 2;
+
+/**
+ * A road to the next stop. Roads only change the scenery (time of day and a landmark); the stop itself is the same
+ * whichever one the child picks. Every road is a real place in its zone.
+ */
+export interface Road {
+  name: string;
+  time: TimeOfDay;
+  sight: Sight;
+}
 
 export interface Zone {
   id: string;
@@ -64,6 +77,8 @@ export interface Zone {
   /** Background music for this zone's journey */
   bgm: SongId;
   boss: { name: string; k: number; maxSols: number; stars?: number };
+  /** Three roads, one for each time of day; a branch offers two of them */
+  roads: Road[];
 }
 
 /** Stages per run; the last one is the zone's final stop */
@@ -84,6 +99,11 @@ export const ZONES: Zone[] = [
     ks: [1, 1, 2, 2],
     bgm: 'tensagu',
     boss: { name: '國際通', k: 3, maxSols: 3 },
+    roads: [
+      { name: '波之上海灘', time: 'day', sight: 'palms' },
+      { name: '國際通', time: 'dusk', sight: 'town' },
+      { name: '泊港', time: 'night', sight: 'pier' },
+    ],
   },
   {
     id: 'yomitan',
@@ -97,71 +117,101 @@ export const ZONES: Zone[] = [
     ks: [2, 2, 2, 3],
     bgm: 'tanchame',
     boss: { name: '殘波岬', k: 3, maxSols: 3 },
+    roads: [
+      { name: '紅芋田', time: 'day', sight: 'field' },
+      { name: '陶器之里', time: 'dusk', sight: 'town' },
+      { name: '座喜味城跡', time: 'night', sight: 'castle' },
+    ],
   },
   {
     id: 'motobu',
     name: '美麗海',
     tier: 2,
     color: '#2D8FD0',
-    w: 6,
+    w: 7,
     line: '海邊的岩石上有海膽，小心別踩到',
     base: { stair: 2, cube: 1, tower: 1, bridge: 1 },
     intro: 'urchin',
     ks: [2, 3, 3, 3],
     bgm: 'toshin',
     boss: { name: '珊瑚礁', k: 3, maxSols: 3 },
+    roads: [
+      { name: '翡翠海灘', time: 'day', sight: 'palms' },
+      { name: '備瀨福木林道', time: 'dusk', sight: 'forest' },
+      { name: '本部港', time: 'night', sight: 'pier' },
+    ],
   },
   {
     id: 'kouri',
     name: '古宇利島',
     tier: 2,
     color: '#E0628A',
-    w: 6,
+    w: 7,
     line: '過了跨海大橋，海灘上有會彈人的跳跳貝',
     base: PLAIN,
     intro: 'spring',
     ks: [2, 2, 3, 3],
     bgm: 'hana',
     boss: { name: '心形岩', k: 3, maxSols: 3 },
+    roads: [
+      { name: '古宇利大橋', time: 'day', sight: 'bridge' },
+      { name: '古宇利海灘', time: 'dusk', sight: 'palms' },
+      { name: '星空下的大橋', time: 'night', sight: 'bridge' },
+    ],
   },
   {
     id: 'taketomi',
     name: '竹富島',
     tier: 3,
     color: '#17A2A6',
-    w: 6,
+    w: 8,
     line: '白沙小路上，要先撿閃亮的星砂',
     base: PLAIN,
     intro: 'star',
     ks: [2, 3, 3, 3],
     bgm: 'asadoya',
     boss: { name: '星砂海灘', k: 3, maxSols: 3 },
+    roads: [
+      { name: '白沙小路', time: 'day', sight: 'town' },
+      { name: '西棧橋', time: 'dusk', sight: 'pier' },
+      { name: '竹富島的星空', time: 'night', sight: 'palms' },
+    ],
   },
   {
     id: 'iriomote',
     name: '西表島',
     tier: 3,
     color: '#6B8F2A',
-    w: 7,
+    w: 8,
     line: '紅樹林的大樹上，垂著長長的藤蔓',
     base: PLAIN,
     intro: 'vine',
     ks: [3, 3, 3, 3],
     bgm: 'densa',
     boss: { name: '紅樹林', k: 3, maxSols: 3 },
+    roads: [
+      { name: '仲間川', time: 'day', sight: 'forest' },
+      { name: '瑪麗伍度瀑布', time: 'dusk', sight: 'waterfall' },
+      { name: '叢林夜路', time: 'night', sight: 'forest' },
+    ],
   },
   {
     id: 'shuri',
     name: '首里城',
     tier: 4,
     color: '#8C56AA',
-    w: 7,
+    w: 8,
     line: '石門有機關，要先壓住壓板',
     base: { stair: 3, cube: 2, tower: 1, bridge: 1 },
     intro: 'gate',
     ks: [2, 3, 3, 3],
     bgm: 'akata',
     boss: { name: '守禮之門', k: 3, maxSols: 2 },
+    roads: [
+      { name: '首里金城町石疊道', time: 'day', sight: 'town' },
+      { name: '龍潭', time: 'dusk', sight: 'castle' },
+      { name: '首里城夜景', time: 'night', sight: 'castle' },
+    ],
   },
 ];
 
@@ -187,7 +237,8 @@ export function stageCfg(zi: number, si: number, els: readonly Element[]): GenCo
     tide: null,
     gate: false,
     stars: 0,
-    obs: [0, 2],
+    // Wider ground gets more fixed blocks, so there is more terrain to build around
+    obs: [Math.max(0, Z.w - 7), Z.w - 4],
   };
   for (const e of els) {
     const sp = SPECIAL[e];
@@ -200,6 +251,8 @@ export function stageCfg(zi: number, si: number, els: readonly Element[]): GenCo
     else if (e === 'gate') cfg.gate = true;
     else if (e === 'star') cfg.stars = boss ? (Z.boss.stars ?? 1) : 1;
   }
+  // The stone gate already takes up a column and the plate another, so it gets fewer fixed blocks
+  if (cfg.gate) cfg.obs = [0, Z.w - 5];
   cfg.k = Math.max(cfg.k, cfg.must.length);
   return cfg;
 }
@@ -281,6 +334,18 @@ export function planRun(zi: number, learned: readonly Element[], seed: number): 
   ];
   const tidy = (set: Element[]) => [...new Set(set)].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   return [own ? [own] : [], ...mid, boss].map(tidy);
+}
+
+/** Whether stop `si` of zone `zi` starts with a choice of roads */
+export const isBranch = (zi: number, si: number): boolean => TIERS[ZONES[zi].tier].branches.includes(si);
+
+/** The two roads offered before stop `si`, drawn from the run's seed: indices into the zone's roads */
+export function roadOffer(zi: number, si: number, seed: number): [number, number] {
+  const n = ZONES[zi].roads.length;
+  const r = rng(seed + si * 613);
+  const a = Math.floor(r() * n);
+  const b = (a + 1 + Math.floor(r() * (n - 1))) % n;
+  return a < b ? [a, b] : [b, a];
 }
 
 /** Easier fallbacks when a demanding stage can't be generated in time */

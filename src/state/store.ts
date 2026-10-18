@@ -17,6 +17,8 @@ export interface Run {
   seed: number;
   /** Elements on each of the five stops, drawn when the run starts */
   plan: Element[][];
+  /** Road picked before each stop (index into the zone's roads), or null where there was no choice */
+  road: (number | null)[];
   level: Level | null;
   placed: Placed[];
   moves: number;
@@ -154,7 +156,8 @@ function normalizeRun(raw: unknown): Run | null {
   const plan = Array.isArray(r.plan) && r.plan.length === 5 ? r.plan : planRun(zi, [], typeof r.seed === 'number' ? r.seed : 0);
   const old = (r as { opened?: unknown }).opened;
   const opened = Array.isArray(old) ? old.filter((id): id is string => typeof id === 'string') : typeof old === 'string' ? [old] : [];
-  return { ...(r as Run), zone: ZONES[zi].id, zi, level, plan, opened };
+  const road = Array.isArray(r.road) && r.road.length === 5 ? r.road.map((v) => (typeof v === 'number' ? v : null)) : [null, null, null, null, null];
+  return { ...(r as Run), zone: ZONES[zi].id, zi, level, plan, road, opened };
 }
 
 /** Repairs anything missing or invalid in saved progress so old saves keep loading */

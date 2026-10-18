@@ -1,13 +1,15 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PieceArt } from '../art/PieceArt';
 import { Background, GateArt, Plate, StarSand, TrayBase, Urchin, Water } from '../art/Scene';
 import { ShisaArt } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
 import { VARIANT_BY_ID } from '../content/shisa';
+import { ZONES } from '../content/zones';
 import { cellsOf, makeGrid, type Placement, sizeOf } from '../engine';
 import { useGame } from '../state/store';
 import { bad, canLiftPiece, pickStar, place, say, shake, walkDone } from './actions';
+import { beginPan, revealScreenX, type ScrollView, stopTour, tourField, viewFor } from './boardView';
 import { beginDrag, clearPreview, hoverPreview, useDrag } from './drag';
 import { boardViewBox, C, landingAt, M, Y0 } from './geometry';
 import { animateWalk, heroTransform } from './walk';
@@ -74,7 +76,46 @@ export function Board() {
   const dragInfo = useDrag((s) => s.info);
   const heroRef = useRef<SVGGElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<ScrollView | null>(null);
   const lv = run?.level ?? null;
+  const cols = lv?.w ?? 6;
+
+  // Fit the whole field, or scroll sideways when cells would get too small to drag onto
+  useLayoutEffect(() => {
+    const wrap = boxRef.current?.parentElement;
+    if (!wrap) return;
+    const measure = () => {
+      const next = viewFor(wrap.clientWidth, wrap.clientHeight, cols);
+      setView((cur) => (cur?.width === next?.width && cur?.height === next?.height ? cur : next));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, [cols]);
+
+  // A new stop on a scrolling board: take a slow look across the field first
+  const scrolling = !!view;
+  useEffect(() => {
+    if (!scrolling || !lv) return;
+    tourField(lv.hero.x > lv.w / 2);
+    return stopTour;
+  }, [scrolling, lv]);
+
+  // Keep the walking hero in view
+  useEffect(() => {
+    if (!scrolling || !ui.walking) return;
+    let raf = 0;
+    const follow = () => {
+      const r = heroRef.current?.getBoundingClientRect();
+      if (r) revealScreenX(r.left + r.width / 2, 90);
+      raf = requestAnimationFrame(follow);
+    };
+    raf = requestAnimationFrame(follow);
+    return () => cancelAnimationFrame(raf);
+  }, [scrolling, ui.walking]);
+
   const g = useMemo(() => (lv && run ? makeGrid(lv, run.placed, run.moves) : null), [lv, run]);
   const lastWater = useRef(0);
   const rise = !!g && g.water > lastWater.current;
@@ -87,7 +128,12 @@ export function Board() {
     return animateWalk(heroRef.current, ui.walking, lv, walkDone, pickStar);
   }, [ui.walking, lv]);
 
-  if (!run || !lv || !g) return <svg id="board" ref={svgRef} viewBox={boardViewBox(6)} />;
+  if (!run || !lv || !g)
+    return (
+      <div className="boardScroll" ref={boxRef}>
+        <svg id="board" ref={svgRef} viewBox={boardViewBox(6)} />
+      </div>
+    );
 
   const pieces = [...lv.fixed.map((p, i) => ({ p, fixed: true, i })), ...run.placed.map((p, i) => ({ p, fixed: false, i }))].sort(
     (a, b) => a.p.y - b.p.y || a.p.x - b.p.x,
@@ -95,10 +141,13 @@ export function Board() {
   const hero = VARIANT_BY_ID[pair[0]];
   const goal = VARIANT_BY_ID[pair[1]];
   const heroPos = ui.heroAt ?? { x: lv.hero.x + 0.5, y: lv.hero.y, flip: false };
+  const roadIdx = run.road?.[run.si];
+  const road = roadIdx === null || roadIdx === undefined ? null : ZONES[run.zi].roads[roadIdx];
   const landPiece = land && (dragInfo ?? (ui.sel >= 0 ? { t: lv.inv[ui.sel], o: run.orient[ui.sel] } : null));
 
   function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
     const st = useGame.getState();
+    stopTour();
     if (st.ui.busy || useDrag.getState().info || !svgRef.current) return;
     const target = e.target as Element;
     const loose = target.closest('[data-pi]');
@@ -122,9 +171,15 @@ export function Board() {
       return;
     }
     const fixed = target.closest('[data-fixed]');
-    if (fixed && st.ui.sel < 0) {
+    const touchFixed = () => {
+      if (!fixed) return;
       shake(`fixed:${fixed.getAttribute('data-fixed')}`);
       say('這塊是固定的，搬不動');
+    };
+    // On a scrolling board, dragging empty ground (or a fixed block) pans the field
+    if (st.ui.sel < 0 && scrolling && beginPan(e, touchFixed)) return;
+    if (fixed && st.ui.sel < 0) {
+      touchFixed();
       return;
     }
     const sel = st.ui.sel;
@@ -139,68 +194,71 @@ export function Board() {
   }
 
   return (
-    <svg
-      id="board"
-      ref={svgRef}
-      viewBox={boardViewBox(lv.w)}
-      preserveAspectRatio="xMidYMid meet"
-      role="img"
-      aria-label="遊戲盤面"
-      onPointerDown={onPointerDown}
-      onPointerMove={(e) => e.pointerType === 'mouse' && hoverPreview(e.clientX, e.clientY)}
-      onPointerLeave={clearPreview}
-    >
-      <Background w={lv.w} />
-      <TrayBase w={lv.w} />
-      {lv.urchin.map((x) => (
-        <Urchin key={`u${x}`} cx={M + x * C + 50} cy={Y0 - 17} />
-      ))}
-      {lv.gate && (
-        <>
-          <Plate px={lv.gate.px} on={g.gateOpen} />
-          <GateArt gate={lv.gate} open={g.gateOpen} />
-        </>
-      )}
-      {pieces.map(({ p, fixed, i }) => {
-        const { h } = sizeOf(p.t, p.o);
-        const target = fixed ? `fixed:${i}` : `pi:${i}`;
-        const shaking = ui.shake?.target === target;
-        const cls = ['pc'];
-        if (!fixed) cls.push('loose');
-        if (!fixed && i === ui.justPlaced) cls.push('drop');
-        if (!fixed && ui.hint?.type === 'lift' && ui.hint.pi === i) cls.push('hinted');
-        if (shaking) cls.push('shake');
-        return (
-          <g
-            key={`${target}:${p.t}${p.o}@${p.x},${p.y}`}
-            transform={`translate(${M + p.x * C},${Y0 - (p.y + h) * C})`}
-            {...(fixed ? { 'data-fixed': i } : { 'data-pi': i })}
-          >
-            <g className={cls.join(' ')} key={shaking ? ui.shake?.n : 0}>
-              <PieceArt t={p.t} o={p.o} />
+    <div className={view ? 'boardScroll scrollX' : 'boardScroll'} ref={boxRef}>
+      <svg
+        id="board"
+        ref={svgRef}
+        viewBox={boardViewBox(lv.w)}
+        style={view ? { width: view.width, height: view.height } : undefined}
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="遊戲盤面"
+        onPointerDown={onPointerDown}
+        onPointerMove={(e) => e.pointerType === 'mouse' && hoverPreview(e.clientX, e.clientY)}
+        onPointerLeave={clearPreview}
+      >
+        <Background w={lv.w} time={road?.time ?? 'day'} sight={road?.sight ?? null} />
+        <TrayBase w={lv.w} />
+        {lv.urchin.map((x) => (
+          <Urchin key={`u${x}`} cx={M + x * C + 50} cy={Y0 - 17} />
+        ))}
+        {lv.gate && (
+          <>
+            <Plate px={lv.gate.px} on={g.gateOpen} />
+            <GateArt gate={lv.gate} open={g.gateOpen} />
+          </>
+        )}
+        {pieces.map(({ p, fixed, i }) => {
+          const { h } = sizeOf(p.t, p.o);
+          const target = fixed ? `fixed:${i}` : `pi:${i}`;
+          const shaking = ui.shake?.target === target;
+          const cls = ['pc'];
+          if (!fixed) cls.push('loose');
+          if (!fixed && i === ui.justPlaced) cls.push('drop');
+          if (!fixed && ui.hint?.type === 'lift' && ui.hint.pi === i) cls.push('hinted');
+          if (shaking) cls.push('shake');
+          return (
+            <g
+              key={`${target}:${p.t}${p.o}@${p.x},${p.y}`}
+              transform={`translate(${M + p.x * C},${Y0 - (p.y + h) * C})`}
+              {...(fixed ? { 'data-fixed': i } : { 'data-pi': i })}
+            >
+              <g className={cls.join(' ')} key={shaking ? ui.shake?.n : 0}>
+                <PieceArt t={p.t} o={p.o} />
+              </g>
             </g>
+          );
+        })}
+        {lv.stars.map((p, i) => (
+          <StarSand key={`s${p.x},${p.y}`} cx={M + (p.x + 0.5) * C} cy={Y0 - p.y * C} taken={ui.picked.includes(i)} />
+        ))}
+        {ui.hint?.type === 'put' && <Ghost p={ui.hint.p} color="#E2703A" opacity={0.5} />}
+        {lv.tide && <Water w={lv.w} level={g.water} rise={rise} />}
+        <g id="goal" transform={`translate(${M + (lv.goal.x + 0.5) * C},${Y0 - lv.goal.y * C})`}>
+          <g className={ui.cheer ? 'bob cheer' : 'bob'}>
+            <ShisaArt v={goal} open={false} />
           </g>
-        );
-      })}
-      {lv.stars.map((p, i) => (
-        <StarSand key={`s${p.x},${p.y}`} cx={M + (p.x + 0.5) * C} cy={Y0 - p.y * C} taken={ui.picked.includes(i)} />
-      ))}
-      {ui.hint?.type === 'put' && <Ghost p={ui.hint.p} color="#E2703A" opacity={0.5} />}
-      {lv.tide && <Water w={lv.w} level={g.water} rise={rise} />}
-      <g id="goal" transform={`translate(${M + (lv.goal.x + 0.5) * C},${Y0 - lv.goal.y * C})`}>
-        <g className={ui.cheer ? 'bob cheer' : 'bob'}>
-          <ShisaArt v={goal} open={false} />
         </g>
-      </g>
-      <g id="hero" ref={heroRef} transform={heroTransform(heroPos)}>
-        <g className={ui.cheer ? 'bob cheer' : 'bob'}>
-          <ShisaArt v={hero} open />
+        <g id="hero" ref={heroRef} transform={heroTransform(heroPos)}>
+          <g className={ui.cheer ? 'bob cheer' : 'bob'}>
+            <ShisaArt v={hero} open />
+          </g>
         </g>
-      </g>
-      {land && landPiece && (
-        <Ghost p={{ t: landPiece.t, o: landPiece.o, x: land.x, y: land.y }} color={land.ok ? '#2E9D6A' : '#CF4436'} opacity={land.ok ? 0.55 : 0.3} />
-      )}
-      {ui.cheer && <Hearts x={M + (lv.goal.x + 0.5) * C} y={Y0 - lv.goal.y * C - 70} />}
-    </svg>
+        {land && landPiece && (
+          <Ghost p={{ t: landPiece.t, o: landPiece.o, x: land.x, y: land.y }} color={land.ok ? '#2E9D6A' : '#CF4436'} opacity={land.ok ? 0.55 : 0.3} />
+        )}
+        {ui.cheer && <Hearts x={M + (lv.goal.x + 0.5) * C} y={Y0 - lv.goal.y * C - 70} />}
+      </svg>
+    </div>
   );
 }
