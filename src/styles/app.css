@@ -1277,14 +1277,28 @@ h1 {
     max-width: 360px;
     height: auto;
   }
+  /* Seven machines: four tabs a row, the count under the name so they stay narrow */
   .series {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
   }
   .sBtn {
+    flex-wrap: wrap;
     justify-content: center;
-    padding-inline: 6px;
+    gap: 0 4px;
+    padding: 4px 2px;
     white-space: nowrap;
+  }
+  .sBtn i {
+    width: 11px;
+    height: 11px;
+  }
+  .sBtn small {
+    flex-basis: 100%;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.1;
   }
   .sBtn .sfx {
     display: none;
@@ -1999,7 +2013,7 @@ h1 {
   /* The gacha machine takes the full width, with its buttons underneath */
   .series {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .sBtn {
     justify-content: center;

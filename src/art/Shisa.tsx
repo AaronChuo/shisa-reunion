@@ -479,6 +479,54 @@ function Hat({ v }: { v: Variant }) {
           strokeLinejoin="round"
         />
       ));
+    case 'antlers':
+      // Kerama deer: a pair of branching antlers
+      return [-1, 1].map((k) => (
+        <path
+          key={k}
+          d={`M${k * 9},-84 C${k * 12},-94 ${k * 16},-100 ${k * 22},-108 M${k * 14},-97 l${k * 10},-3 M${k * 18},-103 l${-k * 2},-8`}
+          stroke="#7A4A24"
+          strokeWidth={4}
+          fill="none"
+          strokeLinecap="round"
+        />
+      ));
+    case 'lily':
+      // A white trumpet lily tucked behind one ear
+      return (
+        <g transform="translate(22,-84) rotate(30)">
+          <path d="M0,10 C-2,4 -1,-4 0,-8" stroke="#5E8A3A" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+          <path
+            d="M-3,-6 C-10,-14 -12,-22 -8,-26 C-4,-22 -2,-18 0,-14 C2,-18 4,-22 8,-26 C12,-22 10,-14 3,-6 Z"
+            fill="#FFFFFF"
+            stroke="#C9C2A8"
+            strokeWidth={1.8}
+            strokeLinejoin="round"
+          />
+          <path d="M0,-14 V-24" stroke="#E8C43A" strokeWidth={1.8} strokeLinecap="round" />
+        </g>
+      );
+    case 'horns':
+      // Water buffalo: wide horns sweeping out and back
+      return [-1, 1].map((k) => (
+        <path
+          key={k}
+          d={`M${k * 16},-80 C${k * 30},-90 ${k * 44},-84 ${k * 46},-70 C${k * 40},-78 ${k * 30},-80 ${k * 20},-74 Z`}
+          fill="#D8CFC0"
+          stroke="#6E6354"
+          strokeWidth={2.2}
+          strokeLinejoin="round"
+        />
+      ));
+    case 'cage':
+      // Daito: the little cage a crane lifts people ashore in
+      return (
+        <g transform="translate(0,-97)">
+          <path d="M0,-12 V-6" stroke="#6E6354" strokeWidth={2.5} strokeLinecap="round" />
+          <rect x={-10} y={-6} width={20} height={14} rx={2} fill="none" stroke="#E2703A" strokeWidth={2.5} />
+          <path d="M-5,-6 V8 M0,-6 V8 M5,-6 V8" stroke="#E2703A" strokeWidth={1.6} />
+        </g>
+      );
     case 'spout':
       return (
         <>

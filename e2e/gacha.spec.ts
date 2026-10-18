@@ -37,6 +37,10 @@ it.describe('a gacha machine you work by hand', () => {
     await expect(page.locator('#machineBox .capsule')).toHaveCount(8);
     await page.click('[data-series="animal"]');
     await expect(page.locator('#machineBox .capsule')).toHaveCount(5);
+    // The island machine: ten shisa from Okinawa's outlying islands
+    await page.click('[data-series="island"]');
+    await expect(page.locator('#machineBox .capsule')).toHaveCount(10);
+    await expect(page.locator('.machine')).toHaveAttribute('aria-label', /離島系列/);
   });
 
   it('takes a coin dragged into the slot, then drops a capsule after one turn of the crank', async ({ page }) => {

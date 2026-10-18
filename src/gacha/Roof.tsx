@@ -236,6 +236,42 @@ function Craft() {
   );
 }
 
+/** 離島: a little island in the sea with palms and a lighthouse, and the ferry that takes you there */
+function Island() {
+  return (
+    <>
+      {/* Sea along the eave, with a few wave crests */}
+      <path d="M40,62 Q155,50 270,62 L270,74 L40,74 Z" fill="#3DB0C1" stroke="#1E7F95" strokeWidth={3} strokeLinejoin="round" />
+      <path d="M58,66 q8,-5 16,0 t16,0 M200,66 q8,-5 16,0 t16,0" stroke="#A9E6EC" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+      {/* The island */}
+      <path d="M86,62 C100,40 130,30 155,30 C182,30 212,40 226,62 Z" fill="#F3E3B5" stroke="#C9A86A" strokeWidth={3} />
+      <path d="M100,56 C118,42 136,38 152,38 C172,38 196,44 212,56 Z" fill="#7DBE93" />
+      {/* Palms */}
+      {[
+        [108, 52, -1],
+        [204, 52, 1],
+      ].map(([x, y, k]) => (
+        <g key={x}>
+          <path d={`M${x},${y} q${k * 3},-14 ${k * 8},-24`} stroke="#8A5A2B" strokeWidth={4} fill="none" strokeLinecap="round" />
+          {[-1, 1].map((d) => (
+            <path key={d} d={`M${x + k * 8},${y - 24} q${d * 10},-6 ${d * 18},2`} stroke="#3E8F4A" strokeWidth={5} fill="none" strokeLinecap="round" />
+          ))}
+        </g>
+      ))}
+      {/* Lighthouse */}
+      <path d="M222,58 L225,26 H233 L236,58 Z" fill="#FFFFFF" stroke="#6E6354" strokeWidth={2} />
+      <rect x={223} y={19} width={12} height={7} fill="#CD4A31" />
+      {/* Ferry */}
+      <g transform="translate(66,58)">
+        <path d="M-16,0 H16 L11,8 H-11 Z" fill="#F2EEE6" stroke="#173944" strokeWidth={2} />
+        <rect x={-8} y={-8} width={14} height={8} rx={2} fill="#2D8FD0" stroke="#173944" strokeWidth={2} />
+      </g>
+      <Prize series="island" y={32} />
+      <rect x={44} y={72} width={222} height={14} rx={6} fill="#F3E3B5" stroke="#8C7A4A" strokeWidth={3} />
+    </>
+  );
+}
+
 export function Roof({ series }: { series: Series['id'] }) {
   switch (series) {
     case 'sea':
@@ -248,6 +284,8 @@ export function Roof({ series }: { series: Series['id'] }) {
       return <Canopy />;
     case 'craft':
       return <Craft />;
+    case 'island':
+      return <Island />;
     default:
       return <Tiles />;
   }

@@ -49,10 +49,14 @@ export type Hat =
   | 'ears'
   | 'claws'
   | 'spout'
-  | 'tugrope';
+  | 'tugrope'
+  | 'antlers'
+  | 'lily'
+  | 'horns'
+  | 'cage';
 
 export interface Series {
-  id: 'trad' | 'sea' | 'food' | 'fest' | 'animal' | 'craft';
+  id: 'trad' | 'sea' | 'food' | 'fest' | 'animal' | 'craft' | 'island';
   name: string;
   color: string;
 }
@@ -92,6 +96,7 @@ export const SERIES: Series[] = [
   { id: 'fest', name: '祭典系列', color: '#E2703A' },
   { id: 'animal', name: '動物系列', color: '#3E8F4A' },
   { id: 'craft', name: '工藝系列', color: '#A86A24' },
+  { id: 'island', name: '離島系列', color: '#17A2A6' },
 ];
 
 /** What a shisa is, for the "西薩是什麼？" page in the collection */
@@ -409,6 +414,64 @@ export const VARIANTS: Variant[] = [
     sparkle: true,
     note: '藏著小氣泡',
     story: '戰爭結束後，沖繩的人把美軍喝完的汽水和啤酒瓶收集起來，熔化以後重新吹成杯子和碗。這種彩色玻璃從前也叫「琉璃」，裡面的小氣泡就是它的特色。',
+  }),
+
+  // ---------- 離島系列 ----------
+  v('jofu', '宮古上布西薩', 'island', '#2F4E8C', '#5C7DBA', '#1C3366', '#0C1A3A', {
+    pattern: 'kasuri',
+    note: '薄得像蟬翼的布',
+    story: '宮古上布是用苧麻的細線織成的布，薄得像蟬的翅膀。織好以後還要用木槌一直敲，布才會發出亮亮的光。它是日本很重要的傳統工藝。',
+  }),
+  v('tsumugi', '久米島紬西薩', 'island', '#5A3A24', '#8A6446', '#3E2614', '#1E1008', {
+    pattern: 'plaid',
+    note: '泥巴染的絲布',
+    story: '久米島紬是用植物和泥巴染色的絲布，顏色多是有光澤的深咖啡色。據說日本各地的紬，最早是從久米島傳出去的。2004 年，它的做法成為日本的重要無形文化財。',
+  }),
+  v('daito', '大東島西薩', 'island', '#7DB04A', '#A8D07A', '#4E7A2A', '#24400E', {
+    pattern: 'grooves',
+    hat: 'cage',
+    note: '坐吊籠上岸',
+    story: '大東島在沖繩本島東邊大約 360 公里。島的四周都是高高的岩壁，船不能靠岸，大家要坐在吊籠裡，用起重機吊上岸。島上種了很多甘蔗。',
+  }),
+  v('yonaguniuma', '與那國馬西薩', 'island', '#A8683A', '#D49A66', '#6E3E1A', '#3A1E08', {
+    hat: 'ears',
+    note: '小小的在來馬',
+    story: '與那國島住著一種小小的馬，叫「與那國馬」，個子矮、脾氣溫和，從很久以前就住在島上。1969 年，牠被與那國町選為天然紀念物。',
+  }),
+  v('keramajika', '慶良間鹿西薩', 'island', '#B0784A', '#D9A878', '#7A4A24', '#3E220C', {
+    pattern: 'spots',
+    hat: 'antlers',
+    note: '會游泳的鹿',
+    story: '慶良間群島住著一種小小的鹿，叫「慶良間鹿」。牠們會游泳，有時候會從一座島游到另一座島。慶良間鹿是日本的天然紀念物。',
+  }),
+  v('yuri', '伊江島百合西薩', 'island', '#F4F1E6', '#FFFFFF', ['#8FCB6B', '#F7E27A'], '#6E8A4A', {
+    pattern: 'flowers',
+    hat: 'lily',
+    note: '春天的百合花海',
+    story: '每年春天，伊江島北邊的海邊公園會開滿白色的鐵砲百合，大家一起來參加「百合祭」。島中間還有一座尖尖的小山，叫做「城山」。',
+  }),
+  v('paantu', '泥巴神西薩', 'island', '#8C8070', '#A89C8A', ['#5E7A3A', '#7A9A4A'], '#3A3226', {
+    pattern: 'darkspots',
+    hat: 'leaves',
+    note: '塗泥巴保平安',
+    story: '宮古島的島尻有一種祭典，全身塗滿泥巴、披著藤蔓、戴著面具的「巴恩圖（パーントゥ）」會把泥巴抹在大家身上，聽說被抹到就能趕走壞運氣、保平安。',
+  }),
+  v('suigyu', '水牛車西薩', 'island', '#6E6A72', '#948F98', '#45424A', '#1E1C22', {
+    hat: 'horns',
+    note: '坐水牛車過海',
+    story: '西表島旁邊有一座小小的由布島，兩座島之間的海很淺。大家坐上水牛拉的車，慢慢走過大約 400 公尺的淺海，就到了島上。',
+  }),
+  v('kudaka', '神之島西薩', 'island', '#F2EEE6', '#FFFFFF', ['#7FCFE0', '#BFE6EE'], '#5E7F86', {
+    pattern: 'waves',
+    note: '傳說中的神之島',
+    story: '久高島在沖繩本島東南邊的海上，被叫做「神之島」。傳說創造琉球的神阿摩美久（アマミキヨ），最先降臨的地方，就是這座島。',
+  }),
+  v('hateruma', '南十字星西薩', 'island', '#1E2A5A', '#3A4E8C', ['#F7E27A', '#FFFFFF'], '#0C1230', {
+    pattern: 'stars',
+    rare: true,
+    sparkle: true,
+    note: '日本最南端的星空',
+    story: '波照間島是日本最南邊、有人住的島。在這裡的夜空，看得到日本其他地方很難看到的「南十字星」，大約十二月到六月都有機會看到。',
   }),
 ];
 
