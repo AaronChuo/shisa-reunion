@@ -1,4 +1,5 @@
 import type { PieceType } from '../engine';
+import type { Element } from './zones';
 
 export const PIECE_NAMES: Record<PieceType, string> = {
   cube: '紅型方塊',
@@ -15,7 +16,7 @@ export const PIECE_NAMES: Record<PieceType, string> = {
 export type Mechanism = 'urchin' | 'tide' | 'gate' | 'star';
 export type IntroKey = PieceType | Mechanism;
 
-export const MECHANISM_NAMES: Record<Mechanism, string> = { urchin: '海膽', tide: '漲潮', gate: '石門機關', star: '星砂' };
+export const MECHANISM_NAMES: Record<Mechanism, string> = { urchin: '海膽', tide: '漲潮', gate: '石門', star: '星砂' };
 
 /** One-line rules shown the first time a piece or mechanism appears */
 export const RULES: Record<IntroKey, string> = {
@@ -35,3 +36,8 @@ export const RULES: Record<IntroKey, string> = {
 };
 
 export const isPiece = (k: IntroKey): k is PieceType => k in PIECE_NAMES;
+
+export const elementName = (e: Element): string => (isPiece(e) ? PIECE_NAMES[e] : MECHANISM_NAMES[e as Mechanism]);
+
+/** What a stop has, for the "next stop" card */
+export const stopLine = (els: readonly Element[]): string => (els.length ? `有${els.map(elementName).join('、')}` : '專心搭路');

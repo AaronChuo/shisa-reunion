@@ -4,8 +4,8 @@ import { type PlaceId, placeSeen } from '../content/places';
 import { drawFromSeries, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { SHISA_CHEER } from '../content/story';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
-import { CARDS, type CardKey, pickCards, STAGES, stageCfg, ZONES } from '../content/zones';
-import { canLift, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, rng, solve, stable, waterAt } from '../engine';
+import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES } from '../content/zones';
+import { canLift, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, waterAt } from '../engine';
 import { getState, mut, type Run, type Screen } from '../state/store';
 import { generateLevel } from './generator';
 
@@ -104,14 +104,14 @@ export function requestRun(zi: number): void {
 }
 
 export function startRun(zi: number): void {
+  const seed = Math.floor(Math.random() * 1e9);
   mut((s) => {
     s.progress.run = {
       zone: ZONES[zi].id,
       zi,
       si: 0,
-      seed: Math.floor(Math.random() * 1e9),
-      card: null,
-      cards: null,
+      seed,
+      plan: planRun(zi, learnedFor(zi, s.progress.clears), seed),
       level: null,
       placed: [],
       moves: 0,
@@ -142,7 +142,7 @@ export function resumeRun(): void {
 
 async function buildStage(): Promise<void> {
   const r = run();
-  const cfg = stageCfg(r.zi, r.si, r.card);
+  const cfg = stageCfg(r.zi, r.si, r.plan[r.si] ?? []);
   hush();
   mut((s) => {
     Object.assign(s.ui, { busy: true, screen: 'play', walking: null, picked: [], cheer: false, heroAt: null, hint: null, sel: -1 });
@@ -159,7 +159,7 @@ async function buildStage(): Promise<void> {
   mut((s) => {
     const cur = s.progress.run;
     if (!cur) return;
-    Object.assign(cur, { level: lv, placed: [], moves: 0, hist: [], phase: 'play', cards: null, orient: lv.inv.map(() => 0) });
+    Object.assign(cur, { level: lv, placed: [], moves: 0, hist: [], phase: 'play', orient: lv.inv.map(() => 0) });
   });
   enterStage();
 }
@@ -402,24 +402,20 @@ export function walkDone(at: { x: number; y: number; flip: boolean }): void {
 }
 
 function onWin(): void {
-  const r = run();
-  const reward = r.si > 0 && r.si < STAGES - 1 && r.card ? (CARDS[r.card].reward ?? null) : null;
-  const last = r.si === STAGES - 1;
+  const last = run().si === STAGES - 1;
   mut((s) => {
     const cur = s.progress.run;
     if (!cur) return;
     s.progress.tokens += 1;
     cur.earned += 1;
-    if (reward?.shell) cur.shell += reward.shell;
-    if (reward?.conch) cur.conch += reward.conch;
     cur.phase = last ? 'done' : 'branch';
     if (last) {
       s.progress.clears[cur.zone] = (s.progress.clears[cur.zone] ?? 0) + 1;
-      const next = ZONES[cur.zi + 1]?.id;
-      cur.opened = next && !s.progress.open.includes(next) ? next : null;
-      if (cur.opened) s.progress.open.push(cur.opened);
+      const was = s.progress.open;
+      cur.opened = openFor(s.progress.clears).filter((id) => !was.includes(id));
+      s.progress.open = ZONES.map((Z) => Z.id).filter((id) => was.includes(id) || cur.opened?.includes(id));
     }
-    s.ui.modal = { kind: 'win', reward, last };
+    s.ui.modal = { kind: 'win', last };
   });
   sfx.coin();
   if (getState().progress.sound) speak(SHISA_CHEER, undefined, 'shisa');
@@ -437,18 +433,17 @@ export function showBranch(): void {
     if (r.phase === 'branch') {
       r.si += 1;
       r.phase = 'choose';
-      r.cards = r.si === STAGES - 1 ? ['boss'] : pickCards(r.zi, r.si, r.seed, rng);
     }
     s.ui.modal = { kind: 'branch' };
   });
 }
 
-export function chooseCard(card: CardKey | 'boss'): void {
+/** Sets off for the stop shown on the "next stop" card */
+export function goNextStop(): void {
   sfx.hello();
   mut((s) => {
     const r = s.progress.run;
     if (!r) return;
-    r.card = card === 'boss' ? null : card;
     r.rerolls = 0;
     s.ui.modal = null;
   });
@@ -457,11 +452,11 @@ export function chooseCard(card: CardKey | 'boss'): void {
 
 function finishRun(): void {
   const r = run();
-  const opened = r.opened ? ZONES.findIndex((Z) => Z.id === r.opened) : -1;
+  const unlocked = (r.opened ?? []).map((id) => ZONES.findIndex((Z) => Z.id === id)).filter((i) => i >= 0);
   mut((s) => {
     s.progress.run = null;
     s.ui.busy = false;
-    s.ui.modal = { kind: 'done', zi: r.zi, earned: r.earned, unlocked: opened >= 0 ? opened : null };
+    s.ui.modal = { kind: 'done', zi: r.zi, earned: r.earned, unlocked };
   });
 }
 

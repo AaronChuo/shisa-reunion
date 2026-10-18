@@ -103,7 +103,8 @@ export interface GenConfig {
   k: number;
   pool: Partial<Record<PieceType, number>>;
   must: PieceType[];
-  need: Move | null;
+  /** Moves every solution's path has to make */
+  need: Move[];
   maxSols: number;
   urchin: number;
   tide: Tide | null;

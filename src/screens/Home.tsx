@@ -5,7 +5,7 @@ import { speak } from '../audio/speech';
 import { type PlaceId, placeSeen } from '../content/places';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { SHISA_HELLO } from '../content/story';
-import { STAGES, ZONES } from '../content/zones';
+import { lockHint, STAGES, ZONES, zoneStars, zoneTag } from '../content/zones';
 import { go, openAudioSettings, openPlace, openStory, requestRun, resumeRun } from '../game/actions';
 import { type Progress, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
@@ -296,16 +296,16 @@ export function Home() {
           {ZONES.map((Z, i) => {
             const locked = !p.open.includes(Z.id);
             const n = p.clears[Z.id] ?? 0;
-            const status = locked ? `先走完${ZONES[i - 1].name}才會打開` : n ? `走完 ${n} 次` : '還沒走過';
+            const status = locked ? lockHint(i, p.clears) : n ? `走完 ${n} 次` : '還沒走過';
             return (
               <div key={Z.id} className={locked ? 'zone locked' : i === here ? 'zone here' : 'zone'} style={{ ['--zc' as string]: Z.color }}>
                 <span className="stripe" />
                 <div>
                   <div className="zt">
                     <span className="zn">{Z.name}</span>
-                    <span className="tag">{Z.tag}</span>
-                    <span className="stars" role="img" aria-label={`難度 ${Z.stars}`}>
-                      {'★'.repeat(Z.stars)}
+                    <span className="tag">{zoneTag(Z)}</span>
+                    <span className="stars" role="img" aria-label={`難度 ${zoneStars(Z)}`}>
+                      {'★'.repeat(zoneStars(Z))}
                     </span>
                   </div>
                   <div className="zl">

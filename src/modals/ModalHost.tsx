@@ -1,5 +1,5 @@
 import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Blocks, CardIcon, CoinIcon, ConchIcon, Icon, ShellIcon, Stamp, TapHand } from '../art/Icons';
+import { Blocks, CardIcon, CoinIcon, Icon, Stamp, TapHand } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
@@ -7,19 +7,19 @@ import { useReadAloud } from '../audio/speech';
 import { PHOTOS } from '../content/credits';
 import { PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, SERIES, VARIANT_BY_ID } from '../content/shisa';
-import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
-import { CARDS, stageCfg, ZONES } from '../content/zones';
+import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES, stopLine } from '../content/text';
+import { STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { sizeOf } from '../engine';
 import {
   ackIntro,
   ackPlace,
   afterWin,
-  chooseCard,
   chooseRole,
   closeModal,
   finishReveal,
   go,
   goHome,
+  goNextStop,
   setOffFrom,
   startRun,
   toggleMusic,
@@ -94,7 +94,6 @@ function Intro({ k }: { k: IntroKey }) {
 
 function Win({ m }: { m: Extract<Modal, { kind: 'win' }> }) {
   const pair = useGame((s) => s.progress.pair);
-  const rw = m.reward;
   return (
     <Sheet label="過關">
       <CoinIcon className="bigCoin" />
@@ -106,18 +105,6 @@ function Win({ m }: { m: Extract<Modal, { kind: 'win' }> }) {
           <CoinIcon />
           福氣幣 <b className="num">+1</b>
         </span>
-        {rw?.shell ? (
-          <span className="gain">
-            <ShellIcon />
-            提示貝 <b className="num">+{rw.shell}</b>
-          </span>
-        ) : null}
-        {rw?.conch ? (
-          <span className="gain">
-            <ConchIcon />
-            換題海螺 <b className="num">+{rw.conch}</b>
-          </span>
-        ) : null}
       </div>
       <div className="btns">
         <Cta icon={<Icon name={m.last ? 'check' : 'next'} />} data={{ 'data-next': true, 'data-focus': true }} onClick={afterWin}>
@@ -128,67 +115,46 @@ function Win({ m }: { m: Extract<Modal, { kind: 'win' }> }) {
   );
 }
 
-function Branch() {
+/** Between stops: one card showing what the next stop has, tapped to set off */
+function NextStop() {
   const run = useGame((s) => s.progress.run);
-  if (!run?.cards) return null;
+  if (run?.phase !== 'choose') return null;
   const Z = ZONES[run.zi];
-  const isBoss = run.cards[0] === 'boss';
+  const boss = run.si === STAGES - 1;
+  const els = run.plan[run.si] ?? [];
+  const k = stageCfg(run.zi, run.si, els).k;
   return (
-    <Sheet wide label="選下一條路">
+    <Sheet label="下一站">
       <div className="eyebrow">
         {Z.name} · 第 {run.si + 1} 站
       </div>
-      <h2>{isBoss ? '最後一站' : '下一站要走哪條路？'}</h2>
+      <h2>{boss ? '最後一站' : '下一站'}</h2>
       <div className="paths">
-        {run.cards.map((key) => {
-          if (key === 'boss') {
-            return (
-              <button key={key} type="button" className="pathCard" data-card="boss" data-focus onClick={() => chooseCard('boss')}>
-                <CardIcon k="boss" />
-                <span className="pn">{Z.boss.name}</span>
-                <span className="pl">最後一站，比較難</span>
-                <span className="pc">
-                  <span className="mini">
-                    <Blocks n={Z.boss.k} />
-                    <b className="num">{Z.boss.k}</b> 塊
-                  </span>
-                </span>
-              </button>
-            );
-          }
-          const c = CARDS[key];
-          const cfg = stageCfg(run.zi, run.si, key);
-          return (
-            <button key={key} type="button" className="pathCard" data-card={key} onClick={() => chooseCard(key)}>
-              <CardIcon k={key} />
-              <span className="pn">{c.name}</span>
-              <span className="pl">{c.line}</span>
-              <span className="pc">
-                <span className="mini">
-                  <Blocks n={cfg.k} />
-                  <b className="num">{cfg.k}</b> 塊
-                </span>
-                {c.reward?.shell && (
-                  <span className="mini">
-                    <ShellIcon />
-                    提示貝 +{c.reward.shell}
-                  </span>
-                )}
-                {c.reward?.conch && (
-                  <span className="mini">
-                    <ConchIcon />
-                    換題海螺 +{c.reward.conch}
-                  </span>
-                )}
-              </span>
-            </button>
-          );
-        })}
+        <button type="button" className="pathCard" data-card={boss ? 'boss' : 'next'} data-focus onClick={goNextStop}>
+          {boss ? (
+            <CardIcon k="boss" />
+          ) : els.length ? (
+            <span className="elIcons">
+              {els.map((e) => (
+                <CardIcon key={e} k={e} />
+              ))}
+            </span>
+          ) : (
+            <CardIcon k="build" />
+          )}
+          <span className="pn">{boss ? Z.boss.name : `第 ${run.si + 1} 站`}</span>
+          <span className="pl">{boss ? `最後一站，${els.length ? stopLine(els) : '比較難'}` : stopLine(els)}</span>
+          <span className="pc">
+            <span className="mini">
+              <Blocks n={k} />
+              <b className="num">{k}</b> 塊
+            </span>
+          </span>
+        </button>
       </div>
     </Sheet>
   );
 }
-
 function Done({ m }: { m: Extract<Modal, { kind: 'done' }> }) {
   const Z = ZONES[m.zi];
   return (
@@ -196,7 +162,7 @@ function Done({ m }: { m: Extract<Modal, { kind: 'done' }> }) {
       <Stamp label={Z.name} mark="過" className="doneStamp" />
       <h2>{Z.name} 走完了！</h2>
       <p>
-        這趟一共拿到 <b className="num">{m.earned}</b> 枚福氣幣{m.unlocked !== null ? `，${ZONES[m.unlocked].name}打開了` : ''}。
+        這趟一共拿到 <b className="num">{m.earned}</b> 枚福氣幣{m.unlocked.length ? `，${m.unlocked.map((i) => ZONES[i].name).join('、')}打開了` : ''}。
       </p>
       <div className="btns">
         <Cta icon={<Icon name="gacha" />} data={{ 'data-g': true, 'data-focus': true }} onClick={() => go('gacha')}>
@@ -387,7 +353,7 @@ function Postcard({ id, start }: { id: PlaceId; start: number | null }) {
     <Sheet label={`${P.name}明信片`} wide>
       <div className="postcard" style={{ ['--zc' as string]: Z?.color ?? '#2D8FD0' }}>
         <PostcardPicture id={id} className="postcardArt" />
-        <Stamp label={P.name} mark={Z ? '★'.repeat(Z.stars) : '琉'} className="postcardStamp" />
+        <Stamp label={P.name} mark={Z ? '★'.repeat(zoneStars(Z)) : '琉'} className="postcardStamp" />
       </div>
       <PhotoCreditLine id={id} />
       <h2>{P.name}</h2>
@@ -531,7 +497,7 @@ export function ModalHost() {
       body = <Win m={m} />;
       break;
     case 'branch':
-      body = <Branch />;
+      body = <NextStop />;
       break;
     case 'done':
       body = <Done m={m} />;

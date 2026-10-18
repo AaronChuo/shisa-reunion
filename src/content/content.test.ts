@@ -5,7 +5,7 @@ import { FREE_LICENSE, OWN_PHOTO, PHOTO_BY_PLACE } from './credits';
 import { PLACE_ORDER, PLACES } from './places';
 import { ABOUT_SHISA, SERIES, VARIANTS } from './shisa';
 import { PIECE_NAMES, RULES } from './text';
-import { CARDS, ZONES } from './zones';
+import { ZONES } from './zones';
 
 // Characters a parent actually reads out: what's left once Japanese words are swapped for their readings
 const spoken = (s: string) => speakable(s).replace(/[「」〈〉（）、，。：；！？\s]/g, '').length;
@@ -73,20 +73,20 @@ describe('read-aloud text', () => {
   });
 });
 
-describe('zones and cards', () => {
+describe('zones', () => {
   it('names and explains every piece', () => {
     for (const t of Object.keys(PIECE_NAMES) as (keyof typeof PIECE_NAMES)[]) expect(RULES[t]).toBeTruthy();
   });
 
-  it('only offers cards that exist, and every zone has a unique id', () => {
+  it('gives every zone a unique id and teaches each element in one zone only', () => {
     expect(new Set(ZONES.map((z) => z.id)).size).toBe(ZONES.length);
-    for (const Z of ZONES) for (const c of Z.cards) expect(CARDS[c], `${Z.id}:${c}`).toBeDefined();
+    const taught = ZONES.flatMap((Z) => (Z.intro ? [Z.intro] : []));
+    expect(new Set(taught).size).toBe(taught.length);
   });
 
-  it('only asks for pieces the zone can hand out', () => {
-    for (const Z of ZONES) {
-      const asks = [...(Z.first?.must ?? []), ...(Z.boss.must ?? []), ...Z.cards.flatMap((c) => CARDS[c].must ?? [])];
-      for (const t of asks) expect(Z.pool[t], `${Z.id} needs ${t}`).toBeGreaterThan(0);
-    }
+  it('starts with plain building and never lets the tiers go back down', () => {
+    expect(ZONES[0].tier).toBe(0);
+    expect(ZONES[0].intro).toBeNull();
+    for (let i = 1; i < ZONES.length; i++) expect(ZONES[i].tier, ZONES[i].id).toBeGreaterThanOrEqual(ZONES[i - 1].tier);
   });
 });

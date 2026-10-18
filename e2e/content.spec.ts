@@ -1,4 +1,4 @@
-import { relax, stageCfg, ZONES } from '../src/content/zones';
+import { planRun, relax, stageCfg, ZONES } from '../src/content/zones';
 import { generate } from '../src/engine';
 import { freshProgress } from '../src/state/store';
 import { expect, test as it } from './fixtures';
@@ -7,18 +7,18 @@ import { dismissIntros, progress, solveByDragging } from './helpers';
 const save = (state: unknown) => JSON.stringify({ state: { progress: state }, version: 2 });
 
 it.describe('new islands', () => {
-  // Kouri brings the slide, Taketomi star sand, Iriomote the vine: each first stop must be playable to the end
-  for (const id of ['kouri', 'taketomi', 'iriomote']) {
+  // Kouri brings the spring, Taketomi star sand, Iriomote the vine, Shuri the stone gate: each lesson must be playable to the end
+  for (const id of ['kouri', 'taketomi', 'iriomote', 'shuri']) {
     it(`plays the first stop of ${id} through to the win`, async ({ page }) => {
       const zi = ZONES.findIndex((z) => z.id === id);
-      const level = generate(stageCfg(zi, 0, null), 7, relax);
+      const plan = planRun(zi, [], 7);
+      const level = generate(stageCfg(zi, 0, plan[0]), 7, relax);
       const run = {
         zone: id,
         zi,
         si: 0,
         seed: 7,
-        card: null,
-        cards: null,
+        plan,
         level,
         placed: [],
         moves: 0,
@@ -40,16 +40,16 @@ it.describe('new islands', () => {
     });
   }
 
-  it('upgrades a save from before the new islands and keeps Shuri open', async ({ page }) => {
+  it('upgrades a save from before the new islands, keeps Shuri open and opens zones by tier', async ({ page }) => {
     const old = { ...freshProgress(), open: undefined, unlocked: 3, clears: [1, 1, 1, 0] };
     await page.addInitScript(
       (s) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', s),
       JSON.stringify({ state: { progress: old }, version: 1 }),
     );
     await page.goto('/');
-    for (const zi of [3, 6]) await expect(page.locator(`.zone [data-zone="${zi}"]`)).toBeEnabled();
-    for (const zi of [4, 5]) await expect(page.locator(`.zone [data-zone="${zi}"]`)).toBeDisabled();
-    expect((await progress(page)).open).toEqual(['naha', 'yomitan', 'motobu', 'kouri', 'shuri']);
+    // Finishing Yomitan opens every 進階 zone, and finishing Motobu opens every 高手 zone
+    for (const zi of [3, 4, 5, 6]) await expect(page.locator(`.zone [data-zone="${zi}"]`)).toBeEnabled();
+    expect((await progress(page)).open).toEqual(['naha', 'yomitan', 'motobu', 'kouri', 'taketomi', 'iriomote', 'shuri']);
   });
 });
 

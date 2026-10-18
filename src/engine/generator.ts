@@ -118,7 +118,7 @@ export function attempt(r: Rng, cfg: GenConfig): Level | null {
     const g = makeGrid(lv, sol);
     const path = findRoute(g, lv.hero, lv.goal, lv.stars);
     if (!path) return null;
-    if (cfg.need && !path.some((p) => p.via === cfg.need)) return null;
+    if (cfg.need.some((m) => !path.some((p) => p.via === m))) return null;
     const gate = lv.gate;
     if (gate && !(g.gateOpen && path.some((p) => p.s.x === gate.x && p.s.y < gate.h))) return null;
   }

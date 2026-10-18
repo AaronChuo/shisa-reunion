@@ -4,7 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import type { PlaceId } from '../content/places';
 import { type Series, STARTERS, VARIANT_BY_ID } from '../content/shisa';
 import type { IntroKey } from '../content/text';
-import { type CardKey, type Reward, ZONES } from '../content/zones';
+import { type Element, openFor, planRun, ZONES } from '../content/zones';
 import type { Level, PathStep, Placed, Placement } from '../engine';
 
 export type Phase = 'play' | 'branch' | 'choose' | 'done';
@@ -15,8 +15,8 @@ export interface Run {
   zi: number;
   si: number;
   seed: number;
-  card: CardKey | null;
-  cards: (CardKey | 'boss')[] | null;
+  /** Elements on each of the five stops, drawn when the run starts */
+  plan: Element[][];
   level: Level | null;
   placed: Placed[];
   moves: number;
@@ -27,8 +27,8 @@ export interface Run {
   earned: number;
   rerolls: number;
   phase: Phase;
-  /** Zone id opened by finishing this run, if any */
-  opened?: string | null;
+  /** Zone ids opened by finishing this run */
+  opened?: string[];
 }
 
 /** Everything that survives a reload (saved to this device's localStorage) */
@@ -53,9 +53,9 @@ export type Screen = 'home' | 'play' | 'gacha' | 'dex';
 export type Modal =
   | { kind: 'loading' }
   | { kind: 'intro'; key: IntroKey }
-  | { kind: 'win'; reward: Reward | null; last: boolean }
+  | { kind: 'win'; last: boolean }
   | { kind: 'branch' }
-  | { kind: 'done'; zi: number; earned: number; unlocked: number | null }
+  | { kind: 'done'; zi: number; earned: number; unlocked: number[] }
   | { kind: 'confirmRun'; zi: number }
   | { kind: 'reveal'; id: string; series: Series['id']; color: string }
   | { kind: 'role'; id: string }
@@ -150,7 +150,11 @@ function normalizeRun(raw: unknown): Run | null {
   if (zi < 0 || typeof r.si !== 'number') return null;
   // Levels saved before star sand existed have no stars
   const level = r.level ? { ...r.level, stars: Array.isArray(r.level.stars) ? r.level.stars : [] } : null;
-  return { ...(r as Run), zone: ZONES[zi].id, zi, level };
+  // Runs saved before stops had planned elements get a plan drawn from their seed
+  const plan = Array.isArray(r.plan) && r.plan.length === 5 ? r.plan : planRun(zi, [], typeof r.seed === 'number' ? r.seed : 0);
+  const old = (r as { opened?: unknown }).opened;
+  const opened = Array.isArray(old) ? old.filter((id): id is string => typeof id === 'string') : typeof old === 'string' ? [old] : [];
+  return { ...(r as Run), zone: ZONES[zi].id, zi, level, plan, opened };
 }
 
 /** Repairs anything missing or invalid in saved progress so old saves keep loading */
@@ -173,11 +177,8 @@ export function normalizeProgress(raw: unknown): Progress {
     : Array.isArray(p.open)
       ? p.open.filter((id) => zoneIndex(id) >= 0)
       : [];
-  // Finishing a zone opens the next one; this also opens zones added after a save was made
-  ZONES.forEach((Z, i) => {
-    if (clears[Z.id] > 0 && i + 1 < ZONES.length) open.push(ZONES[i + 1].id);
-  });
-  open.unshift(ZONES[0].id);
+  // Zones never close again; the tier rules also open zones added after a save was made
+  open.push(...openFor(clears));
   return {
     tokens: typeof p.tokens === 'number' && p.tokens >= 0 ? p.tokens : 0,
     owned,

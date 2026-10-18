@@ -10,8 +10,13 @@ describe('saved progress', () => {
     const old = { ...freshProgress(), open: undefined, unlocked: 3, clears: [2, 1, 1, 0] };
     const p = normalizeProgress(old);
     expect(p.clears).toMatchObject({ naha: 2, yomitan: 1, motobu: 1, shuri: 0, kouri: 0 });
-    // Shuri stays open and Kouri, the new island after Motobu, opens because Motobu was finished
-    expect(p.open).toEqual(['naha', 'yomitan', 'motobu', 'kouri', 'shuri']);
+    // Shuri stays open; finishing Yomitan opens every 進階 zone, and finishing Motobu opens every 高手 zone
+    expect(p.open).toEqual(['naha', 'yomitan', 'motobu', 'kouri', 'taketomi', 'iriomote', 'shuri']);
+  });
+
+  it('opens zones by the tier rules for a save made with one zone opening at a time', () => {
+    const p = normalizeProgress({ ...freshProgress(), open: ['naha', 'yomitan'], clears: { naha: 1, yomitan: 1 } });
+    expect(p.open).toEqual(['naha', 'yomitan', 'motobu', 'kouri']);
   });
 
   it('moves a journey in progress to its zone in the new order', () => {
@@ -25,6 +30,9 @@ describe('saved progress', () => {
     expect(p.run?.zone).toBe('shuri');
     expect(p.run?.zi).toBe(6);
     expect(p.run?.level?.stars).toEqual([]);
+    // Runs saved before stops had planned elements get a plan, which starts with Shuri's lesson on the stone gate
+    expect(p.run?.plan).toHaveLength(5);
+    expect(p.run?.plan[0]).toEqual(['gate']);
   });
 
   it('drops a journey whose zone no longer exists', () => {

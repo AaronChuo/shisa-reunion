@@ -955,6 +955,20 @@ h1 {
   width: 92px;
   height: 70px;
 }
+.pathCard .elIcons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: flex-end;
+}
+.pathCard .elIcons svg {
+  width: 66px;
+  height: 54px;
+}
+.pathCard .elIcons svg:only-child {
+  width: 92px;
+  height: 70px;
+}
 .pathCard .pn {
   font-size: 21px;
   font-weight: 700;
