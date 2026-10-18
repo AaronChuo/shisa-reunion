@@ -1,3 +1,4 @@
+import { backbuild, walkFits } from './backbuild';
 import { makeGrid, placementsFor } from './grid';
 import { findRoute, surfaces } from './path';
 import { cellsOf, DEFS } from './pieces';
@@ -24,12 +25,8 @@ const SEARCH_BUDGET = 20;
 const STACKS: PieceType[][] = [[], ['cube'], ['tower'], ['tower', 'cube'], ['cube', 'cube']];
 const stackH = (s: PieceType[]) => s.reduce((a, t) => a + (t === 'tower' ? 2 : 1), 0);
 
-/**
- * One random level for the config, or null when the draw doesn't qualify.
- * A level qualifies when it starts unsolved, is solvable, every solution uses every loose piece,
- * and every solution satisfies the config's required move / open gate.
- */
-export function attempt(r: Rng, cfg: GenConfig): Level | null {
+/** A random terrain for the config with the blocks for the tray, not yet checked for a road; null when the draw fails */
+export function drawTerrain(r: Rng, cfg: GenConfig): Level | null {
   const w = cfg.w;
   const pick = <T>(a: T[]): T => a[Math.floor(r() * a.length)];
   const fixedPool: Partial<Record<PieceType, number>> = { tower: 2, cube: 3, stair: 1, bridge: 1 };
@@ -113,45 +110,87 @@ export function attempt(r: Rng, cfg: GenConfig): Level | null {
   }
   inv.sort();
   lv.inv = inv;
+  return lv;
+}
+
+/**
+ * The solver's verdict on a level: it qualifies when it starts unsolved, is solvable, every solution uses every loose
+ * piece, and every solution makes the required moves and goes through an open stone gate.
+ */
+export function judge(lv: Level, cfg: GenConfig): Level | null {
   if (findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)) return null;
-  // Cheap filter first: most draws have no solution, and a solvable one usually shows a solution early
-  if (hasSolution(lv, SEARCH_BUDGET * cfg.w) !== true) return null;
   const { sols } = solve(lv, cfg.maxSols + 1);
   if (!sols.length || sols.length > cfg.maxSols) return null;
   if (sols.some((s) => s.length < cfg.k)) return null;
   for (const sol of sols) {
     const g = makeGrid(lv, sol);
     const path = findRoute(g, lv.hero, lv.goal, lv.stars);
-    if (!path) return null;
-    if (cfg.need.some((m) => !path.some((p) => p.via === m))) return null;
-    const gate = lv.gate;
-    if (gate && !(g.gateOpen && path.some((p) => p.s.x === gate.x && p.s.y < gate.h))) return null;
+    if (!path || !walkFits(path, g, lv, cfg)) return null;
   }
   lv.solutions = sols.length;
   return lv;
 }
 
+/** Draw and check: a random terrain and tray, kept only if the solver finds it fair. Most draws have no road. */
+export function attempt(r: Rng, cfg: GenConfig): Level | null {
+  const lv = drawTerrain(r, cfg);
+  if (!lv || findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)) return null;
+  // Cheap filter first: most draws have no solution, and a solvable one usually shows a solution early
+  if (hasSolution(lv, SEARCH_BUDGET * cfg.w) !== true) return null;
+  return judge(lv, cfg);
+}
+
+/** 逆築: a random terrain and tray, with the road built first so only levels known to be solvable go to the solver */
+export function attemptBackbuild(r: Rng, cfg: GenConfig): Level | null {
+  const lv = drawTerrain(r, cfg);
+  if (!lv || findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)) return null;
+  const built = backbuild(r, lv, cfg);
+  if (!built) return null;
+  lv.inv = built.inv;
+  return judge(lv, cfg);
+}
+
+export type Method = 'backbuild' | 'draw';
+
 /**
- * Keeps drawing until a level qualifies. After `stepMs` without success it asks `relax` for an easier
+ * The ways to generate a stage, in the order to try them. 逆築 first, with drawing as the fallback it takes turns with;
+ * a stage that needs a vine only draws. A vine hangs from a block that itself rests on others, two or more steps of
+ * set-up that building one block at a time does not find.
+ */
+export function methodsFor(cfg: GenConfig): Method[] {
+  return cfg.must.includes('vine') ? ['draw'] : ['backbuild', 'draw'];
+}
+
+/**
+ * Keeps generating until a level qualifies, taking turns between the config's methods while they keep failing
+ * (`sliceMs`: the first method's turn, then the other's). After `stepMs` without success it asks `relax` for an easier
  * config (up to `maxStep` times), so generation always finishes.
  */
 export function generate(
   cfg: GenConfig,
   seed: number,
   relax: (cfg: GenConfig, step: number) => GenConfig,
-  { stepMs = 2200, maxStep = 4, now = () => performance.now() } = {},
+  { stepMs = 2200, maxStep = 4, now = () => performance.now(), sliceMs = [700, 250] as [number, number] } = {},
 ): Level {
   const r = rng(seed);
   let step = 0;
   let cur = cfg;
   let since = now();
+  const methods = methodsFor(cfg);
+  let turn = 0;
+  let turnStart = since;
   for (;;) {
-    const lv = attempt(r, cur);
+    const lv = methods[turn] === 'backbuild' ? attemptBackbuild(r, cur) : attempt(r, cur);
     if (lv) return lv;
-    if (now() - since > stepMs && step < maxStep) {
+    const t = now();
+    if (methods.length > 1 && t - turnStart > sliceMs[turn === 0 ? 0 : 1]) {
+      turn = (turn + 1) % methods.length;
+      turnStart = t;
+    }
+    if (t - since > stepMs && step < maxStep) {
       step += 1;
       cur = relax(cfg, step);
-      since = now();
+      since = t;
     }
   }
 }

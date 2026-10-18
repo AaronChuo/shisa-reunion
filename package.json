@@ -1,7 +1,7 @@
 {
   "name": "shisa-reunion",
   "private": true,
-  "version": "0.13.0",
+  "version": "0.14.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,7 +15,8 @@
     "e2e": "playwright test",
     "fonts": "node scripts/subset-font.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "photos": "node scripts/photos.mjs"
+    "photos": "node scripts/photos.mjs",
+    "bench:gen": "vitest run --config vitest.bench.config.ts"
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
