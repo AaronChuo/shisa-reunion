@@ -149,8 +149,8 @@ describe('relaxing a stage', () => {
   });
 
   it('narrows the ground by two columns on step 3, with fewer fixed blocks to match', () => {
-    expect([relax(gate, 2).w, relax(gate, 3).w]).toEqual([9, 7]);
-    expect(relax(gate, 3).obs).toEqual([0, 2]);
+    expect([relax(gate, 2).w, relax(gate, 3).w]).toEqual([10, 8]);
+    expect(relax(gate, 3).obs).toEqual([0, 3]);
     const plain = stageCfg(zi('shuri'), 2, []);
     expect([plain.w, plain.obs]).toEqual([10, [3, 6]]);
     expect([relax(plain, 3).w, relax(plain, 3).obs]).toEqual([8, [1, 4]]);
