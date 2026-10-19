@@ -20,7 +20,8 @@
     "photos": "node scripts/photos.mjs",
     "voice": "node --env-file-if-exists=.env.local scripts/voice.mjs",
     "bench:gen": "vitest run --config vitest.bench.config.ts scripts/bench-gen.ts",
-    "bench:solver": "vitest run --config vitest.bench.config.ts scripts/bench-solver.ts"
+    "bench:solver": "vitest run --config vitest.bench.config.ts scripts/bench-solver.ts",
+    "bench:sweep": "vitest run --config vitest.bench.config.ts scripts/bench-sweep.ts"
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
