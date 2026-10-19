@@ -58,7 +58,18 @@ it.describe('new islands', () => {
 });
 
 it.describe('shisa stories', () => {
-  it('reads a story aloud with the Japanese word swapped for its reading', async ({ page }) => {
+  it('plays the recorded narration of a story', async ({ page }) => {
+    await page.goto('/');
+    await page.click('[data-go="dex"]');
+    await page.click('[data-pick="terracotta"]');
+    const recording = page.waitForResponse((r) => /\/voice\/[0-9a-f]{16}\.mp3$/.test(r.url()));
+    await page.click('#modal [data-read]');
+    expect((await recording).ok()).toBe(true);
+    await expect(page.locator('#modal [data-read]')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('reads a story with the device voice when the recording cannot load, the Japanese word swapped for its reading', async ({ page }) => {
+    await page.route('**/voice/*.mp3', (r) => r.abort());
     await page.addInitScript(() => {
       const said: string[] = [];
       (window as unknown as { said: string[] }).said = said;

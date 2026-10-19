@@ -22,6 +22,7 @@ export const STORY: StoryPage[] = [
   { id: 'go', say: '準備好了嗎？一起出發，幫西薩搭路吧！' },
 ];
 
-/** What a shisa says when tapped, and when the two meet again */
+/** What a shisa says when tapped on the map, when tapped on the board, and when the two meet again */
 export const SHISA_HELLO = '我是西薩！';
+export const SHISA_CALL = '西薩！';
 export const SHISA_CHEER = '西薩團聚了！';

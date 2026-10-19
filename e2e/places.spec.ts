@@ -69,5 +69,7 @@ it.describe('place postcards', () => {
     expect(tile && tile.width / tile.height).toBeCloseTo(5 / 3, 1);
     await page.click('#creditsBtn');
     await expect(page.locator('#modal .creditList li')).toHaveCount(11);
+    // The narration is synthesized, and says so
+    await expect(page.locator('#voiceCredit')).toContainText('Azure');
   });
 });

@@ -431,11 +431,11 @@ function Postcard({ id, start }: { id: PlaceId; start: number | null }) {
   );
 }
 
-/** Every postcard photo with its author, licence and source, as the licences ask */
+/** Every postcard photo with its author, licence and source, as the licences ask, and where the voices come from */
 function Credits() {
   return (
-    <Sheet label="照片來源" wide>
-      <h2>照片來源</h2>
+    <Sheet label="素材來源" wide>
+      <h2>素材來源</h2>
       <p className="small">明信片的照片是自己拍的，或來自 Wikimedia Commons、授權可以自由使用（公眾領域或 CC BY，標示作者即可）；插畫和西薩是遊戲原創。</p>
       <ul className="creditList">
         {PHOTOS.map((c) => (
@@ -463,6 +463,9 @@ function Credits() {
           </li>
         ))}
       </ul>
+      <p className="small" id="voiceCredit">
+        旁白和西薩說話的聲音，是用 Microsoft Azure AI 語音合成的；沒有錄好的句子，用裝置內建的語音念。
+      </p>
       <div className="btns">
         <Cta icon={<Icon name="check" />} data={{ 'data-ok': true, 'data-focus': true }} onClick={closeModal}>
           知道了

@@ -129,6 +129,9 @@ export function duckMusic(seconds: number, to = 0.2): void {
   musicFade.gain.setTargetAtTime(1, t + seconds, 0.3);
 }
 
+/** Where recorded narration plays: straight to the speakers, past the reverb and the sound and music switches */
+export const voiceOut = (): AudioNode | null => (ac ? master : null);
+
 /** Keeps the music quiet while something else needs the room (a story read aloud), until released */
 export function holdMusicDown(on: boolean): void {
   if (!ac) return;

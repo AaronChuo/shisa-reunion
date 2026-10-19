@@ -79,7 +79,7 @@ export function Dex() {
           )}
         </div>
         <button type="button" className="linkBtn" id="creditsBtn" onClick={openCredits}>
-          照片來源
+          素材來源
         </button>
       </section>
       {SERIES.map((se) => (

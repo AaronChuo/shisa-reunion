@@ -5,6 +5,7 @@ import { ShisaArt } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
 import { VARIANT_BY_ID } from '../content/shisa';
+import { SHISA_CALL } from '../content/story';
 import { ZONES } from '../content/zones';
 import { cellsOf, makeGrid, type Placement, sizeOf } from '../engine';
 import { useGame } from '../state/store';
@@ -167,7 +168,7 @@ export function Board() {
     const who = target.closest('#hero, #goal');
     if (who && st.ui.sel < 0) {
       sfx.hello();
-      if (st.progress.sound) speak('西薩！', undefined, 'shisa');
+      if (st.progress.sound) speak(SHISA_CALL, undefined, 'shisa');
       return;
     }
     const fixed = target.closest('[data-fixed]');

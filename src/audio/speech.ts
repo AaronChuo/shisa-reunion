@@ -1,56 +1,60 @@
 import { useEffect, useState } from 'react';
-import { holdMusicDown } from './context';
+import { audioCtx, audioRunning, holdMusicDown, voiceOut } from './context';
+import { speakable, type Voice, voiceKey } from './voice';
+import recorded from './voices.json';
 
-// Read-aloud for the shisa stories with the device's own Mandarin voice (Web Speech API, works offline on most devices).
+// Read-aloud: the recorded Azure narration when a line has one (voice.ts), otherwise the device's own Mandarin voice
+// (Web Speech API, works offline on most devices).
 
-/**
- * What the voice should say: a reading with the Japanese word after it in brackets, 「西薩（シーサー）」, is said as
- * the reading alone, and any other kana is dropped, since a Mandarin voice can't pronounce it.
- */
-export function speakable(text: string): string {
-  return text.replace(/（[\u3040-\u30FF]+）/g, '').replace(/[\u3040-\u30FF]+/g, '');
-}
+export { speakable, type Voice } from './voice';
+
+const RECORDED = new Set<string>(recorded);
+const hasRecording = (text: string, as: Voice): boolean => RECORDED.has(voiceKey(text, as));
 
 export const canSpeak = (): boolean => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
-function voice(): SpeechSynthesisVoice | undefined {
+function deviceVoice(): SpeechSynthesisVoice | undefined {
   const all = window.speechSynthesis.getVoices();
   const zh = all.filter((v) => /^zh|cmn/i.test(v.lang));
   return zh.find((v) => /TW|Hant/i.test(v.lang)) ?? zh.find((v) => !/HK|yue/i.test(v.lang)) ?? zh[0];
 }
 
 let session = 0;
+let playing: AudioBufferSourceNode | null = null;
+// A decoded clip takes about 100 KB a second of memory, so only the last few are kept (the short shisa lines come back
+// most often); the files themselves stay in the offline cache
+const decoded = new Map<string, Promise<AudioBuffer>>();
+const KEEP_DECODED = 6;
 
 export function stopSpeaking(): void {
-  if (!canSpeak()) return;
   session++;
-  window.speechSynthesis.cancel();
+  if (playing) {
+    playing.onended = null;
+    playing.stop();
+    playing = null;
+  }
+  if (canSpeak()) window.speechSynthesis.cancel();
   holdMusicDown(false);
 }
 
-/** How a line is said: the calm storyteller, or a shisa itself, higher and livelier */
-export type Voice = 'narrator' | 'shisa';
+/** The device voice's tone for each kind of line, close to the recordings */
 const TONE: Record<Voice, { rate: number; pitch: number }> = {
   narrator: { rate: 0.92, pitch: 1.05 },
   shisa: { rate: 1.05, pitch: 1.7 },
 };
 
-/**
- * Reads the text aloud a sentence at a time (some engines cut long utterances short); `done` fires at the end or on
- * stop. Respects the sound-effects switch only through the caller.
- */
-export function speak(text: string, done: () => void = () => {}, as: Voice = 'narrator'): void {
+/** Reads with the device voice a sentence at a time (some engines cut long utterances short) */
+function speakWithDevice(text: string, id: number, done: () => void, as: Voice): void {
   if (!canSpeak()) {
+    holdMusicDown(false);
     done();
     return;
   }
-  stopSpeaking();
-  const id = ++session;
   const parts = speakable(text)
     .split(/(?<=[。！？])/)
     .map((p) => p.trim())
     .filter(Boolean);
-  const v = voice();
+  const v = deviceVoice();
   holdMusicDown(true);
   parts.forEach((p, i) => {
     const u = new SpeechSynthesisUtterance(p);
@@ -73,6 +77,63 @@ export function speak(text: string, done: () => void = () => {}, as: Voice = 'na
     };
     window.speechSynthesis.speak(u);
   });
+}
+
+/** Plays a recording through the game's audio; falls back to the device voice if it can't be loaded */
+function playRecording(text: string, id: number, done: () => void, as: Voice): void {
+  const ctx = audioCtx();
+  const out = voiceOut();
+  if (!ctx || !out) {
+    speakWithDevice(text, id, done, as);
+    return;
+  }
+  const key = voiceKey(text, as);
+  let buf = decoded.get(key);
+  if (buf) decoded.delete(key);
+  else {
+    buf = fetch(`/voice/${key}.mp3`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`voice ${key}: ${r.status}`);
+        return r.arrayBuffer();
+      })
+      .then((a) => ctx.decodeAudioData(a));
+    // A failed load is tried again next time rather than remembered
+    buf.catch(() => decoded.delete(key));
+  }
+  // Most recently used last; the oldest goes once there are too many
+  decoded.set(key, buf);
+  if (decoded.size > KEEP_DECODED) decoded.delete(decoded.keys().next().value as string);
+  holdMusicDown(true);
+  buf.then(
+    (b) => {
+      if (id !== session) return;
+      const src = ctx.createBufferSource();
+      src.buffer = b;
+      src.connect(out);
+      src.onended = () => {
+        if (id !== session) return;
+        playing = null;
+        holdMusicDown(false);
+        done();
+      };
+      playing = src;
+      src.start();
+    },
+    () => {
+      if (id === session) speakWithDevice(text, id, done, as);
+    },
+  );
+}
+
+/**
+ * Reads the text aloud; `done` fires at the end or on stop. Respects the sound-effects switch only through the
+ * caller. Recordings need the game's audio running, which the first tap starts; before that the device voice reads.
+ */
+export function speak(text: string, done: () => void = () => {}, as: Voice = 'narrator'): void {
+  stopSpeaking();
+  const id = session;
+  if (hasRecording(text, as) && audioRunning()) playRecording(text, id, done, as);
+  else speakWithDevice(text, id, done, as);
 }
 
 let unlocked = false;
@@ -102,7 +163,7 @@ export function useReadAloud(text: string): { supported: boolean; speaking: bool
     };
   }, [text]);
   return {
-    supported: canSpeak(),
+    supported: hasRecording(text, 'narrator') || canSpeak(),
     speaking,
     toggle: () => {
       if (speaking) {
