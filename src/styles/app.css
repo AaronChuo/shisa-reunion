@@ -37,6 +37,10 @@ body {
   line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
+  /* A long press is a child holding on, not choosing text: no selection highlight, no copy or look-up bubble */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 #root {
   height: 100%;

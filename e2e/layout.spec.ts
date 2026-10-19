@@ -9,6 +9,15 @@ const noSidewaysScroll = (page: Page) =>
   });
 
 it.describe('phone layout', () => {
+  it('keeps a long press from selecting text or opening the browser menu', async ({ page }) => {
+    await page.goto('/');
+    const title = page.locator('h1');
+    expect(await title.evaluate((el) => getComputedStyle(el).userSelect)).toBe('none');
+    // The long-press menu starts as a contextmenu event, which the game cancels
+    const cancelled = await title.evaluate((el) => !el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })));
+    expect(cancelled).toBe(true);
+  });
+
   it('shows the big go button without scrolling', async ({ page }) => {
     await page.goto('/');
     const bb = await page.locator('#goBtn').boundingBox();
