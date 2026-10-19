@@ -650,6 +650,18 @@ h1 {
   border-color: var(--sel);
   background: color-mix(in srgb, var(--sel) 12%, var(--card));
 }
+/* A card shows its selection with its own border; the focus ring around it read as a stray browser frame. A finger or
+   mouse gets no ring at all, and the keyboard sees the card it is on as a lighter border inside the card */
+.card:focus,
+.card:focus-visible {
+  outline: none;
+}
+.card:focus-visible:not(.sel) {
+  border-color: color-mix(in srgb, var(--sel) 50%, transparent);
+}
+.rot:focus:not(:focus-visible) {
+  outline: none;
+}
 .card.dragging {
   opacity: 0.3;
 }

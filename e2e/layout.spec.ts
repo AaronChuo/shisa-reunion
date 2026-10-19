@@ -69,4 +69,16 @@ it.describe('phone layout', () => {
     await expect(page.locator('.tray .card').first()).toBeInViewport();
     expect(await noSidewaysScroll(page)).toBe(true);
   });
+
+  it('marks a picked tray block with its own border only, no focus ring around it', async ({ page }) => {
+    await page.goto('/');
+    await page.click('.zone [data-zone="0"]');
+    await waitForLevel(page);
+    const card = page.locator('.tray .card').first();
+    // Picked by keyboard, the strictest case: the browser would draw its focus ring here
+    await card.focus();
+    await page.keyboard.press('Enter');
+    await expect(card).toHaveClass(/\bsel\b/);
+    expect(await card.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none');
+  });
 });
