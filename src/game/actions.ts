@@ -7,7 +7,10 @@ import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES } from '../content/zones';
 import { canLift, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, waterAt } from '../engine';
 import { getState, mut, type Run, type Screen } from '../state/store';
-import { generateLevel } from './generator';
+import { generateLevel, prepareLevel } from './generator';
+
+/** Each stop has its own seed; a reroll moves to another one. The road picked does not change the level. */
+const stageSeed = (r: Run, si: number, rerolls: number): number => r.seed + si * 1009 + rerolls * 7919;
 
 const run = (): Run => {
   const r = getState().progress.run;
@@ -155,7 +158,7 @@ async function buildStage(): Promise<void> {
       }),
     180,
   );
-  const lv = await generateLevel(cfg, r.seed + r.si * 1009 + r.rerolls * 7919);
+  const lv = await generateLevel(cfg, stageSeed(r, r.si, r.rerolls));
   clearTimeout(loading);
   mut((s) => {
     const cur = s.progress.run;
@@ -418,6 +421,11 @@ function onWin(): void {
     }
     s.ui.modal = { kind: 'win', last };
   });
+  // The next stop is built while the coin shows and the next-stop card is read
+  if (!last) {
+    const r = run();
+    prepareLevel(stageCfg(r.zi, r.si + 1, r.plan[r.si + 1] ?? []), stageSeed(r, r.si + 1, 0));
+  }
   sfx.coin();
   if (getState().progress.sound) speak(SHISA_CHEER, undefined, 'shisa');
 }

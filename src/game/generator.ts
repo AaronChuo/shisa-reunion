@@ -23,12 +23,33 @@ function getWorker(): Worker | null {
   return worker;
 }
 
-export function generateLevel(cfg: GenConfig, seed: number): Promise<Level> {
-  const w = getWorker();
-  if (!w) return Promise.resolve(generate(cfg, seed, relax));
+function request(w: Worker, cfg: GenConfig, seed: number): Promise<Level> {
   const id = ++seq;
   return new Promise((resolve) => {
     pending.set(id, resolve);
     w.postMessage({ id, cfg, seed });
   });
+}
+
+// One level kept in the making ahead of time: the next stop starts while the player is still collecting the coin
+let ahead: { key: string; level: Promise<Level> } | null = null;
+const jobKey = (cfg: GenConfig, seed: number): string => `${seed}:${JSON.stringify(cfg)}`;
+
+/** Starts a level in the background so a later `generateLevel` with the same config and seed gets it right away */
+export function prepareLevel(cfg: GenConfig, seed: number): void {
+  // Without a worker this would block the screen now instead of later, so it waits for the real request
+  const w = getWorker();
+  if (w) ahead = { key: jobKey(cfg, seed), level: request(w, cfg, seed) };
+}
+
+export function generateLevel(cfg: GenConfig, seed: number): Promise<Level> {
+  const key = jobKey(cfg, seed);
+  if (ahead?.key === key) {
+    const { level } = ahead;
+    ahead = null;
+    return level;
+  }
+  const w = getWorker();
+  if (!w) return Promise.resolve(generate(cfg, seed, relax));
+  return request(w, cfg, seed);
 }
