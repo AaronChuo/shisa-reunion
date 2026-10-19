@@ -72,10 +72,10 @@ describe('逆築 (building the answer first)', () => {
       const route = findRoute(g, lv.hero, lv.goal, lv.stars);
       expect(route).not.toBeNull();
       expect(route && walkFits(route, g, lv, cfg)).toBe(true);
-      for (let i = 0; i < placed.length; i++) {
-        const rest = placed.filter((_, j) => j !== i);
-        expect(findRoute(makeGrid(lv, rest), lv.hero, lv.goal, lv.stars), `block ${i} is not needed`).toBeNull();
-      }
+      // Every block stands when put in that order, and lifting any one out, with whatever it holds up, breaks the road
+      expect(standsInOrder(lv, placed)).toBe(true);
+      for (let i = 0; i < placed.length; i++)
+        expect(findRoute(makeGrid(lv, lift(lv, placed, i)), lv.hero, lv.goal, lv.stars), `block ${i} is not needed`).toBeNull();
     }
   });
 

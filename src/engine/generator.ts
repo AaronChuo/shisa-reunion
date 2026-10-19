@@ -2,6 +2,7 @@ import { backbuild, walkFits } from './backbuild';
 import { makeGrid, placementsFor } from './grid';
 import { findRoute, surfaces } from './path';
 import { cellsOf, DEFS } from './pieces';
+import { couldJoin } from './shortfall';
 import { hasSolution, solve } from './solver';
 import type { GenConfig, Level, PieceType, Placement, Pos } from './types';
 
@@ -133,10 +134,16 @@ export function judge(lv: Level, cfg: GenConfig): Level | null {
   return lv;
 }
 
-/** Draw and check: a random terrain and tray, kept only if the solver finds it fair. Most draws have no road. */
+/**
+ * Draw and check: a random terrain and tray, kept only if the solver finds it fair. Most draws have no road; a tray that
+ * cannot add what the walk lacks (see `couldJoin`) is turned down before the solver looks, with the same outcome.
+ */
 export function attempt(r: Rng, cfg: GenConfig): Level | null {
   const lv = drawTerrain(r, cfg);
   if (!lv || findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)) return null;
+  const tray: Partial<Record<PieceType, number>> = {};
+  for (const t of lv.inv) tray[t] = (tray[t] ?? 0) + 1;
+  if (!couldJoin(makeGrid(lv, [], lv.inv.length), lv, tray, [], lv.inv.length)) return null;
   // Cheap filter first: most draws have no solution, and a solvable one usually shows a solution early
   if (hasSolution(lv, SEARCH_BUDGET * cfg.w) !== true) return null;
   return judge(lv, cfg);
