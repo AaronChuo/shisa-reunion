@@ -48,3 +48,35 @@ it.describe('playing without reading', () => {
     expect((await progress(page)).pair).toEqual(['celadon', 'terracotta']);
   });
 });
+
+it.describe('走走看', () => {
+  it('walks the hero as far as the road goes, then back, as often as the child likes', async ({ page }) => {
+    await page.goto('/');
+    await page.click('#goBtn');
+    const lv = await waitForLevel(page);
+    await page.click('#tryBtn');
+    await expect(page.locator('#bubble')).toContainText(/卡住|走不動/);
+    // Back where it started, ready to build, and free to try again
+    await expect(page.locator('#tryBtn')).toBeEnabled();
+    expect((await progress(page)).run?.shell).toBe(2);
+    await page.click('#tryBtn');
+    await expect(page.locator('#tryBtn')).toBeEnabled();
+    await solveByDragging(page, lv);
+    await expect(page.locator('#modal[data-kind="win"]')).toBeVisible();
+  });
+
+  it('stands out for younger players and is a plain button for older ones', async ({ page }) => {
+    await page.goto('/');
+    await page.click('#goBtn');
+    await waitForLevel(page);
+    await expect(page.locator('#tryBtn')).toHaveClass(/\blead\b/);
+    await page.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem('shisa-reunion') ?? '{}');
+      s.state.progress.age = 'big';
+      localStorage.setItem('shisa-reunion', JSON.stringify(s));
+    });
+    await page.reload();
+    await page.click('[data-resume]');
+    await expect(page.locator('#tryBtn')).not.toHaveClass(/\blead\b/);
+  });
+});

@@ -107,6 +107,8 @@ export interface Ui {
   spin: number;
   /** The opening story is showing */
   story: boolean;
+  /** The hero is on a 走走看 walk, which ends wherever the road runs out */
+  trying: boolean;
 }
 
 export interface GameState {
@@ -148,6 +150,7 @@ const freshUi = (): Ui => ({
   capColor: null,
   spin: 0,
   story: false,
+  trying: false,
 });
 
 /** Zone order before v0.5: progress was saved as arrays in this order */

@@ -707,6 +707,18 @@ h1 {
 .actions .iconBtn b {
   font-family: "Fredoka", sans-serif;
 }
+/* 走走看 spans the row above the other four; for younger players it is coloured so it is the one to try first */
+.actions .tryBtn {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  gap: 6px;
+  font-size: 15px;
+}
+.actions .tryBtn.lead {
+  border-color: var(--sel);
+  background: color-mix(in srgb, var(--sel) 12%, var(--card));
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--sel) 45%, var(--line));
+}
 @media (max-aspect-ratio: 1 / 1) {
   .stage {
     grid-template-columns: minmax(0, 1fr);
@@ -740,7 +752,13 @@ h1 {
     aspect-ratio: 76 / 64;
   }
   .actions {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .actions .tryBtn {
+    grid-column: auto;
+    flex-direction: column;
+    gap: 0;
+    font-size: 13px;
   }
 }
 .bubble {

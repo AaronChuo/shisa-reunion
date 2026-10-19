@@ -6,7 +6,7 @@ import { PIECE_NAMES } from '../content/text';
 import { DEFS, sizeOf } from '../engine';
 import { useGame } from '../state/store';
 import { useIdle } from '../ui/useIdle';
-import { hint, reroll, reset, rotate, selectCard, undo } from './actions';
+import { hint, reroll, reset, rotate, selectCard, tryWalk, undo } from './actions';
 import { beginDrag, useDrag } from './drag';
 
 export function Tray() {
@@ -18,6 +18,8 @@ export function Tray() {
   const listRef = useRef<HTMLDivElement>(null);
   // Sitting still for a while usually means stuck: the hint shell starts to wiggle (how soon depends on who is playing)
   const stuckMs = useGame((s) => ageOf(s.progress.age).stuckMs);
+  // Younger players get 走走看 coloured and up front; older ones a plain button
+  const tryFirst = useGame((s) => ageOf(s.progress.age).tryFirst);
   const stuck = useIdle(stuckMs, run?.level);
   if (!run?.level) return <aside className="tray" />;
   const lv = run.level;
@@ -74,6 +76,10 @@ export function Tray() {
         })}
       </div>
       <div className="actions">
+        <button type="button" className={tryFirst ? 'iconBtn tryBtn lead' : 'iconBtn tryBtn'} id="tryBtn" onClick={tryWalk} disabled={busy}>
+          <Icon name="steps" />
+          <span>走走看</span>
+        </button>
         <button type="button" className="iconBtn" id="undoBtn" onClick={undo} disabled={!run.hist.length}>
           <Icon name="undo" />
           <span>退一步</span>

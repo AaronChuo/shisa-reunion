@@ -9,7 +9,7 @@ import { SHISA_CALL } from '../content/story';
 import { ZONES } from '../content/zones';
 import { cellsOf, makeGrid, type Placement, sizeOf } from '../engine';
 import { useGame } from '../state/store';
-import { bad, canLiftPiece, pickStar, place, say, shake, walkDone } from './actions';
+import { bad, canLiftPiece, pickStar, place, say, shake, tryDone, walkDone } from './actions';
 import { beginPan, revealScreenX, type ScrollView, stopTour, tourField, viewFor } from './boardView';
 import { beginDrag, clearPreview, hoverPreview, useDrag } from './drag';
 import { boardViewBox, C, landingAt, M, Y0 } from './geometry';
@@ -126,8 +126,9 @@ export function Board() {
 
   useEffect(() => {
     if (!ui.walking || !lv) return;
-    return animateWalk(heroRef.current, ui.walking, lv, walkDone, pickStar);
-  }, [ui.walking, lv]);
+    // A 走走看 walk ends where the road runs out; the winning walk ends at the goal
+    return animateWalk(heroRef.current, ui.walking, lv, ui.trying ? tryDone : walkDone, pickStar);
+  }, [ui.walking, ui.trying, lv]);
 
   if (!run || !lv || !g)
     return (

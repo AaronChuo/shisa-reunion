@@ -151,6 +151,46 @@ export function findPath(g: Grid, from: Pos, to: Pos, avoid?: Pos, ws: Walkable 
 }
 
 /**
+ * 走走看: as far as the hero gets towards `to` on the road as it stands. The walk to the reachable spot nearest the
+ * goal (the fewest steps on a tie), never through the goal; just the starting spot when nothing gets any closer.
+ */
+export function walkAsFar(g: Grid, from: Pos, to: Pos, ws: Walkable = walkable(g)): PathStep[] {
+  const { S, byCol } = ws;
+  const a = S.findIndex((s) => samePos(s, from));
+  if (a < 0) return [];
+  const away = (s: Surface) => Math.hypot(s.x - to.x, s.y - to.y);
+  const prev = new Array<number>(S.length).fill(-1);
+  const via = new Array<Move | null>(S.length).fill(null);
+  prev[a] = a;
+  let best = a;
+  const q = [a];
+  for (let head = 0; head < q.length; head++) {
+    const i = q[head];
+    // Breadth first, so the first spot found at a distance is also the shortest walk there
+    if (away(S[i]) < away(S[best]) - 1e-9) best = i;
+    const x = S[i].x;
+    for (let cx = x - 1; cx <= x + 1; cx++) {
+      if (cx < 0 || cx >= g.w) continue;
+      for (const j of byCol[cx]) {
+        if (prev[j] !== -1 || samePos(S[j], to)) continue;
+        const e = edge(g, S[i], S[j]);
+        if (e) {
+          prev[j] = i;
+          via[j] = e;
+          q.push(j);
+        }
+      }
+    }
+  }
+  const path: PathStep[] = [];
+  for (let i = best; ; i = prev[i]) {
+    path.unshift({ s: S[i], via: via[i] });
+    if (i === a) break;
+  }
+  return path;
+}
+
+/**
  * The hero's whole walk: over every star sand spot (in whichever order is shortest) and then to the goal,
  * never walking through the goal on the way. Null when any leg is impossible.
  */

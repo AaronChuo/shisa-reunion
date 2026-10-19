@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canLift, findPath, findRoute, fits, makeGrid, restY, solve, stable } from '.';
+import { canLift, findPath, findRoute, fits, makeGrid, restY, solve, stable, walkAsFar } from '.';
 import type { Level, Placement } from './types';
 
 const level = (over: Partial<Level>): Level => ({
@@ -75,6 +75,31 @@ describe('physics', () => {
     ];
     expect(canLift(lv, placed, 0)).toBe(false);
     expect(canLift(lv, placed, 1)).toBe(true);
+  });
+});
+
+describe('走走看, walking as far as the road goes', () => {
+  // The goal sits on a two-high tower that nothing yet leads up to
+  const lv = level({ fixed: [{ t: 'tower', o: 0, x: 5, y: 0 }], goal: { x: 5, y: 2 } });
+
+  it('stops at the spot nearest the goal when the road does not reach it', () => {
+    const path = walkAsFar(makeGrid(lv, []), lv.hero, lv.goal);
+    expect(path[0].s).toMatchObject({ x: 0, y: 0 });
+    expect(path.at(-1)?.s).toMatchObject({ x: 4, y: 0 });
+    expect(path).toHaveLength(5);
+  });
+
+  it('stays where it is when nothing gets any closer', () => {
+    const walled = level({ fixed: [{ t: 'tower', o: 0, x: 1, y: 0 }] });
+    expect(walkAsFar(makeGrid(walled, []), walled.hero, walled.goal)).toHaveLength(1);
+  });
+
+  it('goes as far as the whole route would on a finished road, short of the goal itself', () => {
+    const open = level({});
+    const route = findPath(makeGrid(open, []), open.hero, open.goal);
+    const walk = walkAsFar(makeGrid(open, []), open.hero, open.goal);
+    expect(walk.at(-1)?.s).toMatchObject({ x: 4, y: 0 });
+    expect(walk).toHaveLength((route?.length ?? 0) - 1);
   });
 });
 
