@@ -5,6 +5,7 @@ dev-dist
 .vercel
 test-results
 playwright-report
+.claude/worktrees
 *.log
 .DS_Store
 
