@@ -1,6 +1,6 @@
 # ADR-0018：大地基——更寬的地基、更多積木、更快的求解器
 
-- 狀態：已採用（藤蔓站的 8 格 3 塊上限由 [ADR-0020](0020-vine-backbuild-and-solver-pruning.md) 拿掉）
+- 狀態：已採用（藤蔓站的 8 格 3 塊上限由 [ADR-0020](0020-vine-backbuild-and-solver-pruning.md) 拿掉；石門的 9 格、漲潮的 4 塊上限由 [ADR-0022](0022-shortfall-and-narrower-relax.md) 拿掉）
 - 日期：2026-10-19
 
 ## 背景
