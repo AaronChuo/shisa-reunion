@@ -92,11 +92,12 @@ export function restY(g: Grid, t: PieceType, o: number, x: number, y: number): n
   return ry;
 }
 
-/** Every resting, stable position for a piece in one orientation */
-export function placementsFor(g: Grid, t: PieceType, o: number): Placement[] {
+/** Every resting, stable position for a piece in one orientation; with `keep`, only at the columns it allows */
+export function placementsFor(g: Grid, t: PieceType, o: number, keep?: (x: number) => boolean): Placement[] {
   const { w, h } = sizeOf(t, o);
   const out: Placement[] = [];
   for (let x = 0; x + w <= g.w; x++) {
+    if (keep && !keep(x)) continue;
     for (let y = 0; y + h <= H; y++) {
       if (!fits(g, t, o, x, y)) continue;
       if (t !== 'vine' && y > 0 && fits(g, t, o, x, y - 1)) continue;

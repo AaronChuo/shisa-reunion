@@ -18,7 +18,8 @@
     "fonts": "node scripts/subset-font.mjs",
     "icons": "node scripts/make-icons.mjs",
     "photos": "node scripts/photos.mjs",
-    "bench:gen": "vitest run --config vitest.bench.config.ts"
+    "bench:gen": "vitest run --config vitest.bench.config.ts scripts/bench-gen.ts",
+    "bench:solver": "vitest run --config vitest.bench.config.ts scripts/bench-solver.ts"
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
