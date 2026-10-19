@@ -283,6 +283,15 @@ export const zoneStars = (Z: Zone): number => Z.tier + 1;
 
 const TIDE = { every: 2, max: 1 };
 
+/** The smallest ground in the game: relaxing a stage never makes it narrower than this */
+const MIN_W = Math.min(...ZONES.map((Z) => Z.w));
+
+/**
+ * How many fixed blocks the terrain gets: wider ground gets more, so there is more terrain to build around. The stone
+ * gate already takes up a column and the plate another, so it gets fewer.
+ */
+const obsFor = (w: number, gate: boolean): [number, number] => (gate ? [0, w - 5] : [Math.max(0, w - 7), w - 4]);
+
 /** Generator settings for one stop: the zone's plain blocks plus whatever its elements bring */
 export function stageCfg(zi: number, si: number, els: readonly Element[]): GenConfig {
   const Z = ZONES[zi];
@@ -299,8 +308,7 @@ export function stageCfg(zi: number, si: number, els: readonly Element[]): GenCo
     tide: null,
     gate: false,
     stars: 0,
-    // Wider ground gets more fixed blocks, so there is more terrain to build around
-    obs: [Math.max(0, Z.w - 7), Z.w - 4],
+    obs: obsFor(Z.w, false),
   };
   for (const e of els) {
     const sp = SPECIAL[e];
@@ -321,9 +329,7 @@ export function stageCfg(zi: number, si: number, els: readonly Element[]): GenCo
     cfg.k = Math.min(cfg.k, 4);
   }
   if (cfg.tide) cfg.k = Math.min(cfg.k, 4);
-  cfg.obs = [Math.max(0, cfg.w - 7), cfg.w - 4];
-  // The stone gate already takes up a column and the plate another, so it gets fewer fixed blocks
-  if (cfg.gate) cfg.obs = [0, cfg.w - 5];
+  cfg.obs = obsFor(cfg.w, cfg.gate);
   cfg.k = Math.max(cfg.k, cfg.must.length);
   return cfg;
 }
@@ -422,7 +428,12 @@ export function roadOffer(zi: number, si: number, seed: number): [number, number
   return a < b ? [a, b] : [b, a];
 }
 
-/** Easier fallbacks when a demanding stage can't be generated in time */
+/**
+ * Easier fallbacks when a demanding stage can't be generated in time. The "next stop" card shows the stop's elements
+ * and its block count but not the width of the ground, so the steps that keep what the card showed come first: more
+ * solutions allowed, no required moves and at most one urchin and one star, then narrower ground. Only after that are
+ * elements dropped, and last a block.
+ */
 export function relax(cfg: GenConfig, step: number): GenConfig {
   const c: GenConfig = { ...cfg, must: cfg.must.slice(), need: cfg.need.slice() };
   if (step >= 1) c.maxSols = 12;
@@ -432,11 +443,15 @@ export function relax(cfg: GenConfig, step: number): GenConfig {
     c.stars = Math.min(c.stars, 1);
   }
   if (step >= 3) {
+    c.w = Math.max(MIN_W, c.w - 2);
+    c.obs = obsFor(c.w, c.gate);
+  }
+  if (step >= 4) {
     c.gate = false;
     c.tide = null;
     c.stars = 0;
   }
-  if (step >= 4) {
+  if (step >= 5) {
     c.k = Math.max(1, c.k - 1);
     c.must = c.must.slice(0, c.k);
   }

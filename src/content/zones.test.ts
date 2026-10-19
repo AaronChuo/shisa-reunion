@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allowed, isBranch, learnedFor, lockHint, openFor, planRun, roadOffer, STAGES, TIERS, ZONES } from './zones';
+import { allowed, isBranch, learnedFor, lockHint, openFor, planRun, relax, roadOffer, STAGES, stageCfg, TIERS, ZONES } from './zones';
 
 const zi = (id: string) => ZONES.findIndex((Z) => Z.id === id);
 const SEEDS = Array.from({ length: 200 }, (_, i) => i * 7717 + 3);
@@ -133,5 +133,36 @@ describe('scenery roads', () => {
         expect([a, b].every((i) => i >= 0 && i < 3)).toBe(true);
         expect(roadOffer(0, si, seed)).toEqual([a, b]);
       }
+  });
+});
+
+describe('relaxing a stage', () => {
+  const gate = stageCfg(zi('shuri'), 2, ['gate']);
+  const tide = stageCfg(zi('kumejima'), 2, ['tide', 'star']);
+
+  it('keeps every element and the block count until the ground has been narrowed', () => {
+    for (const cfg of [gate, tide])
+      for (const step of [1, 2, 3]) {
+        const c = relax(cfg, step);
+        expect([c.gate, c.tide, c.stars, c.k, c.must]).toEqual([cfg.gate, cfg.tide, cfg.stars, cfg.k, cfg.must]);
+      }
+  });
+
+  it('narrows the ground by two columns on step 3, with fewer fixed blocks to match', () => {
+    expect([relax(gate, 2).w, relax(gate, 3).w]).toEqual([9, 7]);
+    expect(relax(gate, 3).obs).toEqual([0, 2]);
+    const plain = stageCfg(zi('shuri'), 2, []);
+    expect([plain.w, plain.obs]).toEqual([10, [3, 6]]);
+    expect([relax(plain, 3).w, relax(plain, 3).obs]).toEqual([8, [1, 4]]);
+  });
+
+  it('never narrows the ground below the smallest zone', () => {
+    expect(relax(stageCfg(zi('motobu'), 2, []), 3).w).toBe(6);
+    expect(relax(stageCfg(zi('naha'), 2, []), 3).w).toBe(6);
+  });
+
+  it('drops elements on step 4 and a block on step 5', () => {
+    expect([relax(tide, 4).tide, relax(tide, 4).stars, relax(gate, 4).gate, relax(gate, 4).k]).toEqual([null, 0, false, gate.k]);
+    expect(relax(gate, 5).k).toBe(gate.k - 1);
   });
 });

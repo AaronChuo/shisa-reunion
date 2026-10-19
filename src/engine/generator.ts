@@ -171,7 +171,7 @@ export function generate(
   cfg: GenConfig,
   seed: number,
   relax: (cfg: GenConfig, step: number) => GenConfig,
-  { stepMs = 2200, maxStep = 4, now = () => performance.now(), sliceMs = [700, 250] as [number, number] } = {},
+  { stepMs = 2200, maxStep = 5, now = () => performance.now(), sliceMs = [700, 250] as [number, number] } = {},
 ): Level {
   const r = rng(seed);
   let step = 0;
