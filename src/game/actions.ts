@@ -6,7 +6,7 @@ import { SHISA_CHEER } from '../content/story';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES } from '../content/zones';
 import { canLift, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, walkAsFar, waterAt } from '../engine';
-import { getState, mut, type Run, type Screen } from '../state/store';
+import { type DexTab, getState, mut, type Run, type Screen } from '../state/store';
 import { restBetweenStops } from './family';
 import { generateLevel, prepareLevel } from './generator';
 
@@ -68,6 +68,12 @@ export function goHome(): void {
   hush();
   mut((s) => {
     Object.assign(s.ui, { screen: 'home', modal: null, busy: false, walking: null, trying: false, cheer: false, sel: -1, hint: null });
+  });
+}
+
+export function setDexTab(tab: DexTab): void {
+  mut((s) => {
+    s.ui.dexTab = tab;
   });
 }
 

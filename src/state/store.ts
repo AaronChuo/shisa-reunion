@@ -57,6 +57,9 @@ export interface Progress {
 
 export type Screen = 'home' | 'play' | 'gacha' | 'dex';
 
+/** The collection's pages */
+export type DexTab = 'shisa' | 'cards';
+
 export type Modal =
   | { kind: 'loading' }
   | { kind: 'intro'; key: IntroKey }
@@ -109,6 +112,8 @@ export interface Ui {
   story: boolean;
   /** The hero is on a 走走看 walk, which ends wherever the road runs out */
   trying: boolean;
+  /** The collection page last looked at, kept while the game is open */
+  dexTab: DexTab;
 }
 
 export interface GameState {
@@ -151,6 +156,7 @@ const freshUi = (): Ui => ({
   spin: 0,
   story: false,
   trying: false,
+  dexTab: 'shisa',
 });
 
 /** Zone order before v0.5: progress was saved as arrays in this order */

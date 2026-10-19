@@ -62,6 +62,10 @@ it.describe('place postcards', () => {
     await expect(page.locator('#modal .photoCredit')).toContainText('CC BY');
     await page.click('#modal [data-ok]');
     await page.click('[data-go="dex"]');
+    // Postcards have their own page; the collection opens on the shisa
+    await expect(page.locator('#page-shisa')).toBeVisible();
+    await expect(page.locator('.pcTile')).toHaveCount(0);
+    await page.click('#tab-cards');
     await expect(page.locator('.pcTile:not(.locked)')).toHaveCount(1);
     await expect(page.locator('.pcTile.locked')).toHaveCount(10);
     // Thumbnails keep the postcard's shape
@@ -71,5 +75,10 @@ it.describe('place postcards', () => {
     await expect(page.locator('#modal .creditList li')).toHaveCount(11);
     // The narration is synthesized, and says so
     await expect(page.locator('#voiceCredit')).toContainText('Azure');
+    // Leaving and coming back finds the same page
+    await page.click('#modal [data-ok]');
+    await page.click('[data-go="home"]');
+    await page.click('[data-go="dex"]');
+    await expect(page.locator('#page-cards')).toBeVisible();
   });
 });

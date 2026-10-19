@@ -1523,6 +1523,34 @@ h1 {
     height: 56px;
   }
 }
+/* The collection's two pages, as a pair of tabs under the bar; the count rides along with each name */
+.dexTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.dexTab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--card);
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dexTab .num {
+  color: var(--muted);
+  font-size: 15px;
+}
+.dexTab.on {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink) inset;
+}
 .dexSeries {
   margin-top: 16px;
 }
