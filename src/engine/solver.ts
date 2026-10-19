@@ -65,7 +65,7 @@ const NOWHERE: Spread = { cols: 0, got: new Uint8Array(0) };
  * gate's and the plate's columns are wildcards too.
  *
  * This leans on the walking rules in `path.ts` staying local to a column (and to the step between two neighbouring
- * columns). `solver.test.ts` holds the search to the one before pruning (`solver.reference.ts`) on many levels, so a
+ * columns). `solver.slow.test.ts` holds the search to the one before pruning (`solver.reference.ts`) on many levels, so a
  * rule change that breaks that shows up there.
  */
 class Bound {

@@ -11,7 +11,7 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "test": "vitest run --project unit",
-    "test:gen": "vitest run --project 'sweep-*'",
+    "test:gen": "vitest run --project slow --project 'sweep-*'",
     "test:all": "vitest run",
     "test:watch": "vitest --project unit",
     "e2e": "playwright test",
