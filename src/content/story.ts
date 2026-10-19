@@ -26,3 +26,5 @@ export const STORY: StoryPage[] = [
 export const SHISA_HELLO = '我是西薩！';
 export const SHISA_CALL = '西薩！';
 export const SHISA_CHEER = '西薩團聚了！';
+/** The shisa asking for a rest after a long while of play */
+export const SHISA_REST = '玩了好久囉，休息一下吧！';

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { AGE_ORDER, type Age } from '../content/age';
+import { AGE_ORDER, type Age, REST_CHOICES } from '../content/age';
 import type { PlaceId } from '../content/places';
 import { type Series, STARTERS, VARIANT_BY_ID } from '../content/shisa';
 import type { IntroKey } from '../content/text';
@@ -51,6 +51,8 @@ export interface Progress {
   run: Run | null;
   /** Who is playing, chosen by a grown-up; null until asked */
   age: Age | null;
+  /** Minutes of play before a rest reminder; null for none */
+  restMin: number | null;
 }
 
 export type Screen = 'home' | 'play' | 'gacha' | 'dex';
@@ -69,7 +71,8 @@ export type Modal =
   | { kind: 'credits' }
   | { kind: 'audio' }
   | { kind: 'age' }
-  | { kind: 'parents' };
+  | { kind: 'parents' }
+  | { kind: 'rest' };
 
 export type Hint = { type: 'lift'; pi: number } | { type: 'put'; p: Placement; k: number };
 
@@ -122,6 +125,7 @@ export const freshProgress = (): Progress => ({
   seen: [],
   run: null,
   age: null,
+  restMin: null,
 });
 
 const freshUi = (): Ui => ({
@@ -199,6 +203,7 @@ export function normalizeProgress(raw: unknown): Progress {
     seen: Array.isArray(p.seen) ? p.seen.filter((s) => typeof s === 'string') : [],
     run: normalizeRun(p.run),
     age: AGE_ORDER.includes(p.age as Age) ? (p.age as Age) : null,
+    restMin: REST_CHOICES.includes(p.restMin as number) ? (p.restMin as number) : null,
   };
 }
 

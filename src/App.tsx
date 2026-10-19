@@ -5,7 +5,7 @@ import { HOME_SONG, SHOP_SONG, type SongId } from './audio/songs';
 import { installSpeechUnlock } from './audio/speech';
 import { STAGES, ZONES } from './content/zones';
 import { openStory } from './game/actions';
-import { askAgeIfNeeded } from './game/family';
+import { askAgeIfNeeded, installPlayClock } from './game/family';
 import { DragLayer } from './game/Tray';
 import { ModalHost } from './modals/ModalHost';
 import { Dex } from './screens/Dex';
@@ -30,6 +30,7 @@ export function App() {
   useEffect(() => installAudioUnlock(), []);
   useEffect(() => installMusic(), []);
   useEffect(() => installSpeechUnlock(), []);
+  useEffect(() => installPlayClock(), []);
   // The first time the game opens, the story introduces the two shisa
   useEffect(() => {
     if (!getState().progress.seen.includes('story')) openStory();

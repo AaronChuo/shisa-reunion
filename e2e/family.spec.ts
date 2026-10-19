@@ -21,6 +21,7 @@ it.describe('who is playing', () => {
     await expect(ask).toHaveCount(0);
     const p = await progress(page);
     expect(p.age).toBe('big');
+    expect(p.restMin).toBeNull();
     await page.reload();
     await expect(page.locator('#goBtn')).toBeVisible();
     await expect(ask).toHaveCount(0);
@@ -49,5 +50,23 @@ it.describe("grown-ups' settings", () => {
     await page.mouse.up();
     await page.click('#modal .ageCard[data-age="kid"]');
     expect((await progress(page)).age).toBe('kid');
+    // The rest reminder follows the age, and can then be changed
+    expect((await progress(page)).restMin).toBe(30);
+    await page.click('.chip[data-rest="45"]');
+    expect((await progress(page)).restMin).toBe(45);
+  });
+
+  it('remind the child to rest at a break once the chosen time has passed', async ({ page }) => {
+    await page.clock.install();
+    await seed(page, { age: 'little', restMin: 15 });
+    await page.goto('/');
+    await expect(page.locator('#goBtn')).toBeVisible();
+    await page.clock.fastForward('14:00');
+    await expect(page.locator('#modal')).toHaveCount(0);
+    await page.clock.fastForward('01:10');
+    const rest = page.locator('#modal[data-kind="rest"]');
+    await expect(rest).toBeVisible();
+    await rest.locator('.cta').click();
+    await expect(page.locator('#modal')).toHaveCount(0);
   });
 });

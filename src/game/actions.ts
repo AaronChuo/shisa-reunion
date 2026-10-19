@@ -7,6 +7,7 @@ import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES } from '../content/zones';
 import { canLift, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, waterAt } from '../engine';
 import { getState, mut, type Run, type Screen } from '../state/store';
+import { restBetweenStops } from './family';
 import { generateLevel, prepareLevel } from './generator';
 
 /** Each stop has its own seed; a reroll moves to another one. The road picked does not change the level. */
@@ -432,7 +433,8 @@ function onWin(): void {
 
 export function afterWin(): void {
   if (run().phase === 'done') finishRun();
-  else showBranch();
+  // A long while of play rests here, between stops, rather than in the middle of building a road
+  else if (!restBetweenStops()) showBranch();
 }
 
 export function showBranch(): void {

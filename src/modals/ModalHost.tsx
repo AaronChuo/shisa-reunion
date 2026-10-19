@@ -29,7 +29,7 @@ import {
 import { PhotoCreditLine, PostcardPicture } from '../places/PostcardPicture';
 import { type Modal, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
-import { AgeAsk, ParentSettings, ParentsButton } from './Family';
+import { AgeAsk, ParentSettings, ParentsButton, RestReminder } from './Family';
 import { Sheet, Switch } from './Sheet';
 
 /** A story paragraph with a "念給我聽" button that reads it aloud */
@@ -544,6 +544,9 @@ export function ModalHost() {
       break;
     case 'parents':
       body = <ParentSettings />;
+      break;
+    case 'rest':
+      body = <RestReminder />;
       break;
   }
   return (

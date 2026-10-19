@@ -2458,7 +2458,7 @@ h1 {
   cursor: pointer;
 }
 
-/* ---------- grown-ups: who is playing ---------- */
+/* ---------- grown-ups: who is playing, rest reminder ---------- */
 .holdBtn {
   position: relative;
   overflow: hidden;
@@ -2510,7 +2510,8 @@ h1 {
   margin: 0;
   font-size: 19px;
 }
-.ageCards {
+.ageCards,
+.chips {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
@@ -2520,7 +2521,8 @@ h1 {
   padding: 0;
   min-width: 0;
 }
-.ageCard {
+.ageCard,
+.chip {
   display: grid;
   justify-items: center;
   gap: 2px;
@@ -2532,7 +2534,8 @@ h1 {
   font-weight: 700;
   cursor: pointer;
 }
-.ageCard.on {
+.ageCard.on,
+.chip.on {
   border-color: var(--sel);
   background: color-mix(in srgb, var(--sel) 12%, var(--card));
 }
@@ -2544,4 +2547,8 @@ h1 {
   width: 100%;
   max-width: 110px;
   height: 92px;
+}
+.restArt {
+  width: 180px;
+  height: 116px;
 }

@@ -1,6 +1,6 @@
 import { PLACES } from '../content/places';
 import { ABOUT_SHISA, VARIANTS } from '../content/shisa';
-import { SHISA_CALL, SHISA_CHEER, SHISA_HELLO, STORY } from '../content/story';
+import { SHISA_CALL, SHISA_CHEER, SHISA_HELLO, SHISA_REST, STORY } from '../content/story';
 import { RULES } from '../content/text';
 import type { Voice } from './voice';
 
@@ -15,6 +15,6 @@ export function voiceLines(): { text: string; as: Voice }[] {
   ];
   return [
     ...narrator.map((text) => ({ text, as: 'narrator' as const })),
-    ...[SHISA_HELLO, SHISA_CHEER, SHISA_CALL].map((text) => ({ text, as: 'shisa' as const })),
+    ...[SHISA_HELLO, SHISA_CHEER, SHISA_CALL, SHISA_REST].map((text) => ({ text, as: 'shisa' as const })),
   ];
 }
