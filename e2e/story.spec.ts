@@ -5,6 +5,13 @@ import { progress, waitForLevel } from './helpers';
 const next = (page: Page) => page.click('#storyNext');
 
 it.describe('the opening story', () => {
+  // A brand-new player, except that a grown-up has already said who is playing (asked on the map otherwise)
+  it.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      if (!localStorage.getItem('shisa-reunion')) localStorage.setItem('shisa-reunion', JSON.stringify({ state: { progress: { age: 'little' } }, version: 2 }));
+    });
+  });
+
   it('opens the first time and teaches the name before setting off on the first stop', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#story')).toBeVisible();

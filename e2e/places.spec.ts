@@ -2,9 +2,9 @@ import { expect, test as it, type Page } from '@playwright/test';
 import { freshProgress } from '../src/state/store';
 import { progress } from './helpers';
 
-// Plain Playwright: the postcards show as they do for a new player (only the opening story is marked as seen)
+// Plain Playwright: the postcards show as they do for a new player (only the opening story is marked as seen, and who is playing is set)
 async function open(page: Page, extra: Record<string, unknown> = {}) {
-  const save = JSON.stringify({ state: { progress: { ...freshProgress(), seen: ['story'], ...extra } }, version: 2 });
+  const save = JSON.stringify({ state: { progress: { ...freshProgress(), seen: ['story'], age: 'little', ...extra } }, version: 2 });
   await page.addInitScript((s) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', s), save);
   await page.goto('/');
 }

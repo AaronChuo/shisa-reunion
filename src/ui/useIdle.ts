@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 
 /**
  * True once nobody has touched the screen (or pressed a key) for `ms`; a fresh touch starts the wait again.
- * Change `key` to restart the wait when the situation changes, e.g. a new modal.
+ * Change `key` to restart the wait when the situation changes, e.g. a new modal. With `ms` null it never turns true.
  */
-export function useIdle(ms: number, key: unknown = null): boolean {
+export function useIdle(ms: number | null, key: unknown = null): boolean {
   const [idle, setIdle] = useState(false);
   // biome-ignore lint/correctness/useExhaustiveDependencies: `key` only restarts the timer
   useEffect(() => {
     setIdle(false);
+    if (ms === null) return;
     let t = window.setTimeout(() => setIdle(true), ms);
     const wake = () => {
       setIdle(false);

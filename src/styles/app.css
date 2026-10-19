@@ -2457,3 +2457,91 @@ h1 {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* ---------- grown-ups: who is playing ---------- */
+.holdBtn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 2px dashed var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: none;
+}
+.holdBtn svg {
+  width: 18px;
+  height: 18px;
+}
+.holdBtn > * {
+  position: relative;
+}
+/* Fills from the left while held; opening happens when it is full */
+.holdBtn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--sel) 22%, transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.holdBtn.holding::before {
+  transform: scaleX(1);
+  transition: transform var(--hold) linear;
+}
+.sheet h2:focus {
+  outline: none;
+}
+.setting {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding-top: 12px;
+  border-top: 2px solid var(--line);
+}
+.setting h3 {
+  margin: 0;
+  font-size: 19px;
+}
+.ageCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.ageCard {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 6px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--bg);
+  font-weight: 700;
+  cursor: pointer;
+}
+.ageCard.on {
+  border-color: var(--sel);
+  background: color-mix(in srgb, var(--sel) 12%, var(--card));
+}
+.ageCards.big .ageCard {
+  padding: 10px 6px 12px;
+  font-size: 17px;
+}
+.ageArt {
+  width: 100%;
+  max-width: 110px;
+  height: 92px;
+}

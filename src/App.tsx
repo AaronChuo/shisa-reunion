@@ -5,6 +5,7 @@ import { HOME_SONG, SHOP_SONG, type SongId } from './audio/songs';
 import { installSpeechUnlock } from './audio/speech';
 import { STAGES, ZONES } from './content/zones';
 import { openStory } from './game/actions';
+import { askAgeIfNeeded } from './game/family';
 import { DragLayer } from './game/Tray';
 import { ModalHost } from './modals/ModalHost';
 import { Dex } from './screens/Dex';
@@ -34,6 +35,11 @@ export function App() {
     if (!getState().progress.seen.includes('story')) openStory();
   }, []);
   const story = useGame((s) => s.ui.story);
+  // Once nobody has said who is playing, a grown-up is asked on the map
+  const modal = useGame((s) => s.ui.modal);
+  const age = useGame((s) => s.progress.age);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-check whenever the screen, a modal, the story or the age changes
+  useEffect(() => askAgeIfNeeded(), [screen, modal, story, age]);
   useEffect(() => {
     const [id, boss] = scene.split('-');
     setScene(id as SongId, boss === 'boss');

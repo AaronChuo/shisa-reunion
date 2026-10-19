@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 import { TapHand } from '../art/Icons';
+import { ageOf } from '../content/age';
+import { useGame } from '../state/store';
 import { useIdle } from './useIdle';
 
-/** How long a child can sit still before a finger pops up to point at the main button */
-export const NUDGE_MS = 4500;
+/** How long a child can sit still before a finger pops up to point at the main button; depends on who is playing */
+export const useNudgeMs = (): number | null => useGame((s) => ageOf(s.progress.age).nudgeMs);
 
 /**
  * The one main "next step" on a screen: big, orange, gently breathing, with a picture in a white circle so a child
@@ -30,7 +32,7 @@ export function Cta({
   /** Off where something else on screen already shows a finger, so a child only ever sees one */
   nudge?: boolean;
 }) {
-  const idle = useIdle(NUDGE_MS);
+  const idle = useIdle(useNudgeMs());
   return (
     <button type="button" id={id} className={wide ? 'cta wide' : 'cta'} disabled={disabled} onClick={onClick} {...data}>
       <span className="ci">{icon}</span>

@@ -1,7 +1,7 @@
 import { test as base, expect } from '@playwright/test';
 import { PLACE_ORDER, placeSeen } from '../src/content/places';
 
-/** Marks the opening story and every postcard as seen, on top of whatever save a test has seeded */
+/** Marks the opening story and every postcard as seen, and sets who is playing, on top of whatever save a test has seeded */
 function storySeen(extra: string[]) {
   const key = 'shisa-reunion';
   const raw = localStorage.getItem(key);
@@ -10,6 +10,8 @@ function storySeen(extra: string[]) {
   save.state.progress ??= {};
   const p = save.state.progress;
   p.seen = Array.from(new Set([...(p.seen ?? []), 'story', ...extra]));
+  // Who is playing is asked once; tests play as the youngest unless they seed an age, or set window.keepAgeUnset first
+  if (p.age == null && !(window as unknown as { keepAgeUnset?: boolean }).keepAgeUnset) p.age = 'little';
   localStorage.setItem(key, JSON.stringify(save));
 }
 

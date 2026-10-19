@@ -5,7 +5,7 @@ import { type Series, VARIANTS } from '../content/shisa';
 import { rng } from '../engine';
 import { capsuleOut, insertCoin, openCapsule, releaseCapsule } from '../game/actions';
 import { useGame } from '../state/store';
-import { NUDGE_MS } from '../ui/Cta';
+import { useNudgeMs } from '../ui/Cta';
 import { useIdle } from '../ui/useIdle';
 import { addBall, agitate, asleep, type Dome, inside, makeWorld, release, STEP, step, type World } from './physics';
 import { Roof } from './Roof';
@@ -75,7 +75,7 @@ export function Machine({ series }: { series: Series }) {
   const [locked, setLocked] = useState(0);
   const [coinAt, setCoinAt] = useState<{ x: number; y: number } | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
-  const idle = useIdle(NUDGE_MS, phase);
+  const idle = useIdle(useNudgeMs(), phase);
 
   // ---------- the physics loop: runs while something moves, sleeps when the pile is still ----------
   const wake = () => {

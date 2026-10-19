@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { Blocks, CardIcon, CoinIcon, Icon, Stamp, TapHand } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
@@ -29,25 +29,8 @@ import {
 import { PhotoCreditLine, PostcardPicture } from '../places/PostcardPicture';
 import { type Modal, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
-
-function Sheet({ children, wide, label, enter = 'pop' }: { children: ReactNode; wide?: boolean; label: string; enter?: 'pop' | 'none' }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current?.querySelector<HTMLElement>('[data-focus]') ?? ref.current?.querySelector<HTMLElement>('button');
-    el?.focus({ preventScroll: true });
-  }, []);
-  return (
-    <div
-      ref={ref}
-      className={['sheet', wide && 'wide', enter === 'none' && 'still'].filter(Boolean).join(' ')}
-      role="dialog"
-      aria-modal="true"
-      aria-label={label}
-    >
-      {children}
-    </div>
-  );
-}
+import { AgeAsk, ParentSettings, ParentsButton } from './Family';
+import { Sheet, Switch } from './Sheet';
 
 /** A story paragraph with a "念給我聽" button that reads it aloud */
 function Story({ text }: { text: string }) {
@@ -475,21 +458,6 @@ function Credits() {
   );
 }
 
-function Switch({ id, on, icon, label, detail, onToggle }: { id: string; on: boolean; icon: ReactNode; label: string; detail: string; onToggle: () => void }) {
-  return (
-    <button type="button" className={on ? 'switch on' : 'switch'} id={id} role="switch" aria-checked={on} onClick={onToggle}>
-      <span className="switchIcon">{icon}</span>
-      <span className="switchText">
-        <b>{label}</b>
-        <small>{detail}</small>
-      </span>
-      <span className="knob" aria-hidden="true">
-        {on ? '開' : '關'}
-      </span>
-    </button>
-  );
-}
-
 function AudioSettings() {
   const sound = useGame((s) => s.progress.sound);
   const music = useGame((s) => s.progress.music);
@@ -509,6 +477,7 @@ function AudioSettings() {
         />
       </div>
       <p className="small">iPhone、iPad 開著靜音模式時，網頁不會發出聲音。</p>
+      <ParentsButton />
       <div className="btns">
         <Cta icon={<Icon name="check" />} data={{ 'data-focus': true }} onClick={closeModal}>
           好了
@@ -569,6 +538,12 @@ export function ModalHost() {
       break;
     case 'audio':
       body = <AudioSettings />;
+      break;
+    case 'age':
+      body = <AgeAsk />;
+      break;
+    case 'parents':
+      body = <ParentSettings />;
       break;
   }
   return (

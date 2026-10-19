@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { AGE_ORDER, type Age } from '../content/age';
 import type { PlaceId } from '../content/places';
 import { type Series, STARTERS, VARIANT_BY_ID } from '../content/shisa';
 import type { IntroKey } from '../content/text';
@@ -48,6 +49,8 @@ export interface Progress {
   music: boolean;
   seen: string[];
   run: Run | null;
+  /** Who is playing, chosen by a grown-up; null until asked */
+  age: Age | null;
 }
 
 export type Screen = 'home' | 'play' | 'gacha' | 'dex';
@@ -64,7 +67,9 @@ export type Modal =
   | { kind: 'about' }
   | { kind: 'place'; id: PlaceId; start: number | null }
   | { kind: 'credits' }
-  | { kind: 'audio' };
+  | { kind: 'audio' }
+  | { kind: 'age' }
+  | { kind: 'parents' };
 
 export type Hint = { type: 'lift'; pi: number } | { type: 'put'; p: Placement; k: number };
 
@@ -116,6 +121,7 @@ export const freshProgress = (): Progress => ({
   music: true,
   seen: [],
   run: null,
+  age: null,
 });
 
 const freshUi = (): Ui => ({
@@ -192,6 +198,7 @@ export function normalizeProgress(raw: unknown): Progress {
     music: typeof p.music === 'boolean' ? p.music : true,
     seen: Array.isArray(p.seen) ? p.seen.filter((s) => typeof s === 'string') : [],
     run: normalizeRun(p.run),
+    age: AGE_ORDER.includes(p.age as Age) ? (p.age as Age) : null,
   };
 }
 

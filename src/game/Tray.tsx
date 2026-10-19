@@ -1,15 +1,13 @@
 import { useRef } from 'react';
 import { ConchIcon, Icon, ShellIcon } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
+import { ageOf } from '../content/age';
 import { PIECE_NAMES } from '../content/text';
 import { DEFS, sizeOf } from '../engine';
 import { useGame } from '../state/store';
 import { useIdle } from '../ui/useIdle';
 import { hint, reroll, reset, rotate, selectCard, undo } from './actions';
 import { beginDrag, useDrag } from './drag';
-
-/** Idle time on a stage before the hint button starts asking to be pressed */
-const STUCK_MS = 25_000;
 
 export function Tray() {
   const run = useGame((s) => s.progress.run);
@@ -18,8 +16,9 @@ export function Tray() {
   const busy = useGame((s) => s.ui.busy);
   const drag = useDrag((s) => (s.moved ? s.info : null));
   const listRef = useRef<HTMLDivElement>(null);
-  // Sitting still for a while usually means stuck: the hint shell starts to wiggle
-  const stuck = useIdle(STUCK_MS, run?.level);
+  // Sitting still for a while usually means stuck: the hint shell starts to wiggle (how soon depends on who is playing)
+  const stuckMs = useGame((s) => ageOf(s.progress.age).stuckMs);
+  const stuck = useIdle(stuckMs, run?.level);
   if (!run?.level) return <aside className="tray" />;
   const lv = run.level;
   const used = new Set(run.placed.map((p) => p.k));
