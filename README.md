@@ -1,4 +1,4 @@
-# 小獅搭路（暫名）
+# 西薩搭搭路
 
 幫西薩用積木搭一條路回到同伴身邊的益智遊戲。積木有重力、重心沒撐住就會倒，每一站的關卡都當場隨機產生。過關拿福氣幣，拿去扭蛋機收集 60 隻不同造型的西薩，每一隻都附一段可以念給孩子聽的沖繩小故事。
 
@@ -23,7 +23,10 @@
 ```sh
 pnpm install
 pnpm dev          # 開發伺服器
-pnpm test         # 單元測試（規則引擎、關卡產生、扭蛋與故事、存檔升級、字型涵蓋）
+pnpm test         # 單元測試（規則引擎、關卡產生、扭蛋與故事、存檔升級、字型涵蓋），約 2 秒
+pnpm test:gen     # 生成全掃描：每個分區所有元素組合都生成一遍，依核心數平行跑
+pnpm test:all     # 以上兩者
+pnpm bench:gen    # 比較兩種生成方法的速度與關卡特徵，改生成器時要跑
 pnpm e2e          # 端對端測試（會先 build，使用本機的 Google Chrome）
 pnpm lint         # Biome
 pnpm typecheck
@@ -35,6 +38,10 @@ pnpm build        # 產出 dist/（含 service worker）
 ## 版本
 
 採用語意化版本，變更記錄在 [CHANGELOG.md](CHANGELOG.md)，每個版本打 `vX.Y.Z` tag。
+
+## 授權
+
+本作保留所有權利（見 [LICENSE](LICENSE)），repo 公開只供查看。照片、字型等第三方素材依各自的授權，列在下方。
 
 ## 致謝
 
@@ -51,4 +58,8 @@ pnpm build        # 產出 dist/（含 service worker）
   - 宮古島：[Miyako's Irabu Bridge (52204268416).jpg](https://commons.wikimedia.org/wiki/File:Miyako%27s_Irabu_Bridge_(52204268416).jpg)，Raita Futo from Tokyo, Japan，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
   - 首里城：[Shurei-mon.jpeg](https://commons.wikimedia.org/wiki/File:Shurei-mon.jpeg)，nnh，Public domain，經裁切縮小
   - 久米島：[Okinawa-kumejima Hatenohama Beach-xl.jpg](https://commons.wikimedia.org/wiki/File:Okinawa-kumejima_Hatenohama_Beach-xl.jpg)，Kumejima93_OKINAWA，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0)，經裁切縮小
+- 配樂：九首沖繩傳統曲的旋律都已是公共財，只取旋律、由程式即時合成，不用歌詞、編曲或錄音
+  - 〈てぃんさぐぬ花〉〈赤田首里殿內〉〈谷茶前〉〈唐船ドーイ〉〈花ぬ風車〉〈安里屋ユンタ〉（旋律為宮良長包 1934 年改編版，他 1939 年過世）〈デンサー節〉（相傳為宮良里賢 1768 年所作）〈豊年の歌〉：旋律讀自 [mu-tech.org](https://www.mu-tech.org/) 免費 MIDI 的主旋律聲部
+  - 〈久米阿嘉節〉：大城彦五郎編《琉球楽典 工工四》（1925），[琉球大學附屬圖書館數位典藏](https://shimuchi.lib.u-ryukyu.ac.jp/collection/sakamaki/hw5823102)（原件為夏威夷大學阪巻・宝玲文庫）；與明治期手抄本《工工四》（東京藝術大學附屬圖書館藏）逐格比對
+  - 〈島風〉〈搭路小調〉〈石拱門〉是原創曲
 - 字型：[源泉圓體 GenSen Rounded](https://github.com/ButTaiwan/gensen-font)、[Fredoka](https://fonts.google.com/specimen/Fredoka)，皆為 SIL Open Font License 1.1，授權檔見 `public/fonts/`

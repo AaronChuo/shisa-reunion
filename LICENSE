@@ -1,0 +1,37 @@
+Copyright (c) 2026 Aaron Cho. All rights reserved.
+
+西薩搭搭路（shisa-reunion）
+
+這個 repo 公開只供查看。除了下方列出的第三方素材，本作的程式碼、美術、角色、關卡設計、
+文字與原創樂曲都保留所有權利；未經書面同意，不得使用、重製、修改、散布或用於商業用途。
+
+This repository is public for viewing only. Except for the third-party materials
+listed below, all code, artwork, characters, level design, text and original music
+are the property of the copyright holder. No permission is granted to use, copy,
+modify, distribute or commercially exploit them without prior written consent.
+
+
+第三方素材 / Third-party materials
+
+下列素材依各自的授權，不受上面「保留所有權利」的限制。
+The materials below stay under their own licenses and are not covered by the
+reservation above.
+
+- 明信片照片 Postcard photos: public/places/*.webp
+  Wikimedia Commons, CC BY 2.0 / 2.5 / 4.0 or public domain. Authors, sources and
+  changes are listed in README.md, src/content/photos.json and the in-game photo
+  credits page.
+
+- 字型 Fonts: public/fonts/
+  GenSen Rounded TW (源泉圓體, subset) and Fredoka (@fontsource/fredoka), under the
+  SIL Open Font License 1.1. Full texts: public/fonts/GenSenRounded-OFL.txt and
+  public/fonts/Fredoka-OFL.txt.
+
+- 傳統民謠旋律 Traditional melodies
+  Traditional Okinawan songs whose melodies are in the public domain (titles and
+  sources in README.md). Only the melodies are used; lyrics, arrangements and
+  recordings by others are not.
+
+- npm 套件 npm packages
+  react, react-dom, zustand, immer, workbox and others, each under its own license
+  (mostly MIT), found in the package's LICENSE file.
