@@ -13,7 +13,7 @@ it.describe('offline play', () => {
 
     await context.setOffline(true);
     await page.reload();
-    await expect(page.locator('h1')).toHaveText('小獅搭路');
+    await expect(page.locator('h1')).toHaveText('西薩搭搭路');
     await page.click('.zone [data-zone="0"]');
     await waitForLevel(page);
     await expect(page.locator('#board #hero')).toBeVisible();

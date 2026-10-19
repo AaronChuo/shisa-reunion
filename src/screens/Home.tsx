@@ -259,7 +259,7 @@ export function Home() {
           </svg>
         </button>
         <div className="mh">
-          <h1>小獅搭路</h1>
+          <h1>西薩搭搭路</h1>
           <p className="story">
             颱風把屋頂上的西薩吹得到處都是。幫{hero.name}搭一條路回到{goal.name}身邊，每過一站拿一枚福氣幣，拿去扭蛋機轉出更多西薩。
           </p>

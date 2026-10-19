@@ -14,8 +14,8 @@ export default defineConfig({
       injectRegister: false,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'fonts/*.woff2'],
       manifest: {
-        name: '小獅搭路',
-        short_name: '小獅搭路',
+        name: '西薩搭搭路',
+        short_name: '西薩搭搭路',
         description: '幫西薩用積木搭路回家的益智遊戲',
         lang: 'zh-Hant-TW',
         display: 'standalone',

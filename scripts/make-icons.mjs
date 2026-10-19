@@ -26,7 +26,7 @@ function shisa() {
 function icon(pad, rounded) {
   const r = rounded ? 112 : 0;
   const scale = (512 * (1 - pad * 2)) / 100;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>小獅搭路</title>
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>西薩搭搭路</title>
   <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93D2E8"/><stop offset=".72" stop-color="#E6F6F3"/></linearGradient></defs>
   <rect width="512" height="512" rx="${r}" fill="url(#g)"/>
   <path d="M0,${512 * 0.8} H512 V512 H0 Z" fill="#3DB0C1"/>
