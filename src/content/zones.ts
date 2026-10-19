@@ -267,7 +267,7 @@ export const ZONES: Zone[] = [
     base: PLAIN,
     intro: 'tide',
     ks: [2, 4, 4, 4],
-    bgm: 'sandbar',
+    bgm: 'kumeaka',
     boss: { name: '果之濱', k: 4, maxSols: 3 },
     roads: [
       { name: '疊石', time: 'day', sight: 'rocks' },
