@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { audioCtx, audioRunning, holdMusicDown, voiceOut } from './context';
+import { audioCtx, ensureAudio, holdMusicDown, voiceOut } from './context';
 import { speakable, type Voice, voiceKey } from './voice';
 import recorded from './voices.json';
 
@@ -25,6 +25,8 @@ let playing: AudioBufferSourceNode | null = null;
 // most often); the files themselves stay in the offline cache
 const decoded = new Map<string, Promise<AudioBuffer>>();
 const KEEP_DECODED = 6;
+/** How long a line waits for the audio to wake before the device voice reads it instead */
+const WAKE_MS = 500;
 
 export function stopSpeaking(): void {
   session++;
@@ -127,13 +129,29 @@ function playRecording(text: string, id: number, done: () => void, as: Voice): v
 
 /**
  * Reads the text aloud; `done` fires at the end or on stop. Respects the sound-effects switch only through the
- * caller. Recordings need the game's audio running, which the first tap starts; before that the device voice reads.
+ * caller. Recordings need the game's audio running, which a tap starts; with no tap yet the device voice reads.
  */
 export function speak(text: string, done: () => void = () => {}, as: Voice = 'narrator'): void {
   stopSpeaking();
   const id = session;
-  if (hasRecording(text, as) && audioRunning()) playRecording(text, id, done, as);
-  else speakWithDevice(text, id, done, as);
+  if (!hasRecording(text, as)) {
+    speakWithDevice(text, id, done, as);
+    return;
+  }
+  ensureAudio(true);
+  const ctx = audioCtx();
+  if (!ctx || ctx.state === 'running') {
+    playRecording(text, id, done, as);
+    return;
+  }
+  // On iPhone and iPad the tap that asked for this line is still waking the audio, which takes a moment; wait for it
+  // rather than switching voices, and read with the device voice only if it does not wake (no tap to wake it)
+  const woke = Promise.race([ctx.resume().catch(() => {}), new Promise((r) => setTimeout(r, WAKE_MS))]);
+  woke.then(() => {
+    if (id !== session) return;
+    if (ctx.state === 'running') playRecording(text, id, done, as);
+    else speakWithDevice(text, id, done, as);
+  });
 }
 
 let unlocked = false;

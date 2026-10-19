@@ -74,10 +74,11 @@ export function applyLevels(): void {
 /**
  * Creates or wakes the audio context. Only works inside a gesture the browser counts as user activation:
  * on touch screens that is the finger lifting (pointerup / touchend / click), not the finger going down.
+ * With both switches off there is nothing to play, unless `forVoice`: a story read aloud on request.
  */
-export function ensureAudio(): void {
+export function ensureAudio(forVoice = false): void {
   const p = useGame.getState().progress;
-  if (!p.sound && !p.music) return;
+  if (!forVoice && !p.sound && !p.music) return;
   try {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     const notify = () => {

@@ -68,6 +68,53 @@ it.describe('shisa stories', () => {
     await expect(page.locator('#modal [data-read]')).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('waits for the audio to wake on the tap, as on iPhone and iPad, instead of switching to the device voice', async ({ page }) => {
+    await page.addInitScript(() => {
+      // Safari starts audio suspended and wakes it a moment after the tap
+      const Real = window.AudioContext;
+      class SlowWake extends Real {
+        awake = false;
+        waking = 0;
+        constructor(...args: ConstructorParameters<typeof AudioContext>) {
+          super(...args);
+          (window as unknown as { ctx: SlowWake }).ctx = this;
+        }
+        get state() {
+          return this.awake ? super.state : 'suspended';
+        }
+        resume() {
+          this.waking++;
+          return new Promise<void>((done) =>
+            setTimeout(() => {
+              this.waking--;
+              this.awake = true;
+              super.resume().then(done);
+            }, 200),
+          );
+        }
+      }
+      window.AudioContext = SlowWake;
+      const said: string[] = [];
+      (window as unknown as { said: string[] }).said = said;
+      const fake = { speak: (u: SpeechSynthesisUtterance) => said.push(u.text), cancel: () => {}, getVoices: () => [] };
+      Object.defineProperty(window, 'speechSynthesis', { value: fake });
+    });
+    await page.goto('/');
+    await page.click('[data-go="dex"]');
+    await page.click('[data-pick="terracotta"]');
+    // Coming back from the background, the audio is asleep again until the next tap
+    type Ctx = { ctx: { awake: boolean; waking: number } };
+    await expect.poll(() => page.evaluate(() => (window as unknown as Ctx).ctx.waking)).toBe(0);
+    await page.evaluate(() => {
+      (window as unknown as Ctx).ctx.awake = false;
+    });
+    const recording = page.waitForResponse((r) => /\/voice\/[0-9a-f]{16}\.mp3$/.test(r.url()));
+    await page.click('#modal [data-read]');
+    expect((await recording).ok()).toBe(true);
+    // Only the empty line that unlocks speech on the first tap, nothing read in the device voice
+    expect(await page.evaluate(() => (window as unknown as { said: string[] }).said.filter(Boolean))).toEqual([]);
+  });
+
   it('reads a story with the device voice when the recording cannot load, the Japanese word swapped for its reading', async ({ page }) => {
     await page.route('**/voice/*.mp3', (r) => r.abort());
     await page.addInitScript(() => {
