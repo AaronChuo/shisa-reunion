@@ -1,4 +1,4 @@
-import { CoinIcon, Icon, Stamp } from '../art/Icons';
+import { CoinIcon, Icon } from '../art/Icons';
 import { ShisaArt } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
@@ -162,7 +162,6 @@ export function nextZone(p: Progress): number {
 
 function IslandMap({ here }: { here: number }) {
   const open = useGame((s) => s.progress.open);
-  const clears = useGame((s) => s.progress.clears);
   const font = 'GenSen Rounded TW, PingFang TC, sans-serif';
   return (
     <svg viewBox="40 0 340 660" role="img" aria-label="沖繩地圖">
@@ -217,7 +216,6 @@ function IslandMap({ here }: { here: number }) {
             >
               {Z.name}
             </text>
-            {clears[Z.id] > 0 && <Stamp label="" mark="過" x={x + (side === 'R' ? -36 : 12)} y={y - 38} size={26} />}
           </g>
         );
       })}
