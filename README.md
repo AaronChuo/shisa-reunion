@@ -24,9 +24,10 @@
 pnpm install
 pnpm dev          # 開發伺服器
 pnpm test         # 單元測試（規則引擎、關卡產生、扭蛋與故事、存檔升級、字型涵蓋），約 2 秒
-pnpm test:gen     # 生成全掃描：每個分區所有元素組合都生成一遍，依核心數平行跑
+pnpm test:gen     # 生成全掃描（每個分區所有元素組合都生成一遍，依核心數平行跑）與新舊求解器對照
 pnpm test:all     # 以上兩者
 pnpm bench:gen    # 比較兩種生成方法的速度與關卡特徵，改生成器時要跑
+pnpm bench:solver # 比較新舊求解器的速度
 pnpm e2e          # 端對端測試（會先 build，使用本機的 Google Chrome）
 pnpm lint         # Biome
 pnpm typecheck
