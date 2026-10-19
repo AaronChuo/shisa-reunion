@@ -2,6 +2,12 @@
 
 格式參考 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本採用[語意化版本](https://semver.org/lang/zh-TW/)。
 
+## [0.24.1] - 2026-10-20
+
+### 變更
+
+- 地圖上走完過的地區，圖釘旁不再蓋「過」的印章
+
 ## [0.24.0] - 2026-10-20
 
 ### 新增
