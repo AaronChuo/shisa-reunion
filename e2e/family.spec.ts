@@ -8,6 +8,14 @@ const KEY = 'shisa-reunion';
 const seed = (page: Page, p: Record<string, unknown>) =>
   page.addInitScript(([key, s]) => localStorage.getItem(key) || localStorage.setItem(key, s), [KEY, JSON.stringify({ state: { progress: p }, version: 2 })]);
 
+/** The keyboard opens the grown-ups' settings at once (a finger has to hold the button) */
+async function openParents(page: Page) {
+  await page.click('#audioBtn');
+  await page.focus('#parentsBtn');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#modal[data-kind="parents"]')).toBeVisible();
+}
+
 it.describe('who is playing', () => {
   it('asks a grown-up once on the map, and remembers the answer', async ({ page }) => {
     await page.addInitScript(() => {
@@ -68,5 +76,34 @@ it.describe("grown-ups' settings", () => {
     await expect(rest).toBeVisible();
     await rest.locator('.cta').click();
     await expect(page.locator('#modal')).toHaveCount(0);
+  });
+
+  it('carry progress to another device with a backup code', async ({ page }) => {
+    await seed(page, { tokens: 9, clears: { naha: 1 } });
+    await page.goto('/');
+    await openParents(page);
+    await page.click('#saveBackupBtn');
+    const code = await page.locator('#backupCode').inputValue();
+    expect(code).toMatch(/^SHISA1-/);
+
+    // The other device: a new player
+    await page.evaluate((key) => localStorage.setItem(key, JSON.stringify({ state: { progress: {} }, version: 2 })), KEY);
+    await page.reload();
+    const coins = page.locator('.homeTools .coin .num');
+    await expect(coins).toHaveText('0');
+    await openParents(page);
+    await page.click('#loadBackupBtn');
+    await page.fill('#restoreCode', code.slice(0, -2));
+    await page.click('#checkBackupBtn');
+    await expect(page.locator('#backupBad')).toBeVisible();
+    await page.fill('#restoreCode', `\n${code}\n`);
+    await page.click('#checkBackupBtn');
+    await expect(page.locator('#backupFound')).toContainText('福氣幣 9 枚');
+    await page.click('#restoreBtn');
+    await expect(page.locator('#modal')).toHaveCount(0);
+    await expect(coins).toHaveText('9');
+    const p = await progress(page);
+    expect(p.tokens).toBe(9);
+    expect(p.clears.naha).toBe(1);
   });
 });

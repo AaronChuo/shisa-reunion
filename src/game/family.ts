@@ -1,7 +1,7 @@
 import { speak } from '../audio/speech';
 import { AGES, type Age } from '../content/age';
 import { SHISA_REST } from '../content/story';
-import { getState, mut } from '../state/store';
+import { getState, mut, type Progress } from '../state/store';
 import { goHome } from './actions';
 
 // The grown-ups' side of the game: who is playing, and a gentle reminder to rest after a while.
@@ -24,6 +24,16 @@ export function setRestMin(min: number | null): void {
   mut((s) => {
     s.progress.restMin = min;
   });
+}
+
+/** Replaces this device's progress with a backup's, once a grown-up has confirmed it; back to the map */
+export function restoreProgress(p: Progress): void {
+  playMs = 0;
+  mut((s) => {
+    s.progress = p;
+    s.ui.modal = null;
+  });
+  goHome();
 }
 
 export function openParents(): void {

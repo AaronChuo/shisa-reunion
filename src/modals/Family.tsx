@@ -1,16 +1,17 @@
-import { type PointerEvent as ReactPointerEvent, useRef, useState } from 'react';
+import { type ChangeEvent, type PointerEvent as ReactPointerEvent, useRef, useState } from 'react';
 import { Icon } from '../art/Icons';
 import { ShisaArt } from '../art/Shisa';
 import { AGE_ORDER, AGES, type Age, REST_CHOICES } from '../content/age';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { closeModal } from '../game/actions';
-import { ackRest, chooseAge, openParents, setRestMin } from '../game/family';
-import { useGame } from '../state/store';
+import { ackRest, chooseAge, openParents, restoreProgress, setRestMin } from '../game/family';
+import { decodeBackup, encodeBackup, summary } from '../state/backup';
+import { getState, type Progress, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
 import { Sheet } from './Sheet';
 
-// The grown-ups' corner, behind a button that has to be held: who is playing and the rest reminder; plus what the
-// game shows a child because of them: the age question and the rest reminder itself.
+// The grown-ups' corner: who is playing, the rest reminder and progress backups, behind a button that has to be held,
+// plus the two things the game shows a child because of them: the age question and the rest reminder.
 
 const HOLD_MS = 1500;
 
@@ -100,10 +101,13 @@ export function AgeAsk() {
 
 const restLabel = (m: number | null) => (m === null ? '不提醒' : `${m} 分鐘`);
 
-/** Who is playing and the rest reminder */
+/** Who is playing, the rest reminder, and progress backups */
 export function ParentSettings() {
   const age = useGame((s) => s.progress.age);
   const restMin = useGame((s) => s.progress.restMin);
+  const [view, setView] = useState<'main' | 'save' | 'load'>('main');
+  if (view === 'save') return <SaveBackup back={() => setView('main')} />;
+  if (view === 'load') return <LoadBackup back={() => setView('main')} />;
   return (
     <Sheet label="大人設定" wide>
       <h2>大人設定</h2>
@@ -130,11 +134,149 @@ export function ParentSettings() {
         </fieldset>
         <p className="small">玩到這個時間，會在過關後或回到地圖時，請西薩提醒休息一下。</p>
       </div>
+      <div className="setting">
+        <h3>進度備份</h3>
+        <p className="small">進度只存在這台裝置上。換裝置、清掉網站資料或刪掉主畫面的圖示之前，先備份一份。</p>
+        <div className="btns">
+          <button type="button" className="iconBtn" id="saveBackupBtn" onClick={() => setView('save')}>
+            <Icon name="book" />
+            <span>備份進度</span>
+          </button>
+          <button type="button" className="iconBtn" id="loadBackupBtn" onClick={() => setView('load')}>
+            <Icon name="refresh" />
+            <span>還原進度</span>
+          </button>
+        </div>
+      </div>
       <div className="btns">
         <Cta icon={<Icon name="check" />} data={{ 'data-focus': true }} nudge={false} onClick={closeModal}>
           好了
         </Cta>
       </div>
+    </Sheet>
+  );
+}
+
+const progressLine = (p: Progress) => {
+  const s = summary(p);
+  return `收集 ${s.owned} 隻西薩、福氣幣 ${s.tokens} 枚、走完過 ${s.zones} 區`;
+};
+
+function today(): string {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** The code for this device's progress, to copy or keep as a file */
+function SaveBackup({ back }: { back: () => void }) {
+  const p = getState().progress;
+  const code = encodeBackup(p);
+  const box = useRef<HTMLTextAreaElement>(null);
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard?.writeText(code).then(
+      () => setCopied(true),
+      () => box.current?.select(),
+    );
+  };
+  // A file made only when asked for, and let go of right after
+  const saveFile = () => {
+    const url = URL.createObjectURL(new Blob([code], { type: 'text/plain' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `西薩搭搭路備份-${today()}.txt`;
+    a.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  return (
+    <Sheet label="備份進度" wide>
+      <h2>備份進度</h2>
+      <p>{progressLine(p)}</p>
+      <textarea id="backupCode" ref={box} className="codeBox" readOnly value={code} rows={4} onFocus={(e) => e.currentTarget.select()} />
+      <div className="btns">
+        <button type="button" className="iconBtn" id="copyBackupBtn" onClick={copy}>
+          <Icon name="check" />
+          <span>{copied ? '複製好了' : '複製'}</span>
+        </button>
+        <button type="button" className="iconBtn" id="fileBackupBtn" onClick={saveFile}>
+          <Icon name="book" />
+          <span>存成檔案</span>
+        </button>
+      </div>
+      <p className="small">把這串文字貼到新裝置的「還原進度」，就能接著玩。</p>
+      <button type="button" className="linkBtn" onClick={back}>
+        回大人設定
+      </button>
+    </Sheet>
+  );
+}
+
+/** Paste a code or open a backup file, check what it holds, then replace this device's progress with it */
+function LoadBackup({ back }: { back: () => void }) {
+  const [text, setText] = useState('');
+  const [found, setFound] = useState<Progress | null>(null);
+  const [bad, setBad] = useState(false);
+  const check = (t: string) => {
+    const p = decodeBackup(t);
+    setFound(p);
+    setBad(!p);
+  };
+  const openFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    f.text().then((t) => {
+      setText(t);
+      check(t);
+    });
+  };
+  return (
+    <Sheet label="還原進度" wide>
+      <h2>還原進度</h2>
+      <p>貼上備份的文字，或選備份檔。</p>
+      <textarea
+        id="restoreCode"
+        className="codeBox"
+        rows={4}
+        value={text}
+        placeholder="SHISA1-…"
+        onChange={(e) => {
+          setText(e.target.value);
+          setFound(null);
+          setBad(false);
+        }}
+      />
+      <div className="btns">
+        <label className="iconBtn" htmlFor="restoreFile">
+          <Icon name="book" />
+          <span>選備份檔</span>
+        </label>
+        <input id="restoreFile" type="file" accept=".txt,text/plain" hidden onChange={openFile} />
+        <button type="button" className="iconBtn" id="checkBackupBtn" disabled={!text.trim()} onClick={() => check(text)}>
+          <Icon name="check" />
+          <span>看看內容</span>
+        </button>
+      </div>
+      {bad && (
+        <p className="warn" id="backupBad">
+          這不是完整的備份，請整串重新複製一次。
+        </p>
+      )}
+      {found && (
+        <div className="confirm" id="backupFound">
+          <p>
+            備份裡：{progressLine(found)}
+            <br />
+            這台裝置現在：{progressLine(getState().progress)}
+          </p>
+          <p className="small">還原會用備份取代這台裝置現在的進度。</p>
+          <Cta icon={<Icon name="refresh" />} id="restoreBtn" nudge={false} onClick={() => restoreProgress(found)}>
+            用備份取代
+          </Cta>
+        </div>
+      )}
+      <button type="button" className="linkBtn" onClick={back}>
+        回大人設定
+      </button>
     </Sheet>
   );
 }
