@@ -313,13 +313,9 @@ export function stageCfg(zi: number, si: number, els: readonly Element[]): GenCo
     else if (e === 'gate') cfg.gate = true;
     else if (e === 'star') cfg.stars = boss ? (Z.boss.stars ?? 1) : 1;
   }
-  // What the generator cannot yet build quickly is kept smaller: a vine (its hanging spot needs set-up that 逆築 does
-  // not find, so it is drawn at random) on at most 8 columns with 3 pieces, the stone gate on at most 9 columns with
-  // 4 pieces, and the tide with 4 pieces (the floor floods after two, which leaves few ways to use a fifth)
-  if (els.includes('vine')) {
-    cfg.w = Math.min(cfg.w, 8);
-    cfg.k = Math.min(cfg.k, 3);
-  }
+  // What the generator cannot yet build quickly is kept smaller: the stone gate on at most 9 columns with 4 pieces,
+  // and the tide with 4 pieces (the floor floods after two, which leaves few ways to use a fifth). A vine needs no
+  // cap: 逆築 sets up its hanging spot first
   if (cfg.gate) {
     cfg.w = Math.min(cfg.w, 9);
     cfg.k = Math.min(cfg.k, 4);

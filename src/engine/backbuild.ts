@@ -3,12 +3,20 @@
 // what joins the road up. The blocks then go back into the tray, and the solver checks the level is fair exactly as
 // it does for a level drawn at random. Building a road costs a handful of cheap walk-checks, where proving that a
 // random draw has no road at all costs a full search; most random draws have none, so this is much faster.
-import { makeGrid, placementsFor } from './grid';
+//
+// A vine needs set-up that growing the road one block at a time never finds: it hangs under a block that juts out
+// into the air, held up by a block beside it. So a stage with a vine starts from the vine: it picks where the vine will
+// hang and builds what holds it (the jutting block, and a block under its other end if the ground has none there),
+// then grows the rest of the road with the vine already standing in it, so the road is built to climb it. The vine
+// goes in last.
+import { at, fits, makeGrid, placementsFor, stable } from './grid';
 import { edge, findRoute, type Walkable, walkable } from './path';
-import { cellsOf, DEFS } from './pieces';
-import type { GenConfig, Grid, Level, PathStep, Placement, Pos, Surface } from './types';
+import { cellsOf, DEFS, H, HANG_FROM, SUPPORT, sizeOf } from './pieces';
+import type { GenConfig, Grid, Level, PathStep, PieceType, Placement, Pos, Surface } from './types';
 
 export type Rng = () => number;
+
+type Pool = Partial<Record<PieceType, number>>;
 
 const standsAt = (s: Surface, p: Pos) => !s.ramp && s.x === p.x && s.y === p.y;
 
@@ -73,93 +81,288 @@ const coversPlate = (p: Placement, lv: Level) => {
 };
 
 /** Every placement of every orientation of a block on this grid */
-function options(g: Grid, t: Placement['t']): Placement[] {
+function options(g: Grid, t: PieceType): Placement[] {
   const out: Placement[] = [];
   for (let o = 0; o < DEFS[t].orients.length; o++) out.push(...placementsFor(g, t, o));
   return out;
 }
 
+const inPool = (pool: Pool): PieceType[] => (Object.keys(pool) as PieceType[]).filter((t) => (pool[t] ?? 0) > 0);
+
+function shuffle<T>(r: Rng, a: T[]): void {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+}
+
+/** Rows 0..H of each column where the walkable spots in `set` are, as bits */
+function rowsByCol(w: number, S: Surface[], set: number[]): Uint8Array {
+  const m = new Uint8Array(w);
+  for (const i of set) m[S[i].x] |= 1 << S[i].y;
+  return m;
+}
+
+/** Whether any spot in `m` lies in columns x0..x1 and rows y0..y1 */
+function within(m: Uint8Array, x0: number, x1: number, y0: number, y1: number): boolean {
+  const rows = ((1 << (Math.min(y1, H) + 1)) - 1) & ~((1 << Math.max(y0, 0)) - 1);
+  for (let x = Math.max(x0, 0); x <= Math.min(x1, m.length - 1); x++) if (m[x] & rows) return true;
+  return false;
+}
+
+/**
+ * A quick test that one more block could join the road on a grid where it is not joined yet. A block only adds
+ * walkable spots in its own columns, from its bottom row to just above its top (and in the stone gate's column when it
+ * opens the gate), and one move spans at most one column and two rows. So the block has to come that close both to
+ * where the hero (or a star sand spot) can already get to and to where the goal (or a star sand spot) can already be
+ * reached from. It only rules out blocks that cannot join the road, so the ones it keeps are checked in full as before.
+ */
+function mayJoin(g: Grid, lv: Level): (p: Placement) => boolean {
+  const ws = walkable(g);
+  if (findRoute(g, lv.hero, lv.goal, lv.stars, ws)) return () => true;
+  const { S, byCol } = ws;
+  const from: number[] = [];
+  const to: number[] = [];
+  const ends: [Pos, boolean, boolean][] = [[lv.hero, true, false], ...lv.stars.map((s): [Pos, boolean, boolean] => [s, true, true]), [lv.goal, false, true]];
+  for (const [pos, fwd, bwd] of ends) {
+    const i = S.findIndex((s) => standsAt(s, pos));
+    if (i < 0) return () => false;
+    if (fwd) from.push(...reach(g, S, byCol, i, true));
+    if (bwd) to.push(...reach(g, S, byCol, i, false));
+  }
+  const F = rowsByCol(g.w, S, from);
+  const T = rowsByCol(g.w, S, to);
+  const gate = lv.gate && !g.gateOpen ? lv.gate : null;
+  return (p) => {
+    const { w, h } = sizeOf(p.t, p.o);
+    const near = (m: Uint8Array) =>
+      within(m, p.x - 1, p.x + w, p.y - 2, p.y + h + 2) || (!!gate && coversPlate(p, lv) && within(m, gate.x - 1, gate.x + 1, 0, gate.h + 2));
+    return near(F) && near(T);
+  };
+}
+
 /** A built road: the blocks for the tray (sorted, as the tray shows them) and where each one goes */
 export interface Build {
-  inv: Placement['t'][];
+  inv: PieceType[];
   placed: Placement[];
 }
 
-/** At most this many spots are weighed for each block before the last one, so building stays cheap */
+/** At most this many spots are weighed for each block before the last one (and set-ups for a vine), so building stays cheap */
 const SAMPLE = 36;
+
+/** A road being built: the blocks standing so far, the ones left to place, and a vine planned in from the start */
+interface Work {
+  placed: Placement[];
+  pool: Pool;
+  must: PieceType[];
+  /** Stands in the road while the other blocks are placed, so they are placed to use it; it goes in last */
+  vine: Placement | null;
+}
+
+function put(w: Work, p: Placement): void {
+  w.placed.push(p);
+  w.pool[p.t] = (w.pool[p.t] ?? 0) - 1;
+  const mi = w.must.indexOf(p.t);
+  if (mi >= 0) w.must.splice(mi, 1);
+}
+
+/**
+ * Places blocks one by one until `total` stand, so the road grows towards the goal and only the last block joins it
+ * up, in a walk that fits the stage. A planned vine stands in the road all along. False when a step finds no block.
+ */
+function grow(r: Rng, lv: Level, cfg: GenConfig, w: Work, total: number): boolean {
+  const ahead = w.vine ? [w.vine] : [];
+  for (let n = w.placed.length; n < total; n++) {
+    const g = makeGrid(lv, [...w.placed, ...ahead]);
+    const left = total - n;
+    // The blocks the stage must use come in before the tray runs out of room for them
+    const types = (left <= w.must.length ? [...new Set(w.must)] : inPool(w.pool)).filter((t) => (w.pool[t] ?? 0) > 0);
+    let opts: Placement[] = types.flatMap((t) => options(g, t));
+    // The stone gate only opens with a block on its plate: the first block goes there when one fits
+    if (n === 0 && lv.gate) {
+      const plate = opts.filter((p) => coversPlate(p, lv));
+      if (plate.length) opts = plate;
+    }
+    let pick: Placement | null = null;
+    if (n === total - 1) {
+      // Last block: every spot of every block that may still go in, keeping one that joins the road up
+      const near = mayJoin(g, lv);
+      const done = opts.filter((p) => {
+        if (!near(p)) return false;
+        const g2 = makeGrid(lv, [...w.placed, p, ...ahead]);
+        const route = findRoute(g2, lv.hero, lv.goal, lv.stars);
+        return !!route && walkFits(route, g2, lv, cfg);
+      });
+      if (done.length) pick = done[Math.floor(r() * done.length)];
+    } else {
+      // Earlier blocks: never finish the road early (the level would not need every block); among a sample of
+      // spots, prefer those that bring it closest to done, with some chance so the roads differ
+      shuffle(r, opts);
+      const scored: { p: Placement; gap: number }[] = [];
+      for (const p of opts.slice(0, SAMPLE)) {
+        const g2 = makeGrid(lv, [...w.placed, p, ...ahead]);
+        const ws = walkable(g2);
+        if (findRoute(g2, lv.hero, lv.goal, lv.stars, ws)) continue;
+        scored.push({ p, gap: roadGap(g2, lv, ws) });
+      }
+      if (scored.length) {
+        const best = Math.min(...scored.map((x) => x.gap));
+        const near = scored.filter((x) => x.gap <= best + (r() < 0.35 ? 1 : 0));
+        pick = near[Math.floor(r() * near.length)].p;
+      }
+    }
+    if (!pick) return false;
+    put(w, pick);
+  }
+  return true;
+}
+
+/** The blocks left once block `i` is taken away and whatever it held up falls: a vine hanging from it, a block on it */
+function without(lv: Level, placed: readonly Placement[], i: number): Placement[] {
+  let rest = placed.filter((_, j) => j !== i);
+  for (;;) {
+    const g = makeGrid(lv, rest);
+    const held = rest.filter((p) => stable(g, p.t, p.o, p.x, p.y));
+    if (held.length === rest.length) return rest;
+    rest = held;
+  }
+}
+
+/**
+ * Whether taking any one block away breaks the road; otherwise fewer blocks would do. On a road with a vine, what the
+ * block held up falls with it, so the blocks that hold the vine up count as part of the climb.
+ */
+function needsAll(lv: Level, placed: readonly Placement[]): boolean {
+  const falls = placed.some((p) => p.t === 'vine');
+  for (let i = 0; i < placed.length; i++) {
+    const rest = falls ? without(lv, placed, i) : placed.filter((_, j) => j !== i);
+    if (findRoute(makeGrid(lv, rest), lv.hero, lv.goal, lv.stars)) return false;
+  }
+  return true;
+}
+
+/** Whether a block let go at (x, y) comes to rest right there and stands: the rule placementsFor lists spots by */
+const restsAt = (g: Grid, t: PieceType, o: number, x: number, y: number) => fits(g, t, o, x, y) && !(y > 0 && fits(g, t, o, x, y - 1)) && stable(g, t, o, x, y);
+
+/** Spots of the pool's blocks that put a flat underside at (x, y), over the vine's top, for the vine to hang from */
+function hangers(g: Grid, x: number, y: number, pool: Pool): Placement[] {
+  const out: Placement[] = [];
+  for (const t of inPool(pool)) {
+    if (t === 'vine') continue;
+    for (let o = 0; o < DEFS[t].orients.length; o++)
+      for (const [dx, dy, k] of cellsOf(t, o)) if (HANG_FROM.has(k) && restsAt(g, t, o, x - dx, y - dy)) out.push({ t, o, x: x - dx, y: y - dy });
+  }
+  return out;
+}
+
+/** Spots of the pool's blocks that give a hanger at (x, y) something to rest its other end on: a flat top beside it */
+function holders(g: Grid, x: number, y: number, pool: Pool): Placement[] {
+  const sides = [x - 1, x + 1].filter((sx) => sx >= 0 && sx < g.w && !at(g, sx, y) && !SUPPORT.has(at(g, sx, y - 1)?.k ?? ''));
+  const out: Placement[] = [];
+  for (const t of inPool(pool)) {
+    if (t === 'vine') continue;
+    for (let o = 0; o < DEFS[t].orients.length; o++) {
+      const cells = cellsOf(t, o);
+      for (const sx of sides)
+        for (const [dx, dy, k] of cells) {
+          const p: Placement = { t, o, x: sx - dx, y: y - 1 - dy };
+          // It has to leave free both cells the hanger goes in
+          const on = (cx: number, cy: number) => cells.some(([ex, ey]) => p.x + ex === cx && p.y + ey === cy);
+          if (!SUPPORT.has(k) || on(x, y) || on(sx, y) || !restsAt(g, t, o, p.x, p.y)) continue;
+          if (!out.some((q) => q.t === t && q.o === o && q.x === p.x && q.y === p.y)) out.push(p);
+        }
+    }
+  }
+  return out;
+}
+
+/** Where a vine will hang, and the blocks that hold it up, in the order they go in (the vine itself goes in last) */
+export interface VinePlan {
+  vine: Placement;
+  blocks: Placement[];
+}
+
+/** Every way to set up a spot for a vine on this terrain with at most two of the pool's blocks */
+export function vinePlans(lv: Level, pool: Pool): VinePlan[] {
+  const g = makeGrid(lv, []);
+  const out: VinePlan[] = [];
+  for (let x = 0; x < lv.w; x++) {
+    for (let y = 0; y + 2 < H; y++) {
+      if (!fits(g, 'vine', 0, x, y)) continue;
+      const vine: Placement = { t: 'vine', o: 0, x, y };
+      const above = at(g, x, y + 2);
+      if (above) {
+        // The ground already juts out over this spot
+        if (HANG_FROM.has(above.k)) out.push({ vine, blocks: [] });
+        continue;
+      }
+      // With the vine standing, nothing can drop into its cells, so a hanger has to rest on its other end
+      const gv = makeGrid(lv, [vine]);
+      for (const a of hangers(gv, x, y + 2, pool)) out.push({ vine, blocks: [a] });
+      for (const s of holders(gv, x, y + 2, pool)) {
+        const rest = { ...pool, [s.t]: (pool[s.t] ?? 0) - 1 };
+        // ...only hangers that rest on the holder: one that stands without it needs no holder
+        for (const a of hangers(makeGrid(lv, [s, vine]), x, y + 2, rest)) if (!stable(gv, a.t, a.o, a.x, a.y)) out.push({ vine, blocks: [s, a] });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * A stage with a vine: ranks the ways to set the vine up by how close each brings the road to done (now and then
+ * counting one a step closer than it is, so the roads differ), then, for the best `tries` of them, builds the set-up
+ * and grows the rest of the road with the vine standing in it. The vine goes in last.
+ */
+function buildAroundVine(r: Rng, lv: Level, cfg: GenConfig, tries: number): Placement[] | null {
+  const real = cfg.k - 1;
+  const pool: Pool = { ...cfg.pool, vine: (cfg.pool.vine ?? 0) - 1 };
+  const must = cfg.must.slice();
+  must.splice(must.indexOf('vine'), 1);
+  const plans = vinePlans(lv, pool).filter((pl) => {
+    if (pl.blocks.length > real) return false;
+    // ...leaving room for the other blocks the stage must use
+    const m = must.slice();
+    for (const b of pl.blocks) if (m.includes(b.t)) m.splice(m.indexOf(b.t), 1);
+    return m.length <= real - pl.blocks.length;
+  });
+  shuffle(r, plans);
+  const ranked: { pl: VinePlan; gap: number }[] = [];
+  for (const pl of plans.slice(0, SAMPLE)) {
+    const g = makeGrid(lv, [...pl.blocks, pl.vine]);
+    const ws = walkable(g);
+    const route = findRoute(g, lv.hero, lv.goal, lv.stars, ws);
+    // A set-up that uses up the tray has to join the road itself; any other must leave it open for the last block
+    if (pl.blocks.length === real) {
+      if (route && walkFits(route, g, lv, cfg)) ranked.push({ pl, gap: 0 });
+    } else if (!route) ranked.push({ pl, gap: roadGap(g, lv, ws) - (r() < 0.35 ? 1 : 0) });
+  }
+  ranked.sort((a, b) => a.gap - b.gap);
+  for (const { pl } of ranked.slice(0, tries)) {
+    const w: Work = { placed: [], pool: { ...pool }, must: must.slice(), vine: pl.vine };
+    for (const b of pl.blocks) put(w, b);
+    if (!grow(r, lv, cfg, w, real) || w.must.length) continue;
+    const placed = [...w.placed, pl.vine];
+    if (needsAll(lv, placed)) return placed;
+  }
+  return null;
+}
 
 /**
  * Builds a road out of `cfg.k` blocks taken from the zone's pool (always including the blocks the stage must use),
- * placing them one by one so the road grows towards the goal and only the last block joins it up. The blocks used
- * become the tray. Null after `tries` attempts.
+ * placing them one by one so the road grows towards the goal and only the last block joins it up. A stage with a vine
+ * is built around the vine, each attempt from the next-best way to set it up. The blocks used become the tray. Null
+ * after `tries` attempts.
  */
 export function backbuild(r: Rng, lv: Level, cfg: GenConfig, tries = 3): Build | null {
-  const k = cfg.k;
+  if (cfg.must.includes('vine')) {
+    const placed = buildAroundVine(r, lv, cfg, tries);
+    return placed && { inv: placed.map((p) => p.t).sort(), placed };
+  }
   for (let attempt = 0; attempt < tries; attempt++) {
-    const pool: Partial<Record<Placement['t'], number>> = { ...cfg.pool };
-    const must = cfg.must.slice();
-    const placed: Placement[] = [];
-    let stuck = false;
-    for (let n = 0; n < k && !stuck; n++) {
-      const g = makeGrid(lv, placed);
-      const left = k - n;
-      // The blocks the stage must use come in before the tray runs out of room for them
-      const types = (left <= must.length ? [...new Set(must)] : (Object.keys(pool) as Placement['t'][]).filter((t) => (pool[t] ?? 0) > 0)).filter(
-        (t) => (pool[t] ?? 0) > 0,
-      );
-      let opts: Placement[] = types.flatMap((t) => options(g, t));
-      // The stone gate only opens with a block on its plate: the first block goes there when one fits
-      if (n === 0 && lv.gate) {
-        const plate = opts.filter((p) => coversPlate(p, lv));
-        if (plate.length) opts = plate;
-      }
-      let pick: Placement | null = null;
-      if (n === k - 1) {
-        // Last block: every spot of every block that may still go in, keeping one that joins the road up
-        const done = opts.filter((p) => {
-          const g2 = makeGrid(lv, [...placed, p]);
-          const route = findRoute(g2, lv.hero, lv.goal, lv.stars);
-          return !!route && walkFits(route, g2, lv, cfg);
-        });
-        if (done.length) pick = done[Math.floor(r() * done.length)];
-      } else {
-        // Earlier blocks: never finish the road early (the level would not need every block); among a sample of
-        // spots, prefer those that bring it closest to done, with some chance so the roads differ
-        for (let i = opts.length - 1; i > 0; i--) {
-          const j = Math.floor(r() * (i + 1));
-          [opts[i], opts[j]] = [opts[j], opts[i]];
-        }
-        const scored: { p: Placement; gap: number }[] = [];
-        for (const p of opts.slice(0, SAMPLE)) {
-          const g2 = makeGrid(lv, [...placed, p]);
-          const ws = walkable(g2);
-          if (findRoute(g2, lv.hero, lv.goal, lv.stars, ws)) continue;
-          scored.push({ p, gap: roadGap(g2, lv, ws) });
-        }
-        if (scored.length) {
-          const best = Math.min(...scored.map((x) => x.gap));
-          const near = scored.filter((x) => x.gap <= best + (r() < 0.35 ? 1 : 0));
-          pick = near[Math.floor(r() * near.length)].p;
-        }
-      }
-      if (!pick) {
-        stuck = true;
-        break;
-      }
-      placed.push(pick);
-      pool[pick.t] = (pool[pick.t] ?? 0) - 1;
-      const mi = must.indexOf(pick.t);
-      if (mi >= 0) must.splice(mi, 1);
-    }
-    if (stuck || placed.length !== k || must.length) continue;
-    // Taking any one block away must break the road; otherwise fewer blocks would do
-    let needsAll = true;
-    for (let i = 0; i < k && needsAll; i++) {
-      const rest = placed.filter((_, j) => j !== i);
-      if (findRoute(makeGrid(lv, rest), lv.hero, lv.goal, lv.stars)) needsAll = false;
-    }
-    if (!needsAll) continue;
-    return { inv: placed.map((p) => p.t).sort(), placed };
+    const w: Work = { placed: [], pool: { ...cfg.pool }, must: cfg.must.slice(), vine: null };
+    if (!grow(r, lv, cfg, w, cfg.k) || w.must.length || !needsAll(lv, w.placed)) continue;
+    return { inv: w.placed.map((p) => p.t).sort(), placed: w.placed };
   }
   return null;
 }

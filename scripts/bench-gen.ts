@@ -1,7 +1,8 @@
 // Compares the two ways of generating levels on the same stage configs, each for a fixed time (BENCH_MS, default
 // 3000): draw-and-check (`attempt`) and 逆築 (`attemptBackbuild`). Prints how fast each one makes qualifying levels
 // and what those levels are like, so a change to either can be checked for speed and for sameness.
-// Run with `pnpm bench:gen`.
+// Run with `pnpm bench:gen`; BENCH_ONLY=vine runs only the stages whose label contains "vine". Drawing a wide vine
+// stage takes seconds a level, so compare those with a longer window (e.g. BENCH_MS=30000).
 import { describe, it } from 'vitest';
 import { type Element, stageCfg, ZONES } from '../src/content/zones';
 import { findRoute, makeGrid, rng, solve } from '../src/engine';
@@ -16,7 +17,13 @@ const CASES: Case[] = [
   ['美麗海 urchin+ladder', 'motobu', 2, ['urchin', 'ladder']],
   ['古宇利島 spring', 'kouri', 2, ['spring']],
   ['竹富島 star+urchin', 'taketomi', 2, ['star', 'urchin']],
+  ['西表島 vine, first stop', 'iriomote', 0, ['vine']],
+  ['西表島 vine', 'iriomote', 2, ['vine']],
   ['西表島 vine+urchin', 'iriomote', 2, ['vine', 'urchin']],
+  ['西表島 vine+ladder', 'iriomote', 2, ['vine', 'ladder']],
+  ['西表島 vine+star', 'iriomote', 2, ['vine', 'star']],
+  ['西表島 vine, old cap: 8 wide 3 blocks', 'iriomote', 2, ['vine'], (c) => Object.assign(c, { w: 8, k: 3, obs: [1, 4] })],
+  ['久米島 vine+urchin, 10 wide', 'kumejima', 2, ['urchin', 'vine']],
   ['首里城 gate', 'shuri', 2, ['gate']],
   ['首里城 gate+urchin+spring', 'shuri', 2, ['gate', 'urchin', 'spring']],
   ['首里城 gate, 10 wide', 'shuri', 2, ['gate'], (c) => Object.assign(c, { w: 10, obs: [0, 5] })],
@@ -24,6 +31,7 @@ const CASES: Case[] = [
   ['stone bridge+urchin, 9 wide', 'shuri', 2, ['long', 'urchin'], (c) => Object.assign(c, { w: 9, obs: [2, 5] })],
 ];
 const WINDOW = Number(process.env.BENCH_MS ?? 3000);
+const ONLY = process.env.BENCH_ONLY ?? '';
 
 /** What the levels are like: solutions, length and height of the walk, kinds of move, kinds of block */
 function traits(lvs: Level[]): string {
@@ -44,7 +52,7 @@ function traits(lvs: Level[]): string {
 describe('level generation benchmark', () => {
   it('compares draw-and-check with 逆築', () => {
     const rows = ['| stage | method | levels | ms per level | solutions | walk | top | moves | block kinds |', '|---|---|---|---|---|---|---|---|---|'];
-    for (const [label, z, si, els, tweak] of CASES) {
+    for (const [label, z, si, els, tweak] of CASES.filter(([label]) => label.includes(ONLY))) {
       const cfg = stageCfg(zi(z), si, els);
       tweak?.(cfg);
       for (const [name, fn] of [

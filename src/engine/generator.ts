@@ -155,12 +155,11 @@ export function attemptBackbuild(r: Rng, cfg: GenConfig): Level | null {
 export type Method = 'backbuild' | 'draw';
 
 /**
- * The ways to generate a stage, in the order to try them. 逆築 first, with drawing as the fallback it takes turns with;
- * a stage that needs a vine only draws. A vine hangs from a block that itself rests on others, two or more steps of
- * set-up that building one block at a time does not find.
+ * The ways to generate a stage, in the order to try them: 逆築 first, with drawing as the fallback it takes turns with.
+ * A stage with a vine is built the same way, starting from where the vine hangs.
  */
-export function methodsFor(cfg: GenConfig): Method[] {
-  return cfg.must.includes('vine') ? ['draw'] : ['backbuild', 'draw'];
+export function methodsFor(_cfg: GenConfig): Method[] {
+  return ['backbuild', 'draw'];
 }
 
 /**
