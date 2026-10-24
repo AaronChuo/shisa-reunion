@@ -1,4 +1,5 @@
-import type { PieceType } from '../engine';
+import type { JSX } from 'react';
+import { cellsOf, type PieceType } from '../engine';
 
 const f1 = (v: number) => +v.toFixed(1);
 
@@ -12,6 +13,10 @@ export const PALETTE: Record<PieceType, { fill: string; dark: string; light: str
   long: { fill: '#D9CFBD', dark: '#8C7F6B', light: '#F1EBDF' },
   slide: { fill: '#F08BA8', dark: '#A8405E', light: '#FFD3DF', accent: '#FFD45E' },
   vine: { fill: '#5FA84A', dark: '#2F6B2A', light: '#A8DB8A', accent: '#8A5A2B' },
+  bar: { fill: '#E8B66E', dark: '#9A6630', light: '#FBE2B2' },
+  corner: { fill: '#E6DCC6', dark: '#8E8268', light: '#FAF6EC' },
+  parasol: { fill: '#F4E1B0', dark: '#9C7B43', light: '#FFF6DE', accent: '#E5533D' },
+  wave: { fill: '#3D9FD9', dark: '#1F5F8E', light: '#C4E8F8' },
 };
 
 function steps(x0: number, x1: number, yb: number, yt: number): [number, number][] {
@@ -21,6 +26,60 @@ function steps(x0: number, x1: number, yb: number, yt: number): [number, number]
   const a: [number, number][] = [];
   for (let i = 0; i < n; i++) a.push([x0 + i * sw, yb - (i + 1) * sh], [x0 + (i + 1) * sw, yb - (i + 1) * sh]);
   return a;
+}
+
+/**
+ * The outline of a shape block in its first orientation: 3 units inside its cells like the other blocks, the outer
+ * corners rounded more than the inner ones
+ */
+function outline(t: PieceType): string {
+  const cells = cellsOf(t, 0);
+  const h = Math.max(...cells.map(([, dy]) => dy)) + 1;
+  // Every cell's edges, clockwise on screen; an edge two cells share runs both ways and drops out, leaving the outline
+  const edges = cells.flatMap(([cx, dy]): [number, number, number, number][] => {
+    const cy = h - 1 - dy;
+    return [
+      [cx, cy, cx + 1, cy],
+      [cx + 1, cy, cx + 1, cy + 1],
+      [cx + 1, cy + 1, cx, cy + 1],
+      [cx, cy + 1, cx, cy],
+    ];
+  });
+  const all = new Set(edges.map((e) => e.join()));
+  const next = new Map<string, [number, number]>();
+  for (const [ax, ay, bx, by] of edges) if (!all.has([bx, by, ax, ay].join())) next.set(`${ax},${ay}`, [bx, by]);
+  const loop: [number, number][] = [];
+  let at = [...next.keys()][0].split(',').map(Number) as [number, number];
+  do {
+    loop.push(at);
+    at = next.get(at.join()) as [number, number];
+  } while (at.join() !== loop[0].join());
+  // The corners, each moved 3 units inside: the inside is on the right of the way round
+  const n = loop.length;
+  const way = (a: [number, number], b: [number, number]) => [Math.sign(b[0] - a[0]), Math.sign(b[1] - a[1])];
+  const corners: { x: number; y: number; r: number }[] = [];
+  loop.forEach((v, i) => {
+    const [ix, iy] = way(loop[(i + n - 1) % n], v);
+    const [ox, oy] = way(v, loop[(i + 1) % n]);
+    const turn = ix * oy - iy * ox;
+    if (turn) corners.push({ x: v[0] * 100 - 3 * (iy + oy), y: v[1] * 100 + 3 * (ix + ox), r: turn > 0 ? 12 : 6 });
+  });
+  return `${corners
+    .map((c, i) => {
+      const toward = (q: { x: number; y: number }) => {
+        const len = Math.hypot(q.x - c.x, q.y - c.y);
+        return `${f1(c.x + ((q.x - c.x) / len) * c.r)},${f1(c.y + ((q.y - c.y) / len) * c.r)}`;
+      };
+      const m = corners.length;
+      return `${i ? 'L' : 'M'}${toward(corners[(i + m - 1) % m])} Q${f1(c.x)},${f1(c.y)} ${toward(corners[(i + 1) % m])}`;
+    })
+    .join(' ')} Z`;
+}
+
+/** A drawing made for a block's first orientation (`w`×`h` cells), turned the quarter turns clockwise orientation `o` is */
+function turned(o: number, w: number, h: number, body: JSX.Element): JSX.Element {
+  const tf = ['', `translate(${h * 100},0) rotate(90)`, `translate(${w * 100},${h * 100}) rotate(180)`, `translate(0,${w * 100}) rotate(270)`][o];
+  return tf ? <g transform={tf}>{body}</g> : body;
 }
 
 /** One block drawn in local units (100 per cell, origin at the piece's top-left) */
@@ -43,7 +102,11 @@ export function PieceArt({ t, o }: { t: PieceType; o: number }) {
         </g>
       );
     case 'tower':
-      return (
+      // Lying down is the standing tower turned on its side
+      return turned(
+        o,
+        1,
+        2,
         <g>
           <rect x={3} y={3} width={94} height={194} rx={12} fill={p.fill} stroke={p.dark} strokeWidth={4} />
           <rect x={8} y={8} width={84} height={14} rx={7} fill={p.light} />
@@ -52,7 +115,7 @@ export function PieceArt({ t, o }: { t: PieceType; o: number }) {
             const d = `M${odd ? 20 : 10},${42 + r * 27}${' a10,9 0 0 0 20,0'.repeat(odd ? 3 : 4)}`;
             return <path key={r} d={d} fill="none" stroke={p.light} strokeWidth={3.5} strokeLinecap="round" opacity={0.85} />;
           })}
-        </g>
+        </g>,
       );
     case 'bridge':
       return (
@@ -184,6 +247,83 @@ export function PieceArt({ t, o }: { t: PieceType; o: number }) {
         </>
       );
       return mirror ? <g transform={`translate(${horiz ? 200 : 100},0) scale(-1,1)`}>{body}</g> : <g>{body}</g>;
+    }
+    // The shape blocks are drawn lying in their first orientation and turn with the block, like a real one
+    case 'bar':
+      // A chinsuko biscuit with the ridges along its top
+      return turned(
+        o,
+        3,
+        1,
+        <g>
+          <path d={outline(t)} fill={p.fill} stroke={p.dark} strokeWidth={4} strokeLinejoin="round" />
+          {[38, 58, 78].map((y) => (
+            <path key={y} d={`M18,${y} q12,-7 24,0${' t24,0'.repeat(10)}`} fill="none" stroke={p.dark} strokeWidth={3} strokeLinecap="round" opacity={0.35} />
+          ))}
+          {shine(150)}
+        </g>,
+      );
+    case 'corner':
+      // Coral stone laid in courses, with the little holes coral stone has
+      return turned(
+        o,
+        2,
+        2,
+        <g>
+          <path d={outline(t)} fill={p.fill} stroke={p.dark} strokeWidth={4} strokeLinejoin="round" />
+          <path
+            d="M8,50 H92 M8,100 H92 M8,150 H192 M50,8 V50 M25,50 V100 M75,50 V100 M50,100 V150 M150,108 V150 M25,150 V192 M100,150 V192 M170,150 V192"
+            stroke={p.dark}
+            strokeWidth={2.5}
+            opacity={0.4}
+            strokeLinecap="round"
+          />
+          {[
+            [30, 28],
+            [70, 80],
+            [118, 128],
+            [62, 172],
+            [138, 176],
+          ].map(([x, y]) => (
+            <circle key={x} cx={x} cy={y} r={3} fill={p.dark} opacity={0.3} />
+          ))}
+          {shine(56)}
+        </g>,
+      );
+    case 'parasol':
+      // A striped beach parasol open over its pole, on a patch of sand
+      return turned(
+        o,
+        3,
+        2,
+        <g>
+          <path d={outline(t)} fill={p.fill} stroke={p.dark} strokeWidth={4} strokeLinejoin="round" />
+          <rect x={10} y={10} width={280} height={80} rx={9} fill={p.accent} />
+          <rect x={103} y={10} width={94} height={80} fill={p.light} />
+          <path d="M22,22 H84" stroke="#fff" strokeWidth={5} strokeLinecap="round" opacity={0.55} />
+          <rect x={143} y={88} width={14} height={104} rx={6} fill="#8A5A2B" stroke="#5A3A1A" strokeWidth={2.5} />
+        </g>,
+      );
+    case 'wave': {
+      // Waves breaking along each row; turned over, it is the same wave drawn the other way round
+      const body = (
+        <g>
+          <path d={outline(t)} fill={p.fill} stroke={p.dark} strokeWidth={4} strokeLinejoin="round" />
+          {[
+            [114, 58],
+            [14, 158],
+          ].map(([x, y]) => (
+            <g key={y} fill="none" stroke={p.light} strokeLinecap="round">
+              <path d={`M${x},${y} q12,-14 24,0${' t24,0'.repeat(6)}`} strokeWidth={4.5} />
+              <path d={`M${x + 24},${y + 24} q12,-10 24,0${' t24,0'.repeat(4)}`} strokeWidth={3} opacity={0.6} />
+            </g>
+          ))}
+          <path d="M117,13 H156" stroke={p.light} strokeWidth={5} strokeLinecap="round" opacity={0.7} />
+        </g>
+      );
+      const lying = o % 2 === 0;
+      const art = turned(lying ? 0 : 1, 3, 2, body);
+      return o < 2 ? art : <g transform={`translate(${lying ? 300 : 200},0) scale(-1,1)`}>{art}</g>;
     }
   }
 }

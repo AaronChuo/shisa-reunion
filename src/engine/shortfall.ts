@@ -19,11 +19,11 @@ export type Pool = Partial<Record<PieceType, number>>;
  * The most one block can pay for on a relaxed walk: `lift`, changes of height (a slope one, a ladder or vine two, a clam
  * up to two each way); `adds`, those plus the spots it makes to stand on (a slope at either end and a stair's or
  * slide's flat top, an arch inside and on top, a stone bridge's three tops and its arch, a ladder's three, a clam's top
- * and the air it jumps through).
+ * and the air it jumps through, a plain block one top per column in its widest orientation).
  */
 const ADDS: Record<PieceType, { lift: number; adds: number }> = {
   cube: { lift: 0, adds: 1 },
-  tower: { lift: 0, adds: 1 },
+  tower: { lift: 0, adds: 2 },
   bridge: { lift: 0, adds: 2 },
   long: { lift: 0, adds: 4 },
   stair: { lift: 1, adds: 4 },
@@ -31,6 +31,10 @@ const ADDS: Record<PieceType, { lift: number; adds: number }> = {
   ladder: { lift: 2, adds: 5 },
   spring: { lift: 4, adds: 5 },
   vine: { lift: 2, adds: 4 },
+  bar: { lift: 0, adds: 3 },
+  corner: { lift: 0, adds: 2 },
+  parasol: { lift: 0, adds: 3 },
+  wave: { lift: 0, adds: 3 },
 };
 
 /** Cells the hero can be in: its own and the other figures', an arch, a ladder, an open gate, a vine, on a slope */

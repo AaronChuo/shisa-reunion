@@ -5,7 +5,7 @@ import { drawFromSeries, type Series, VARIANT_BY_ID, VARIANTS } from '../content
 import { SHISA_CHEER } from '../content/story';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES } from '../content/zones';
-import { canLift, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, walkAsFar, waterAt } from '../engine';
+import { canLift, DEFS, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, walkAsFar, waterAt } from '../engine';
 import { type DexTab, getState, mut, type Run, type Screen } from '../state/store';
 import { restBetweenStops } from './family';
 import { generateLevel, prepareLevel } from './generator';
@@ -264,9 +264,7 @@ export function rotate(k: number): void {
   mut((s) => {
     const r = s.progress.run;
     if (!r?.level) return;
-    const t = r.level.inv[k];
-    const n = t === 'stair' ? 4 : 1;
-    r.orient[k] = (r.orient[k] + 1) % n;
+    r.orient[k] = (r.orient[k] + 1) % DEFS[r.level.inv[k]].orients.length;
     if (s.ui.hint?.type === 'put' && s.ui.hint.k === k) s.ui.hint = null;
   });
   sfx.rotate();

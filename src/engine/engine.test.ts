@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { canLift, findPath, findRoute, fits, makeGrid, restY, solve, stable, walkAsFar } from '.';
-import type { Level, Placement } from './types';
+import { canLift, cellsOf, DEFS, findPath, findRoute, fits, makeGrid, restY, solve, stable, walkAsFar } from '.';
+import type { Level, PieceCell, Placement } from './types';
 
 const level = (over: Partial<Level>): Level => ({
   w: 6,
@@ -226,5 +226,66 @@ describe('star sand', () => {
   it('refuses a route that has to walk through the goal to reach a star', () => {
     const lv = level({ hero: { x: 0, y: 0 }, goal: { x: 3, y: 0 }, stars: [{ x: 5, y: 0 }] });
     expect(findRoute(makeGrid(lv, []), lv.hero, lv.goal, lv.stars)).toBeNull();
+  });
+});
+
+describe('shape blocks', () => {
+  /** A set of cells turned a quarter clockwise, then moved back to start at column 0 and row 0 */
+  const quarter = (cells: readonly PieceCell[]) => {
+    const turned = cells.map(([x, y]) => [y, -x]);
+    const lo = Math.min(...turned.map(([, y]) => y));
+    return turned.map(([x, y]) => `${x},${y - lo}`).sort();
+  };
+  const mirror = (cells: readonly PieceCell[]) => {
+    const hi = Math.max(...cells.map(([x]) => x));
+    return cells.map(([x, y]) => `${hi - x},${y}`).sort();
+  };
+  const spots = (cells: readonly PieceCell[]) => cells.map(([x, y]) => `${x},${y}`).sort();
+
+  it('turns each block a quarter clockwise from one orientation to the next', () => {
+    for (const t of ['tower', 'bar', 'corner', 'parasol'] as const) {
+      const n = DEFS[t].orients.length;
+      for (let o = 0; o < n; o++) expect(spots(cellsOf(t, (o + 1) % n)), `${t} ${o}`).toEqual(quarter(cellsOf(t, o)));
+    }
+  });
+
+  it('turns the wave over after its two quarter turns', () => {
+    expect(spots(cellsOf('wave', 1))).toEqual(quarter(cellsOf('wave', 0)));
+    expect(spots(cellsOf('wave', 2))).toEqual(mirror(cellsOf('wave', 0)));
+    expect(spots(cellsOf('wave', 3))).toEqual(quarter(cellsOf('wave', 2)));
+  });
+
+  it('balances a lying bar on its middle or both ends, never on one end', () => {
+    const g = makeGrid(
+      level({
+        fixed: [
+          { t: 'cube', o: 0, x: 1, y: 0 },
+          { t: 'cube', o: 0, x: 3, y: 0 },
+        ],
+      }),
+      [],
+    );
+    expect(stable(g, 'bar', 0, 0, 1)).toBe(true);
+    expect(stable(g, 'bar', 0, 1, 1)).toBe(true);
+    expect(stable(g, 'bar', 0, 3, 1)).toBe(false);
+  });
+
+  it('holds an L up by its side two cells tall, not by the cell jutting out', () => {
+    const g = makeGrid(level({ fixed: [{ t: 'tower', o: 0, x: 2, y: 0 }] }), []);
+    expect(stable(g, 'corner', 1, 2, 2)).toBe(true);
+    expect(stable(g, 'corner', 1, 1, 1)).toBe(false);
+  });
+
+  it('stands an open parasol on its pole, and the hero walks across its top', () => {
+    const lv = level({
+      fixed: [
+        { t: 'tower', o: 0, x: 0, y: 0 },
+        { t: 'tower', o: 0, x: 4, y: 0 },
+      ],
+      hero: { x: 0, y: 2 },
+      goal: { x: 4, y: 2 },
+    });
+    expect(stable(makeGrid(lv, []), 'parasol', 0, 1, 0)).toBe(true);
+    expect(findRoute(makeGrid(lv, [{ t: 'parasol', o: 0, x: 1, y: 0 }]), lv.hero, lv.goal, lv.stars)).not.toBeNull();
   });
 });

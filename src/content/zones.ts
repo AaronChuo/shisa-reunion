@@ -76,7 +76,7 @@ export interface Zone {
   color: string;
   w: number;
   line: string;
-  /** Plain blocks this zone hands out; special blocks are added stop by stop */
+  /** Plain blocks this zone hands out; the tier's shape blocks join them, and special blocks are added stop by stop */
   base: Partial<Record<PieceType, number>>;
   /** The element taught on the first stop, or null for plain building */
   intro: Element | null;
@@ -93,6 +93,9 @@ export interface Zone {
 export const STAGES = 5;
 
 const PLAIN: Partial<Record<PieceType, number>> = { stair: 2, cube: 2, tower: 1, bridge: 1 };
+
+/** Shape blocks join every zone's plain ones by tier: the bar from the start, the corner from 初級, the parasol and the wave from 進階 */
+const SHAPES: Partial<Record<PieceType, number>>[] = [{ bar: 1 }, { bar: 1, corner: 1 }, { bar: 1, corner: 1, parasol: 1, wave: 1 }];
 
 export const ZONES: Zone[] = [
   {
@@ -296,7 +299,7 @@ const obsFor = (w: number, gate: boolean): [number, number] => (gate ? [0, w - 5
 export function stageCfg(zi: number, si: number, els: readonly Element[]): GenConfig {
   const Z = ZONES[zi];
   const boss = si === STAGES - 1;
-  const pool = { ...Z.base };
+  const pool = { ...Z.base, ...SHAPES[Math.min(Z.tier, SHAPES.length - 1)] };
   const cfg: GenConfig = {
     w: Z.w,
     k: boss ? Z.boss.k : Z.ks[si],

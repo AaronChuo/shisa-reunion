@@ -1,4 +1,4 @@
-export type PieceType = 'cube' | 'tower' | 'stair' | 'bridge' | 'ladder' | 'spring' | 'long' | 'slide' | 'vine';
+export type PieceType = 'cube' | 'tower' | 'stair' | 'bridge' | 'ladder' | 'spring' | 'long' | 'slide' | 'vine' | 'bar' | 'corner' | 'parasol' | 'wave';
 
 // solid: flat top, blocks walking through
 // stairR / stairL: climbs left→right / right→left; slanted top, nothing can rest on it

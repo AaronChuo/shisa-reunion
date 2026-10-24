@@ -22,6 +22,11 @@ export const DEFS: Record<PieceType, { orients: PieceCell[][] }> = {
         [0, 0, 'solid'],
         [0, 1, 'solid'],
       ],
+      // Lying down
+      [
+        [0, 0, 'solid'],
+        [1, 0, 'solid'],
+      ],
     ],
   },
   stair: {
@@ -81,6 +86,104 @@ export const DEFS: Record<PieceType, { orients: PieceCell[][] }> = {
       [
         [0, 0, 'vine'],
         [0, 1, 'vine'],
+      ],
+    ],
+  },
+  // Shape blocks: plain cells in a shape, each orientation a quarter turn clockwise from the one before
+  bar: {
+    orients: [
+      [
+        [0, 0, 'solid'],
+        [1, 0, 'solid'],
+        [2, 0, 'solid'],
+      ],
+      [
+        [0, 0, 'solid'],
+        [0, 1, 'solid'],
+        [0, 2, 'solid'],
+      ],
+    ],
+  },
+  // An L, its corner at the bottom left, then top left, top right, bottom right
+  corner: {
+    orients: [
+      [
+        [0, 0, 'solid'],
+        [1, 0, 'solid'],
+        [0, 1, 'solid'],
+      ],
+      [
+        [0, 0, 'solid'],
+        [0, 1, 'solid'],
+        [1, 1, 'solid'],
+      ],
+      [
+        [1, 0, 'solid'],
+        [0, 1, 'solid'],
+        [1, 1, 'solid'],
+      ],
+      [
+        [0, 0, 'solid'],
+        [1, 0, 'solid'],
+        [1, 1, 'solid'],
+      ],
+    ],
+  },
+  // A T, open with its pole down, then the pole to the left, up, to the right
+  parasol: {
+    orients: [
+      [
+        [1, 0, 'solid'],
+        [0, 1, 'solid'],
+        [1, 1, 'solid'],
+        [2, 1, 'solid'],
+      ],
+      [
+        [1, 0, 'solid'],
+        [1, 1, 'solid'],
+        [1, 2, 'solid'],
+        [0, 1, 'solid'],
+      ],
+      [
+        [0, 0, 'solid'],
+        [1, 0, 'solid'],
+        [2, 0, 'solid'],
+        [1, 1, 'solid'],
+      ],
+      [
+        [0, 0, 'solid'],
+        [0, 1, 'solid'],
+        [0, 2, 'solid'],
+        [1, 1, 'solid'],
+      ],
+    ],
+  },
+  // S lying and standing, then turned over: Z lying and standing
+  wave: {
+    orients: [
+      [
+        [0, 0, 'solid'],
+        [1, 0, 'solid'],
+        [1, 1, 'solid'],
+        [2, 1, 'solid'],
+      ],
+      [
+        [1, 0, 'solid'],
+        [1, 1, 'solid'],
+        [0, 1, 'solid'],
+        [0, 2, 'solid'],
+      ],
+      [
+        [1, 0, 'solid'],
+        [2, 0, 'solid'],
+        [0, 1, 'solid'],
+        [1, 1, 'solid'],
+      ],
+      [
+        [0, 0, 'solid'],
+        [0, 1, 'solid'],
+        [1, 1, 'solid'],
+        [1, 2, 'solid'],
       ],
     ],
   },
