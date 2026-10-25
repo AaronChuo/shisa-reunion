@@ -66,3 +66,11 @@ export async function solveByDragging(page: Page, lv: Level): Promise<void> {
     await page.mouse.up();
   }
 }
+
+/** The CSS animation running on the first element that matches */
+export async function animationOf(page: Page, sel: string): Promise<string> {
+  return page
+    .locator(sel)
+    .first()
+    .evaluate((el) => getComputedStyle(el).animationName);
+}

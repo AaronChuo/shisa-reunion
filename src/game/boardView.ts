@@ -47,6 +47,7 @@ export function tourField(heroOnRight: boolean): void {
   const max = el.scrollWidth - el.clientWidth;
   const home = heroOnRight ? max : 0;
   el.scrollLeft = home;
+  // Panning the whole screen is what less motion is for; the field can still be scrolled by hand
   if (max <= 0 || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   const legs = [
     { from: home, to: max - home, ms: 1500, wait: 500 },

@@ -1,5 +1,5 @@
 import { expect, test as it, type Page } from '@playwright/test';
-import { progress, waitForLevel } from './helpers';
+import { animationOf, progress, waitForLevel } from './helpers';
 
 // These tests use the plain Playwright test, so the game opens as it does for a brand-new player
 const next = (page: Page) => page.click('#storyNext');
@@ -51,5 +51,21 @@ it.describe('the opening story', () => {
     await expect(page.locator('#story')).toHaveCount(0);
     await page.click('#storyBtn');
     await expect(page.locator('#story')).toBeVisible();
+  });
+
+  it.describe('on a phone set to less motion', () => {
+    it.use({ reducedMotion: 'reduce' });
+
+    it('still shows the swipe and blows the two apart, without the spin', async ({ page }) => {
+      await page.goto('/');
+      await page.click('#story [data-shisa="0"]');
+      await next(page);
+      await next(page);
+      expect(await animationOf(page, '#story .swipeDemo')).toBe('swipeDemo');
+      await page.click('#story [aria-label="吹起颱風"]');
+      expect(await animationOf(page, '#story .wind path')).toBe('wind');
+      expect(await animationOf(page, '#story .blownLeft')).toBe('blownLeftCalm');
+      expect(await animationOf(page, '#story .blownRight')).toBe('blownRightCalm');
+    });
   });
 });

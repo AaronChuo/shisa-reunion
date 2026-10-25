@@ -77,7 +77,10 @@ const legMs = (l: Leg): number => {
   return l.pick === undefined ? run : run + 260;
 };
 
-/** Animates the hero element along the legs; returns a cancel function. `onPick` fires as each star sand is scooped up. */
+/**
+ * Animates the hero element along the legs; returns a cancel function. `onPick` fires as each star sand is scooped up.
+ * The walk plays even with less motion asked for: it is how the child sees the road work and the two meet.
+ */
 export function animateWalk(
   el: SVGGElement | null,
   path: PathStep[],
@@ -88,7 +91,7 @@ export function animateWalk(
   const legs = legsFor(path, lv);
   const start: HeroPos = { x: lv.hero.x + 0.5, y: lv.hero.y, flip: false };
   const end = endOf(legs, start);
-  if (!el || !legs.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (!el || !legs.length) {
     for (const l of legs) if (l.t === 'walk' && l.pick !== undefined) onPick(l.pick);
     done(end);
     return () => {};

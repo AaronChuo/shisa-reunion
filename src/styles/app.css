@@ -1868,6 +1868,11 @@ h1 {
     transform: translateX(-40px);
   }
 }
+/*
+ * Less motion stops what only decorates (bobbing, glows, twinkles, waves). What tells the story or shows the child what
+ * to do still moves: the capsule coming out (without its spin), the coin and crank demos and the drag demo, which mean
+ * nothing standing still.
+ */
 @media (prefers-reduced-motion: reduce) {
   .drop,
   .bob,
@@ -1880,14 +1885,11 @@ h1 {
   .starGlint,
   .cta::before,
   .cta .ci,
-  .capsuleBtn.flyIn,
   .tapHand,
   .capsuleHand,
   .slotGlow,
   .crankGlow,
   .steam,
-  .coinDemo,
-  .crankDemo,
   .capsuleBtn.shut .reveal,
   .iconBtn.hasCoins svg,
   .iconBtn.nudge svg,
@@ -1897,15 +1899,16 @@ h1 {
   .wave path {
     animation: none;
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .demoHand,
-  .demoPiece {
-    animation: none;
-    transform: translate(var(--x0), var(--y0));
+  .capsuleBtn.flyIn {
+    animation: capsuleSlide 0.8s cubic-bezier(0.25, 0.9, 0.3, 1) both;
   }
-  .demoPiece {
-    opacity: 0;
+}
+@keyframes capsuleSlide {
+  0% {
+    transform: translate(var(--fx), var(--fy)) scale(var(--fs));
+  }
+  100% {
+    transform: none;
   }
 }
 
@@ -2354,23 +2357,38 @@ h1 {
 .pairBtn:active .pairArt {
   transform: translateY(-6px);
 }
+/*
+ * Less motion keeps the story's events (the hop when tapped, luck flying in, the swipe demo, the wind, the stair dropping
+ * in, the walk over, the hearts) and stops the loops around them; the two still blow away, but without spinning.
+ */
 @media (prefers-reduced-motion: reduce) {
-  .hop,
   .storyHand,
   .storyCloud.dark,
-  .luckIn,
   .luckKeep > g,
-  .swipeDemo,
-  .wind path,
-  .dropIn,
   .cheerStory {
     animation: none;
   }
-  .blownLeft,
-  .blownRight,
-  .walkOver,
-  .hearts path {
-    animation-duration: 0.01s;
+  .blownLeft {
+    animation: blownLeftCalm 1s cubic-bezier(0.3, 0, 0.4, 1) forwards;
+  }
+  .blownRight {
+    animation: blownRightCalm 1s cubic-bezier(0.3, 0, 0.4, 1) forwards;
+  }
+}
+@keyframes blownLeftCalm {
+  50% {
+    transform: translate(-80px, -40px);
+  }
+  to {
+    transform: translate(-122px, 144px);
+  }
+}
+@keyframes blownRightCalm {
+  50% {
+    transform: translate(80px, -40px);
+  }
+  to {
+    transform: translate(120px, 144px);
   }
 }
 

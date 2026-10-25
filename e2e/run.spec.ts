@@ -44,3 +44,24 @@ it.describe('a full journey', () => {
     await expect(page.locator('#board #hero')).toBeVisible();
   });
 });
+
+it.describe('a phone set to less motion', () => {
+  it.use({ reducedMotion: 'reduce' });
+
+  it('still walks the hero over to its friend instead of jumping there', async ({ page }) => {
+    await page.goto('/');
+    await page.click('.zone [data-zone="0"]');
+    const lv = await waitForLevel(page);
+    await page.evaluate(() => {
+      const w = window as unknown as { heroMoves: number };
+      w.heroMoves = 0;
+      new MutationObserver((ms) => {
+        for (const m of ms) if ((m.target as Element).id === 'hero') w.heroMoves++;
+      }).observe(document.body, { subtree: true, attributeFilter: ['transform'] });
+    });
+    await solveByDragging(page, lv);
+    await expect(page.locator('#modal[data-kind="win"]')).toBeVisible();
+    // Frame by frame along the road, not one jump to the end
+    expect(await page.evaluate(() => (window as unknown as { heroMoves: number }).heroMoves)).toBeGreaterThan(10);
+  });
+});

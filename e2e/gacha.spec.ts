@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { freshProgress } from '../src/state/store';
 import { expect, test as it } from './fixtures';
-import { progress } from './helpers';
+import { animationOf, progress } from './helpers';
 
 const seed = (tokens: number) => JSON.stringify({ state: { progress: { ...freshProgress(), tokens } }, version: 2 });
 
@@ -88,5 +88,20 @@ it.describe('a gacha machine you work by hand', () => {
     await page.mouse.up();
     await expect(page.locator('#outCap')).toHaveCount(0);
     expect((await progress(page)).tokens).toBe(1);
+  });
+
+  it.describe('on a phone set to less motion', () => {
+    it.use({ reducedMotion: 'reduce' });
+
+    it('still shows how to put a coin in, and brings the capsule out without the spin', async ({ page }) => {
+      await open(page, 1);
+      await expect(page.locator('.coinDemo')).toBeVisible();
+      expect(await animationOf(page, '.coinDemo')).toBe('coinDemo');
+      await page.locator('#coinBtn').click();
+      await page.locator('#turnBtn').click();
+      await page.locator('#openBtn').click();
+      await expect(page.locator('#capsule')).toHaveClass(/flyIn/);
+      expect(await animationOf(page, '#capsule')).toBe('capsuleSlide');
+    });
   });
 });
