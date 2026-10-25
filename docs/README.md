@@ -1,6 +1,6 @@
 # 西薩搭搭路發展計畫
 
-> 狀態：v0.26.0（2026-10-25）。遊戲正式名稱「西薩搭搭路」（[ADR-0019](adr/0019-official-name.md)）；repo、網址與存檔仍用 `shisa-reunion`。待辦記在 [GitHub Issues](https://github.com/AaronChuo/shisa-reunion/issues)。
+> 狀態：v0.26.1（2026-10-25）。遊戲正式名稱「西薩搭搭路」（[ADR-0019](adr/0019-official-name.md)）；repo、網址與存檔仍用 `shisa-reunion`。待辦記在 [GitHub Issues](https://github.com/AaronChuo/shisa-reunion/issues)。
 
 ## 1. 目標
 
@@ -188,6 +188,7 @@ docs/adr/      架構決策紀錄
 - 用圖代替字：出發／等待用張嘴、閉嘴的獅子圖卡；獎勵與積木數量用圖示
 - 第一關有手指示範拖曳，之後的提示也用手指示範；卡住一陣子提示貝殼會搖（3–5 歲 25 秒、6–8 歲 45 秒、9 歲以上不搖）
 - 「走走看」：西薩沿著現在搭好的路走，走到路斷的地方停下來再跳回起點，讓孩子看見缺在哪裡；不限次數、不扣東西（[ADR-0026](adr/0026-try-walk.md)）
+- 手機開了「減少動態效果」時，只停一直重複的裝飾動畫；西薩走路、故事、扭蛋飛出來和示範手指照樣播，只是不旋轉（[ADR-0028](adr/0028-less-motion-keeps-the-story.md)）
 
 ### 大人設定
 
