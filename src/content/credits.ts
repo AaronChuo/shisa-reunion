@@ -25,3 +25,8 @@ export const OWN_PHOTO = '自己拍的';
 export const FREE_LICENSE = /^(自己拍的|cc0|public domain|cc by [0-9.]+)$/i;
 
 export const photoUrl = (place: PlaceId) => `/places/${place}.webp`;
+
+/** Zones added in v0.27 have no photo: their postcard shows the zone's own painted scene, made for the game */
+export const SCENE_PLACES: PlaceId[] = ['chatan', 'onna', 'yanbaru', 'kaichu', 'nanjo', 'ishigaki'];
+
+export const sceneUrl = (place: PlaceId) => `/scenes/${place}/day.webp`;

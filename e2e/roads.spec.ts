@@ -1,3 +1,4 @@
+import { ZONES } from '../src/content/zones';
 import { freshProgress } from '../src/state/store';
 import { expect, test as it } from './fixtures';
 
@@ -42,17 +43,18 @@ it.describe('wide ground on a narrow screen', () => {
   it.use({ viewport: { width: 250, height: 700 }, hasTouch: true });
 
   it('scrolls the field sideways and pans when empty ground is dragged', async ({ page }) => {
-    const all = ['naha', 'yomitan', 'motobu', 'kouri', 'nakagusuku', 'taketomi', 'iriomote', 'miyako', 'shuri', 'kumejima'];
+    const all = ZONES.map((z) => z.id);
     const state = {
       ...freshProgress(),
       open: all,
       clears: Object.fromEntries(all.map((id) => [id, 1])),
-      seen: [...SEEN, 'ladder', 'urchin', 'spring', 'star'],
+      // Every block and element card already read, so nothing covers the field
+      seen: [...SEEN, 'bar', 'corner', 'parasol', 'wave', 'ladder', 'urchin', 'spring', 'vine'],
     };
     await page.addInitScript((s) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', s), save(state));
     await page.goto('/');
-    // Taketomi is 8 columns wide: too wide to fit 250 px with fingertip-sized cells
-    await page.click(`.zone [data-zone="${all.indexOf('taketomi')}"]`);
+    // Yanbaru is 9 columns wide: too wide to fit 250 px with fingertip-sized cells
+    await page.click(`.zone [data-zone="${all.indexOf('yanbaru')}"]`);
     const box = page.locator('.boardScroll.scrollX');
     await expect(box).toBeVisible({ timeout: 15_000 });
     const { sw, cw } = await box.evaluate((el) => ({ sw: el.scrollWidth, cw: el.clientWidth }));

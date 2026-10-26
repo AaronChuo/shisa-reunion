@@ -7,9 +7,9 @@ import { dismissIntros, progress, solveByDragging } from './helpers';
 const save = (state: unknown) => JSON.stringify({ state: { progress: state }, version: 2 });
 
 it.describe('new islands', () => {
-  // Each zone's lesson must be playable to the end: Kouri's spring, Nakagusuku's stone bridge, Taketomi's star sand,
-  // Iriomote's vine, Miyako's slide, Shuri's stone gate and Kumejima's tide
-  for (const id of ['kouri', 'nakagusuku', 'taketomi', 'iriomote', 'miyako', 'shuri', 'kumejima']) {
+  // Each zone's lesson must be playable to the end: Onna's spring, Kouri's urchins, Yanbaru's vine, Nakagusuku's stone
+  // bridge, Shuri's stone gate, Kumejima's tide, Miyako's slide and Ishigaki's star sand
+  for (const id of ['onna', 'kouri', 'yanbaru', 'nakagusuku', 'shuri', 'kumejima', 'miyako', 'ishigaki']) {
     it(`plays the first stop of ${id} through to the win`, async ({ page }) => {
       const zi = ZONES.findIndex((z) => z.id === id);
       const plan = planRun(zi, [], 7);
@@ -51,9 +51,9 @@ it.describe('new islands', () => {
     await page.goto('/');
     // Finishing Yomitan opens every 進階 zone; one 進階 zone finished is not yet enough for 高手
     const zone = (id: string) => page.locator(`.zone [data-zone="${ZONES.findIndex((z) => z.id === id)}"]`);
-    for (const id of ['kouri', 'nakagusuku', 'shuri']) await expect(zone(id)).toBeEnabled();
-    await expect(zone('taketomi')).toBeDisabled();
-    expect((await progress(page)).open).toEqual(['naha', 'yomitan', 'motobu', 'kouri', 'nakagusuku', 'shuri']);
+    for (const id of ['onna', 'kouri', 'shuri']) await expect(zone(id)).toBeEnabled();
+    await expect(zone('yanbaru')).toBeDisabled();
+    expect((await progress(page)).open).toEqual(['naha', 'chatan', 'yomitan', 'onna', 'motobu', 'kouri', 'shuri']);
   });
 });
 

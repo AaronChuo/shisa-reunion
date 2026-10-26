@@ -1,20 +1,21 @@
 import { useState } from 'react';
-import { PHOTO_BY_PLACE, photoUrl } from '../content/credits';
+import { PHOTO_BY_PLACE, photoUrl, SCENE_PLACES, sceneUrl } from '../content/credits';
 import { PLACES, type PlaceId } from '../content/places';
 import { PostcardArt } from './PostcardArt';
 
-/** The postcard's photo; if it can't load, the drawn picture of the place stands in */
+/** The postcard's photo, or the zone's painted scene where there is no photo; if it can't load, a drawn picture stands in */
 export function PostcardPicture({ id, className }: { id: PlaceId; className?: string }) {
   const [failed, setFailed] = useState(false);
   const alt = PLACES[id].sights.join('、');
-  if (failed || !PHOTO_BY_PLACE[id]) {
+  const src = PHOTO_BY_PLACE[id] ? photoUrl(id) : SCENE_PLACES.includes(id) ? sceneUrl(id) : null;
+  if (failed || !src) {
     return (
       <svg className={className} viewBox="0 0 400 240" role="img" aria-label={alt}>
         <PostcardArt id={id} />
       </svg>
     );
   }
-  return <img className={className} src={photoUrl(id)} width={1000} height={600} alt={alt} loading="lazy" onError={() => setFailed(true)} />;
+  return <img className={className} src={src} width={1000} height={600} alt={alt} loading="lazy" onError={() => setFailed(true)} />;
 }
 
 /** A one-line credit for the photo: author and licence, linked to its source */

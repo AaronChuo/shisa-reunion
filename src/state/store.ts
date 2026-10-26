@@ -162,7 +162,14 @@ const freshUi = (): Ui => ({
 /** Zone order before v0.5: progress was saved as arrays in this order */
 const LEGACY_ZONES = ['naha', 'yomitan', 'motobu', 'shuri'];
 
-const zoneIndex = (id: unknown): number => ZONES.findIndex((Z) => Z.id === id);
+/**
+ * Zones that took over a zone dropped in v0.27, with the id they replace: the same element and the same part of the
+ * map (Ishigaki's star sand was Taketomi's, Yanbaru's vines were Iriomote's), so progress there carries over
+ */
+const FORMER: Record<string, string> = { ishigaki: 'taketomi', yanbaru: 'iriomote' };
+const NOW: Record<string, string> = Object.fromEntries(Object.entries(FORMER).map(([now, was]) => [was, now]));
+
+const zoneIndex = (id: unknown): number => ZONES.findIndex((Z) => Z.id === (typeof id === 'string' ? (NOW[id] ?? id) : id));
 
 function normalizeRun(raw: unknown): Run | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -189,15 +196,16 @@ export function normalizeProgress(raw: unknown): Progress {
   const pair: [string, string] =
     Array.isArray(p.pair) && p.pair.length === 2 && p.pair.every((id) => owned.includes(id)) && p.pair[0] !== p.pair[1] ? [p.pair[0], p.pair[1]] : base.pair;
   const legacy = Array.isArray(p.clears);
+  const saved = legacy ? {} : ((p.clears ?? {}) as Record<string, unknown>);
   const clears: Record<string, number> = {};
   for (const Z of ZONES) {
-    const v = legacy ? (p.clears as unknown[])[LEGACY_ZONES.indexOf(Z.id)] : (p.clears as Record<string, unknown> | undefined)?.[Z.id];
+    const v = legacy ? (p.clears as unknown[])[LEGACY_ZONES.indexOf(Z.id)] : (saved[Z.id] ?? saved[FORMER[Z.id]]);
     clears[Z.id] = typeof v === 'number' && v >= 0 ? v : 0;
   }
   const open = legacy
     ? LEGACY_ZONES.slice(0, (typeof p.unlocked === 'number' ? p.unlocked : 0) + 1)
     : Array.isArray(p.open)
-      ? p.open.filter((id) => zoneIndex(id) >= 0)
+      ? p.open.filter((id) => zoneIndex(id) >= 0).map((id) => ZONES[zoneIndex(id)].id)
       : [];
   // Zones never close again; the tier rules also open zones added after a save was made
   open.push(...openFor(clears));

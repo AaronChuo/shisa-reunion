@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { speakable } from '../audio/speech';
-import { FREE_LICENSE, OWN_PHOTO, PHOTO_BY_PLACE } from './credits';
+import { FREE_LICENSE, OWN_PHOTO, PHOTO_BY_PLACE, SCENE_PLACES } from './credits';
 import { PLACE_ORDER, PLACES } from './places';
 import { ABOUT_SHISA, SERIES, VARIANTS } from './shisa';
 import { PIECE_NAMES, RULES } from './text';
@@ -48,8 +48,8 @@ describe('place postcards', () => {
   });
 });
 
-describe('postcard photos', () => {
-  it.each(PLACE_ORDER)('has a freely licensed, credited photo for %s', (id) => {
+describe('postcard pictures', () => {
+  it.each(PLACE_ORDER.filter((id) => !SCENE_PLACES.includes(id)))('has a freely licensed, credited photo for %s', (id) => {
     const c = PHOTO_BY_PLACE[id];
     expect(c, id).toBeDefined();
     // Public domain, CC0 or CC BY only: fine for an app store release as long as the credit is shown
@@ -58,6 +58,13 @@ describe('postcard photos', () => {
     // Downloaded photos must point back to their Commons page; our own have no source
     if (c.license !== OWN_PHOTO) expect(c.source).toMatch(/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
     const file = `public/places/${id}.webp`;
+    expect(existsSync(file), file).toBe(true);
+    expect(statSync(file).size).toBeLessThan(200 * 1024);
+  });
+
+  it.each(SCENE_PLACES)('shows the zone’s painted scene for %s, which has no photo', (id) => {
+    expect(PHOTO_BY_PLACE[id]).toBeUndefined();
+    const file = `public/scenes/${id}/day.webp`;
     expect(existsSync(file), file).toBe(true);
     expect(statSync(file).size).toBeLessThan(200 * 1024);
   });

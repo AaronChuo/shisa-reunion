@@ -1,4 +1,4 @@
-// Background music. Nine traditional Okinawan songs (public domain, melody only, transposed to C) and three originals
+// Background music. Nine traditional Okinawan songs (public domain, melody only, transposed to C) and seven originals
 // in the Ryukyu scale. Eight were read from the melody line of mu-tech.org's MIDI files; the Kume song from a printed
 // kunkunshi of 1925, checked against a Meiji-era manuscript.
 
@@ -146,6 +146,46 @@ export const SONGS = {
      C4:1 E4:1 G4:1 B4:1 | C5:1 E5:1 C5:1 B4:1 | G4:1 F4:.5 G4:.5 E4:1 F4:1 | C4:3 r:1 |
      G4:.5 B4:.5 C5:1 B4:.5 G4:.5 F4:1 | G4:.5 B4:.5 C5:1 E5:2 | C5:.5 B4:.5 G4:1 F4:.5 E4:.5 F4:1 | G4~:3 r:1 |
      E4:1 F4:.5 G4:.5 B4:1 C5:1 | B4:1 G4:1 F4:1 E4:1 | F4:.5 G4:.5 F4:.5 E4:.5 C4:1 E4:1 | C4:3 r:1`,
+  ),
+  // Original, for American Village: a bouncy walk along the seawall towards the sunset
+  sunset: song(
+    '夕陽海堤',
+    104,
+    'lively',
+    `C5:.5 B4:.5 G4:1 E4:.5 F4:.5 G4:1 | B4:.5 C5:.5 B4:.5 G4:.5 F4:2 | E4:.5 F4:.5 G4:.5 B4:.5 C5:1 B4:1 | G4:3 r:1 |
+     C5:.5 B4:.5 G4:1 E4:.5 F4:.5 G4:1 | B4:.5 C5:.5 E5:.5 C5:.5 B4:2 | G4:.5 F4:.5 E4:.5 F4:.5 G4:1 F4:1 | C4:3 r:1 |
+     E4:1 G4:.5 B4:.5 C5:1 E5:1 | F5:.5 E5:.5 C5:.5 B4:.5 C5:2 | B4:.5 G4:.5 F4:.5 G4:.5 B4:1 C5:1 | G4~:3 r:1 |
+     E4:.5 F4:.5 G4:1 B4:.5 G4:.5 F4:1 | E4:.5 F4:.5 G4:.5 B4:.5 C5:2 | B4:.5 G4:.5 F4:.5 E4:.5 F4:1 E4:1 | C4:3 r:1`,
+  ),
+  // Original, for Onna: long, open phrases, like the wind over the grass on top of Manzamo's cliff
+  manzamo: song(
+    '萬座毛',
+    76,
+    'calm',
+    `G4:2 B4:1 C5:1 | E5~:2 C5:1 B4:1 | G4:1 F4:.5 G4:.5 B4:1 G4:1 | F4:3 r:1 |
+     E4:1 F4:1 G4:1 B4:1 | C5:1.5 B4:.5 G4:2 | F4:1 E4:.5 F4:.5 G4:1 F4:1 | E4:3 r:1 |
+     C5:2 E5:1 C5:1 | B4:1 G4:1 B4:1 C5:1 | G4:1 F4:.5 E4:.5 F4:1 G4:1 | B4~:3 r:1 |
+     C5:1 B4:.5 G4:.5 F4:1 E4:1 | F4:1 G4:1 B4:2 | G4:1 F4:.5 E4:.5 C4:1 E4:1 | C4:3 r:1`,
+  ),
+  // Original, for the Kaichu Road: a steady run of eighths, like driving across the sea
+  kaichu: song(
+    '海上的路',
+    108,
+    'eisa',
+    `C4:.5 E4:.5 F4:.5 G4:.5 B4:1 G4:1 | C5:.5 B4:.5 G4:.5 F4:.5 G4:2 | C4:.5 E4:.5 F4:.5 G4:.5 B4:1 C5:1 | B4:.5 G4:.5 F4:.5 E4:.5 F4:2 |
+     G4:1 G4:.5 B4:.5 C5:1 C5:1 | E5:.5 C5:.5 B4:.5 G4:.5 B4:2 | G4:.5 F4:.5 E4:.5 F4:.5 G4:1 B4:1 | C5:3 r:1 |
+     E5:1 C5:.5 B4:.5 G4:1 B4:1 | C5:.5 B4:.5 G4:.5 F4:.5 E4:2 | F4:1 G4:.5 F4:.5 E4:1 C4:1 | E4:.5 F4:.5 G4:1 B4:2 |
+     C5:.5 C5:.5 B4:.5 G4:.5 F4:1 G4:1 | B4:.5 C5:.5 B4:.5 G4:.5 F4:2 | E4:.5 F4:.5 G4:.5 F4:.5 E4:1 F4:1 | C4:3 r:1`,
+  ),
+  // Original, for Nanjo: slow and still, looking out east over the sea to Kudaka, the island of the gods
+  nirai: song(
+    '東方的海',
+    70,
+    'calm',
+    `C4:1 E4:1 F4:2 | G4~:2 F4:1 E4:1 | F4:1 G4:1 B4:1 G4:1 | F4:3 r:1 |
+     C4:1 E4:1 F4:1 G4:1 | B4~:2 C5:1 B4:1 | G4:1 F4:.5 G4:.5 F4:1 E4:1 | C4:3 r:1 |
+     G4:1 B4:1 C5:2 | E5~:1.5 C5:.5 B4:2 | C5:1 B4:.5 G4:.5 F4:1 G4:1 | B4:3 r:1 |
+     C5:1 B4:1 G4:1 F4:1 | E4:1 F4:.5 E4:.5 C4:2 | E4:1 F4:1 G4:.5 F4:.5 E4:1 | C4:3 r:1`,
   ),
   // The song of Kume's Aka village, from Oshiro Hikogoro's Ryukyu Gakuten Kunkunshi (1925), supplement pp. 12–13: one
   // cell a beat, the small characters as the second half of a beat, an empty circle (string not plucked) holding the

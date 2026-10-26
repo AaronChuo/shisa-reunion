@@ -48,16 +48,16 @@ const CASES: [string, Element[]][] = [
   ['yomitan', ['ladder']],
   ['motobu', ['urchin', 'ladder']],
   ['kouri', ['spring']],
-  ['taketomi', ['star', 'urchin']],
+  ['ishigaki', ['star', 'urchin']],
   ['shuri', ['gate']],
   ['shuri', ['gate', 'urchin', 'spring']],
 ];
 
 const VINE_CASES: [string, Element[]][] = [
-  ['iriomote', ['vine']],
-  ['iriomote', ['vine', 'urchin']],
-  ['iriomote', ['vine', 'ladder']],
-  ['taketomi', ['star', 'vine']],
+  ['yanbaru', ['vine']],
+  ['yanbaru', ['vine', 'urchin']],
+  ['yanbaru', ['vine', 'ladder']],
+  ['ishigaki', ['star', 'vine']],
   ['kumejima', ['urchin', 'vine']],
 ];
 
@@ -85,7 +85,7 @@ describe('逆築 (building the answer first)', () => {
   });
 
   it('tries 逆築 first on every stage, those with a vine included, and takes turns with drawing', () => {
-    expect(methodsFor(stageCfg(zi('iriomote'), 2, ['vine']))).toEqual(['backbuild', 'draw']);
+    expect(methodsFor(stageCfg(zi('yanbaru'), 2, ['vine']))).toEqual(['backbuild', 'draw']);
     expect(methodsFor(stageCfg(zi('shuri'), 2, ['gate']))).toEqual(['backbuild', 'draw']);
   });
 });
@@ -148,7 +148,7 @@ describe('逆築 with a vine', () => {
 
   it('only sets up spots where the vine really hangs once its blocks are in', () => {
     for (const seed of [1, 2, 3, 4, 5]) {
-      const c = stageCfg(zi('iriomote'), 2, ['vine']);
+      const c = stageCfg(zi('yanbaru'), 2, ['vine']);
       const r = rng(seed);
       let lv: Level | null = null;
       while (!lv) lv = drawTerrain(r, c);
@@ -184,14 +184,14 @@ describe('逆築 with a vine', () => {
   });
 
   it('builds the first stop’s two-block lesson around the vine', () => {
-    const { lv, placed } = built('iriomote', ['vine'], 1, 0);
+    const { lv, placed } = built('yanbaru', ['vine'], 1, 0);
     expect(placed).toHaveLength(2);
     const route = findRoute(makeGrid(lv, placed), lv.hero, lv.goal, lv.stars);
     expect(route?.some((p) => p.via === 'hang')).toBe(true);
   });
 
   it('makes levels the solver passes, where every way to win climbs the vine', () => {
-    const cfg = stageCfg(zi('iriomote'), 2, ['vine']);
+    const cfg = stageCfg(zi('yanbaru'), 2, ['vine']);
     const r = rng(8);
     const levels: Level[] = [];
     for (let i = 0; i < 3000 && levels.length < 3; i++) {

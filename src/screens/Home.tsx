@@ -136,22 +136,26 @@ const KUME: [number, number][] = [
 type Side = 'L' | 'R' | 'B';
 /** Map pin per zone (same order as ZONES) and which side its name goes on */
 const PINS: [number, number, Side][] = [
-  [134, 478, 'L'],
-  [186, 384, 'L'],
+  [130, 480, 'L'],
+  [192, 412, 'L'],
+  [184, 366, 'L'],
+  [242, 312, 'L'],
   [190, 232, 'L'],
   [206, 170, 'L'],
-  [210, 438, 'R'],
-  [166, 604, 'B'],
-  [98, 600, 'B'],
-  [286, 598, 'B'],
-  [176, 462, 'R'],
+  [314, 108, 'L'],
+  [254, 412, 'R'],
+  [220, 446, 'R'],
+  [148, 526, 'R'],
+  [174, 466, 'B'],
   [80, 400, 'B'],
+  [286, 598, 'B'],
+  [208, 606, 'B'],
 ];
 const ISLAND_PATH = smooth(ISLAND);
 const P = (i: number) => `${PINS[i][0]},${PINS[i][1]}`;
-// Up the main island to Kouri, down the east coast to Nakagusuku, over the sea to Yaeyama and Miyako, back to Shuri
-// and out west to Kume
-const ROUTE = `M${P(0)} Q150,430 ${P(1)} Q160,300 ${P(2)} Q178,200 ${P(3)} Q330,300 ${P(4)} Q250,540 ${P(5)} Q132,640 ${P(6)} Q190,660 ${P(7)} Q262,520 ${P(8)} Q120,400 ${P(9)}`;
+// Up the west coast to Yanbaru, down the east coast past the Kaichu Road to Nanjo, back to Shuri, out west to Kume,
+// then over the sea to Miyako and Ishigaki
+const ROUTE = `M${P(0)} Q150,440 ${P(1)} Q176,390 ${P(2)} Q206,326 ${P(3)} Q232,262 ${P(4)} Q178,196 ${P(5)} Q262,120 ${P(6)} Q330,290 ${P(7)} Q240,436 ${P(8)} Q200,496 ${P(9)} Q170,500 ${P(10)} Q120,446 ${P(11)} Q210,530 ${P(12)} Q250,640 ${P(13)}`;
 
 /** Where "go" takes a child: the unfinished journey, else the first open zone not yet finished, else the furthest one */
 export function nextZone(p: Progress): number {
@@ -182,8 +186,8 @@ function IslandMap({ here }: { here: number }) {
           <path key={pts[0][0]} d={smooth(pts)} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke" />
         ))}
         <circle cx={166} cy={608} r={7} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={3} />
-        <text x={228} y={610} fontSize={11} fill="#5E7F86" fontFamily={font}>
-          石垣島
+        <text x={98} y={636} fontSize={11} textAnchor="middle" fill="#5E7F86" fontFamily={font}>
+          西表島
         </text>
       </g>
       <path d={smooth(KUME)} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke" />

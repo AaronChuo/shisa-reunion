@@ -1,4 +1,5 @@
 import { expect, test as it, type Page } from '@playwright/test';
+import { ZONES } from '../src/content/zones';
 import { freshProgress } from '../src/state/store';
 import { progress } from './helpers';
 
@@ -30,15 +31,15 @@ it.describe('place postcards', () => {
 
   it('lets a locked place be read about without setting off or collecting it', async ({ page }) => {
     await open(page);
-    // Shuri (大師) opens once two 高手 zones are finished
-    await page.click('.islandWrap [data-zone="8"]');
-    await expect(page.locator('#modal')).toContainText('走完 2 個高手地區才會打開');
+    // Shuri (大師) opens once three of the four 高手 zones are finished
+    await page.click(`.islandWrap [data-zone="${ZONES.findIndex((z) => z.id === 'shuri')}"]`);
+    await expect(page.locator('#modal')).toContainText('走完 3 個高手地區才會打開');
     await expect(page.locator('#modal [data-go-place]')).toHaveCount(0);
     expect((await progress(page)).seen).not.toContain('place:shuri');
   });
 
   it('keeps every map pin tappable, nothing laid over them', async ({ page }) => {
-    await open(page, { open: ['naha', 'yomitan', 'motobu', 'kouri', 'nakagusuku', 'taketomi', 'iriomote', 'miyako', 'shuri', 'kumejima'] });
+    await open(page, { open: ZONES.map((z) => z.id) });
     const covered = await page.evaluate(() =>
       [...document.querySelectorAll<SVGGElement>('.islandWrap [data-zone]')]
         .filter((g) => {
@@ -51,6 +52,16 @@ it.describe('place postcards', () => {
     expect(covered).toEqual([]);
     const btn = await page.locator('#okinawaBtn').boundingBox();
     expect(btn?.height).toBeLessThan(70);
+  });
+
+  it('shows a newer zone’s painted scene on its postcard, with no photo credit', async ({ page }) => {
+    await open(page, { open: ['naha', 'chatan', 'yomitan'] });
+    await page.click(`.islandWrap [data-zone="${ZONES.findIndex((z) => z.id === 'chatan')}"]`);
+    await expect(page.locator('#modal[data-kind="place"] h2')).toHaveText('美國村');
+    const img = page.locator('#modal img.postcardArt');
+    await expect(img).toHaveAttribute('src', '/scenes/chatan/day.webp');
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+    await expect(page.locator('#modal .photoCredit')).toHaveCount(0);
   });
 
   it('has a postcard for Okinawa itself and collects postcards in the collection', async ({ page }) => {
@@ -67,12 +78,13 @@ it.describe('place postcards', () => {
     await expect(page.locator('.pcTile')).toHaveCount(0);
     await page.click('#tab-cards');
     await expect(page.locator('.pcTile:not(.locked)')).toHaveCount(1);
-    await expect(page.locator('.pcTile.locked')).toHaveCount(10);
+    await expect(page.locator('.pcTile.locked')).toHaveCount(ZONES.length);
     // Thumbnails keep the postcard's shape
     const tile = await page.locator('.pcTile[data-place="okinawa"] img').boundingBox();
     expect(tile && tile.width / tile.height).toBeCloseTo(5 / 3, 1);
     await page.click('#creditsBtn');
-    await expect(page.locator('#modal .creditList li')).toHaveCount(11);
+    // Photos for Okinawa and the eight zones that have one; the newer zones show their painted scene
+    await expect(page.locator('#modal .creditList li')).toHaveCount(9);
     // The narration is synthesized, and says so
     await expect(page.locator('#voiceCredit')).toContainText('Azure');
     // Leaving and coming back finds the same page

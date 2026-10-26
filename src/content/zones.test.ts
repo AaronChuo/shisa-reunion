@@ -56,7 +56,7 @@ describe('planning a run', () => {
   it('turns up a mix of stops: some plain, some with one or two elements', () => {
     const sizes = new Set(
       SEEDS.flatMap((seed) =>
-        planRun(zi('motobu'), ['ladder'], seed)
+        planRun(zi('kouri'), ['ladder'], seed)
           .slice(1, 4)
           .map((s) => s.length),
       ),
@@ -67,8 +67,8 @@ describe('planning a run', () => {
 
 describe('learned elements', () => {
   it('counts only finished zones of the same or a lower tier', () => {
-    const clears = { naha: 1, yomitan: 1, motobu: 1, taketomi: 1 };
-    expect(learnedFor(zi('kouri'), clears)).toEqual(['ladder', 'urchin']);
+    const clears = { naha: 1, yomitan: 1, kouri: 1, ishigaki: 1 };
+    expect(learnedFor(zi('onna'), clears)).toEqual(['ladder', 'urchin']);
     expect(learnedFor(zi('yomitan'), clears)).toEqual([]);
     expect(learnedFor(zi('shuri'), clears)).toEqual(['ladder', 'urchin', 'star']);
   });
@@ -79,31 +79,39 @@ describe('opening zones', () => {
     expect(openFor({})).toEqual(['naha']);
   });
 
-  it('opens every 進階 zone at once when 初級 is finished', () => {
-    expect(openFor({ naha: 1 })).toEqual(['naha', 'yomitan']);
-    expect(openFor({ naha: 1, yomitan: 1 })).toEqual(['naha', 'yomitan', 'motobu', 'kouri', 'nakagusuku']);
+  it('opens both 初級 zones after 那霸, and every 進階 zone once either of them is finished', () => {
+    expect(openFor({ naha: 1 })).toEqual(['naha', 'chatan', 'yomitan']);
+    const advanced = ['naha', 'chatan', 'yomitan', 'onna', 'motobu', 'kouri'];
+    expect(openFor({ naha: 1, yomitan: 1 })).toEqual(advanced);
+    expect(openFor({ naha: 1, chatan: 1 })).toEqual(advanced);
   });
 
   it('opens the next tier once all but one zone of a tier is finished', () => {
     // 進階 has three zones: two of them open 高手
-    expect(openFor({ naha: 1, yomitan: 1, kouri: 1 })).not.toContain('taketomi');
-    expect(openFor({ naha: 1, yomitan: 1, kouri: 1, nakagusuku: 1 })).toEqual([
+    expect(openFor({ naha: 1, yomitan: 1, kouri: 1 })).not.toContain('yanbaru');
+    expect(openFor({ naha: 1, yomitan: 1, kouri: 1, onna: 1 })).toEqual([
       'naha',
+      'chatan',
       'yomitan',
+      'onna',
       'motobu',
       'kouri',
+      'yanbaru',
+      'kaichu',
       'nakagusuku',
-      'taketomi',
-      'iriomote',
-      'miyako',
+      'nanjo',
     ]);
-    expect(openFor({ naha: 1, yomitan: 1, kouri: 1, nakagusuku: 1, iriomote: 1, miyako: 1 })).toEqual(expect.arrayContaining(['shuri', 'kumejima']));
+    // 高手 has four: three of them open 大師
+    const high = { naha: 1, yomitan: 1, kouri: 1, onna: 1, yanbaru: 1, kaichu: 1 };
+    expect(openFor(high)).not.toContain('shuri');
+    expect(openFor({ ...high, nanjo: 1 })).toEqual(expect.arrayContaining(['shuri', 'kumejima', 'miyako', 'ishigaki']));
   });
 
   it('says what is left to finish', () => {
     expect(lockHint(zi('yomitan'), {})).toBe('先走完那霸市才會打開');
-    expect(lockHint(zi('taketomi'), {})).toBe('走完 2 個進階地區才會打開');
-    expect(lockHint(zi('taketomi'), { kouri: 1 })).toBe('再走完 1 個進階地區才會打開');
+    expect(lockHint(zi('yanbaru'), {})).toBe('走完 2 個進階地區才會打開');
+    expect(lockHint(zi('yanbaru'), { kouri: 1 })).toBe('再走完 1 個進階地區才會打開');
+    expect(lockHint(zi('shuri'), { kaichu: 1 })).toBe('再走完 2 個高手地區才會打開');
   });
 });
 

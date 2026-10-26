@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react';
 import { ShisaArt } from '../art/Shisa';
 import type { PlaceId } from '../content/places';
 import { VARIANT_BY_ID } from '../content/shisa';
 
-// Postcard pictures, 400 × 240 each. Simple shapes in the game's palette; one picture per place.
+// Postcard pictures, 400 × 240 each. Simple shapes in the game's palette, one per place that has a photo: they stand in
+// when the photo can't load. Places with a painted scene instead fall back to the Okinawa picture.
 
 const FONT = 'GenSen Rounded TW, PingFang TC, sans-serif';
 const f1 = (v: number) => +v.toFixed(1);
@@ -223,102 +223,6 @@ function Kouri() {
   );
 }
 
-/** 竹富: coral stone walls along a white sand road, a red tile roof with its shisa, and a water buffalo cart */
-function Taketomi() {
-  const stones = (x0: number, x1: number, y: number) => {
-    const out: ReactNode[] = [];
-    for (let row = 0; row < 3; row++) {
-      for (let x = x0 + (row % 2) * 9; x < x1; x += 18) {
-        out.push(<ellipse key={`${x},${y + row * 11}`} cx={x} cy={y + row * 11} rx={9} ry={6} fill="#CFC6B6" stroke="#8C7F6B" strokeWidth={1.5} />);
-      }
-    }
-    return out;
-  };
-  return (
-    <>
-      <rect width={400} height={240} fill="#BFE6EE" />
-      <circle cx={350} cy={42} r={20} fill="#FFD45E" />
-      <rect y={150} width={400} height={90} fill="#F6F1E4" />
-      <rect x={30} y={96} width={130} height={54} fill="#F4EADA" stroke="#8C7F6B" strokeWidth={2} />
-      <path d="M16,100 L50,62 L140,62 L174,100 Z" fill="#CD4A31" stroke="#86281A" strokeWidth={3} />
-      <path
-        d="M40,82 a6,5 0 0 0 12,0 a6,5 0 0 0 12,0 a6,5 0 0 0 12,0 a6,5 0 0 0 12,0 a6,5 0 0 0 12,0 a6,5 0 0 0 12,0 a6,5 0 0 0 12,0 a6,5 0 0 0 12,0 a6,5 0 0 0 12,0"
-        stroke="#F7E2C7"
-        strokeWidth={2}
-        fill="none"
-      />
-      <g transform="translate(95,64) scale(.34)">
-        <ShisaArt v={VARIANT_BY_ID.yaeyama} open />
-      </g>
-      {stones(8, 200, 128)}
-      {stones(250, 400, 128)}
-      {/* Water buffalo cart */}
-      <g transform="translate(230,196)">
-        <path d="M-60,-30 h70 v-6 h-70 Z" fill="#D9443A" />
-        <path d="M-60,-36 h70" stroke="#fff" strokeWidth={3} strokeDasharray="8 6" />
-        <rect x={-58} y={-30} width={66} height={26} fill="#C9A26A" stroke="#6E4A1E" strokeWidth={2} />
-        <circle cx={-44} cy={0} r={12} fill="#fff" stroke="#6E4A1E" strokeWidth={3} />
-        <circle cx={-6} cy={0} r={12} fill="#fff" stroke="#6E4A1E" strokeWidth={3} />
-        <ellipse cx={46} cy={-12} rx={30} ry={18} fill="#6E7F7C" stroke="#3A454B" strokeWidth={2.5} />
-        <ellipse cx={80} cy={-16} rx={12} ry={10} fill="#6E7F7C" stroke="#3A454B" strokeWidth={2.5} />
-        <path d="M74,-24 q-6,-12 6,-14 M86,-24 q8,-10 -2,-14" stroke="#F2EEE6" strokeWidth={3} fill="none" strokeLinecap="round" />
-        {[26, 40, 54, 66].map((x) => (
-          <rect key={x} x={x} y={0} width={5} height={14} fill="#3A454B" />
-        ))}
-      </g>
-      {/* Star sand */}
-      {[
-        [40, 210],
-        [60, 222],
-        [80, 206],
-      ].map(([x, y]) => (
-        <path key={x} d={`M${x},${y - 5} l1.5,3.5 l3.5,1.5 l-3.5,1.5 l-1.5,3.5 l-1.5,-3.5 l-3.5,-1.5 l3.5,-1.5 Z`} fill="#F2C43A" />
-      ))}
-    </>
-  );
-}
-
-/** 西表: a river through the mangroves, a canoe paddling past, and the wild cat peeking out */
-function Iriomote() {
-  const tree = (x: number, y: number, s: number) => (
-    <g key={x} transform={`translate(${x},${y}) scale(${s})`}>
-      {[-24, -12, 0, 12, 24].map((dx) => (
-        <path key={dx} d={`M${dx},0 Q${dx / 2},-26 0,-40`} stroke="#6E4A1E" strokeWidth={3} fill="none" />
-      ))}
-      <circle cx={-18} cy={-56} r={22} fill="#3E8F4A" />
-      <circle cx={14} cy={-62} r={26} fill="#4FA857" />
-      <circle cx={0} cy={-40} r={20} fill="#3E8F4A" />
-    </g>
-  );
-  return (
-    <>
-      <rect width={400} height={240} fill="#CFEFD8" />
-      <path d="M0,150 C80,140 160,170 240,160 C300,152 350,140 400,146 L400,240 L0,240 Z" fill="#5FB0B6" />
-      {tree(40, 170, 1.1)}
-      {tree(120, 160, 0.9)}
-      {tree(330, 166, 1.2)}
-      {/* Canoe */}
-      <g transform="translate(220,196) rotate(-4)">
-        <path d="M-50,0 Q0,16 50,0 Q0,6 -50,0 Z" fill="#F28C38" stroke="#B5531A" strokeWidth={2.5} />
-        <circle cx={-6} cy={-14} r={7} fill="#F3C9A5" />
-        <path d="M-6,-8 v8" stroke="#2D8FD0" strokeWidth={8} />
-        <path d="M-30,-22 L22,10" stroke="#8A5A2B" strokeWidth={3} strokeLinecap="round" />
-      </g>
-      {/* Iriomote wild cat in the bushes */}
-      <g transform="translate(250,120)">
-        <ellipse cx={0} cy={18} rx={40} ry={16} fill="#3E8F4A" />
-        <path d="M-16,-6 L-12,-22 L-2,-10 Z M16,-6 L12,-22 L2,-10 Z" fill="#8A7A5A" stroke="#2E281C" strokeWidth={2} />
-        <ellipse cx={0} cy={2} rx={18} ry={15} fill="#8A7A5A" stroke="#2E281C" strokeWidth={2} />
-        <circle cx={-6} cy={0} r={3} fill="#2E281C" />
-        <circle cx={6} cy={0} r={3} fill="#2E281C" />
-        <path d="M-3,7 h6 l-3,3 Z" fill="#C98A7A" />
-        <path d="M-10,-8 l2,4 M0,-10 v4 M10,-8 l-2,4" stroke="#2E281C" strokeWidth={1.5} />
-        <ellipse cx={0} cy={22} rx={30} ry={10} fill="#4FA857" />
-      </g>
-    </>
-  );
-}
-
 /** 首里: the red main hall of Shuri Castle on its stone base, with the Shurei gate in front */
 function Shuri() {
   return (
@@ -445,10 +349,6 @@ export function PostcardArt({ id }: { id: PlaceId }) {
       return <Kouri />;
     case 'nakagusuku':
       return <Nakagusuku />;
-    case 'taketomi':
-      return <Taketomi />;
-    case 'iriomote':
-      return <Iriomote />;
     case 'miyako':
       return <Miyako />;
     case 'shuri':
