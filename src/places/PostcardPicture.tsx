@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { PHOTO_BY_PLACE, photoUrl, SCENE_PLACES, sceneUrl } from '../content/credits';
+import { PHOTO_BY_PLACE, photoUrl, SCENE_PLACES } from '../content/credits';
 import { PLACES, type PlaceId } from '../content/places';
+import { sceneUrl } from '../content/zones';
 import { PostcardArt } from './PostcardArt';
 
 /** The postcard's photo, or the zone's painted scene where there is no photo; if it can't load, a drawn picture stands in */

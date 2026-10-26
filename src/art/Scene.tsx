@@ -1,7 +1,19 @@
 import { useId } from 'react';
+import { sceneUrl } from '../content/zones';
 import type { Gate } from '../engine';
 import { boardWidth, C, M, Y0 } from '../game/geometry';
-import { PALETTES, type Sight, SightArt, SkyLight, type TimeOfDay } from './Sights';
+
+export type TimeOfDay = 'day' | 'dusk' | 'night';
+
+/** Colours of the drawn sky and sea that show until the painting has loaded */
+const PALETTES: Record<
+  TimeOfDay,
+  { skyTop: string; skyBottom: string; sea: string; seaDeep: string; wave: string; land: string; land2: string; cloud: string }
+> = {
+  day: { skyTop: '#93D2E8', skyBottom: '#E6F6F3', sea: '#3DB0C1', seaDeep: '#2B95A8', wave: '#A9E6EC', land: '#7DBE93', land2: '#94CEA6', cloud: '#FFFFFF' },
+  dusk: { skyTop: '#F08A5D', skyBottom: '#FCE1B8', sea: '#D9826B', seaDeep: '#9A5E6E', wave: '#FBC9A4', land: '#8C7A5A', land2: '#A08A62', cloud: '#FFD9C2' },
+  night: { skyTop: '#16224A', skyBottom: '#3A4D80', sea: '#1F4A6E', seaDeep: '#163652', wave: '#5E86B5', land: '#2D4A45', land2: '#365850', cloud: '#56688F' },
+};
 
 const f1 = (v: number) => +v.toFixed(1);
 
@@ -36,8 +48,51 @@ function Cloud({ x, y, s, fill = '#fff' }: { x: number; y: number; s: number; fi
   );
 }
 
-/** Sky, sun or moon, islands, sea and the road's landmark behind the board */
-export function Background({ w, time = 'day', sight = null }: { w: number; time?: TimeOfDay; sight?: Sight | null }) {
+/** A sun, a low setting sun, or a moon with stars, for a sky `W` wide whose horizon is at `hy` */
+function SkyLight({ time, W, hy }: { time: TimeOfDay; W: number; hy: number }) {
+  if (time === 'dusk') {
+    return (
+      <g>
+        <circle cx={W * 0.72} cy={hy - 8} r={62} fill="#FFB36B" opacity={0.45} />
+        <circle cx={W * 0.72} cy={hy - 8} r={40} fill="#FF8A4C" />
+      </g>
+    );
+  }
+  if (time === 'night') {
+    const stars = [
+      [0.08, 0.2],
+      [0.18, 0.42],
+      [0.3, 0.16],
+      [0.42, 0.34],
+      [0.55, 0.12],
+      [0.63, 0.4],
+      [0.9, 0.3],
+      [0.24, 0.6],
+      [0.5, 0.55],
+    ];
+    return (
+      <g>
+        {stars.map(([fx, fy], i) => (
+          <circle key={i} cx={W * fx} cy={hy * fy} r={i % 3 === 0 ? 3.4 : 2.2} fill="#FFF6D8" opacity={0.9} />
+        ))}
+        <circle cx={W * 0.82} cy={hy * 0.22} r={30} fill="#FFF3C4" />
+        <circle cx={W * 0.82 + 12} cy={hy * 0.22 - 7} r={26} fill={PALETTES.night.skyTop} />
+      </g>
+    );
+  }
+  return (
+    <g>
+      <circle cx={W * 0.82} cy={hy * 0.2} r={50} fill="#FFF4C9" opacity={0.75} />
+      <circle cx={W * 0.82} cy={hy * 0.2} r={32} fill="#FFD45E" />
+    </g>
+  );
+}
+
+/**
+ * The zone's painting for the time of day behind the board, cut to the board's width. A drawn sky, sun or moon,
+ * islands and sea sit underneath, so the board never stands on nothing while the painting loads.
+ */
+export function Background({ w, zone, time }: { w: number; zone: string; time: TimeOfDay }) {
   const id = useId();
   const W2 = boardWidth(w);
   const P = PALETTES[time];
@@ -63,11 +118,6 @@ export function Background({ w, time = 'day', sight = null }: { w: number; time?
         )}
         <path d="M0,604 C70,572 150,566 230,586 C262,594 284,600 304,604 Z" fill={P.land} />
         <path d={`M${W2 - 180},604 c24,-16 64,-20 96,-9 c22,7 46,9 84,9 Z`} fill={P.land2} />
-        {sight && (
-          <g transform={`translate(${Math.round(W2 / 2 - 156)},604) scale(1.3)`} data-sight={sight}>
-            <SightArt sight={sight} time={time} />
-          </g>
-        )}
         <rect x={0} y={602} width={W2} height={118} fill={P.sea} />
         <path
           d={`M20,624 q15,-8 30,0 t30,0 M${W2 * 0.45},624 q15,-8 30,0 t30,0 M${W2 - 140},620 q15,-8 30,0 t30,0`}
@@ -77,6 +127,7 @@ export function Background({ w, time = 'day', sight = null }: { w: number; time?
           strokeLinecap="round"
         />
         <rect x={0} y={690} width={W2} height={30} fill={P.seaDeep} />
+        <image href={sceneUrl(zone, time)} x={0} y={30} width={W2} height={690} preserveAspectRatio="xMidYMid slice" />
       </g>
     </>
   );

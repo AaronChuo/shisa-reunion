@@ -2,14 +2,13 @@ import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState }
 import { Blocks, CardIcon, CoinIcon, Icon, Stamp, TapHand } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
-import { RoadScene } from '../art/Sights';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
 import { PHOTOS } from '../content/credits';
 import { PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES, stopLine } from '../content/text';
-import { isBranch, lockHint, roadOffer, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
+import { lockHint, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { sizeOf } from '../engine';
 import {
   ackIntro,
@@ -99,12 +98,7 @@ function Win({ m }: { m: Extract<Modal, { kind: 'win' }> }) {
   );
 }
 
-const TIME_WORD = { day: '白天', dusk: '黃昏', night: '夜晚' } as const;
-
-/**
- * Between stops: what the next stop has. Most stops show one card to tap; at a branch the child picks one of two
- * roads, which changes only the scenery.
- */
+/** Between stops: one card that shows what the next stop has */
 function NextStop() {
   const run = useGame((s) => s.progress.run);
   if (run?.phase !== 'choose') return null;
@@ -118,41 +112,6 @@ function NextStop() {
       <b className="num">{k}</b> 塊
     </span>
   );
-  if (isBranch(run.zi, run.si)) {
-    const offer = roadOffer(run.zi, run.si, run.seed);
-    return (
-      <Sheet wide label="選一條路">
-        <div className="eyebrow">
-          {Z.name} · 第 {run.si + 1} 站
-        </div>
-        <h2>要走哪條路？</h2>
-        <p className="roadLine">
-          {stopLine(els)} · {blocks}
-        </p>
-        <div className="paths">
-          {offer.map((i, n) => {
-            const road = Z.roads[i];
-            return (
-              <button
-                key={i}
-                type="button"
-                className="pathCard roadCard"
-                data-card="road"
-                data-road={i}
-                data-time={road.time}
-                {...(n === 0 ? { 'data-focus': true } : {})}
-                onClick={() => goNextStop(i)}
-              >
-                <RoadScene time={road.time} sight={road.sight} className="roadArt" />
-                <span className="pn">{road.name}</span>
-                <span className="pl">{TIME_WORD[road.time]}</span>
-              </button>
-            );
-          })}
-        </div>
-      </Sheet>
-    );
-  }
   return (
     <Sheet label="下一站">
       <div className="eyebrow">

@@ -1028,26 +1028,6 @@ h1 {
   width: 92px;
   height: 70px;
 }
-.roadLine {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 10px;
-  color: var(--muted);
-  font-weight: 700;
-}
-.pathCard.roadCard {
-  padding: 10px;
-}
-.pathCard .roadArt {
-  width: 100%;
-  max-width: 220px;
-  height: auto;
-  aspect-ratio: 5 / 3;
-  border-radius: 12px;
-}
 .pathCard .elIcons {
   display: flex;
   gap: 6px;

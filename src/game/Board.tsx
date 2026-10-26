@@ -6,7 +6,7 @@ import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { SHISA_CALL } from '../content/story';
-import { ZONES } from '../content/zones';
+import { sceneUrl, timeOfStop } from '../content/zones';
 import { cellsOf, makeGrid, type Placement, sizeOf } from '../engine';
 import { useGame } from '../state/store';
 import { bad, canLiftPiece, pickStar, place, say, shake, tryDone, walkDone } from './actions';
@@ -40,6 +40,8 @@ function Ghost({ p, color, opacity }: { p: Placement; color: string; opacity: nu
     </g>
   );
 }
+
+const TIMES = ['day', 'dusk', 'night'] as const;
 
 const HEART_COLORS = ['#E2513C', '#F3A83F', '#2D8FD0', '#8C56AA', '#3DA399', '#FF8FB1'];
 
@@ -117,6 +119,13 @@ export function Board() {
     return () => cancelAnimationFrame(raf);
   }, [scrolling, ui.walking]);
 
+  // Fetch the zone's dusk and night paintings ahead, so the sky changes the moment the stop does
+  const zone = run?.zone;
+  useEffect(() => {
+    if (!zone) return;
+    for (const t of TIMES) new Image().src = sceneUrl(zone, t);
+  }, [zone]);
+
   const g = useMemo(() => (lv && run ? makeGrid(lv, run.placed, run.moves) : null), [lv, run]);
   const lastWater = useRef(0);
   const rise = !!g && g.water > lastWater.current;
@@ -143,8 +152,6 @@ export function Board() {
   const hero = VARIANT_BY_ID[pair[0]];
   const goal = VARIANT_BY_ID[pair[1]];
   const heroPos = ui.heroAt ?? { x: lv.hero.x + 0.5, y: lv.hero.y, flip: false };
-  const roadIdx = run.road?.[run.si];
-  const road = roadIdx === null || roadIdx === undefined ? null : ZONES[run.zi].roads[roadIdx];
   const landPiece = land && (dragInfo ?? (ui.sel >= 0 ? { t: lv.inv[ui.sel], o: run.orient[ui.sel] } : null));
 
   function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
@@ -209,7 +216,7 @@ export function Board() {
         onPointerMove={(e) => e.pointerType === 'mouse' && hoverPreview(e.clientX, e.clientY)}
         onPointerLeave={clearPreview}
       >
-        <Background w={lv.w} time={road?.time ?? 'day'} sight={road?.sight ?? null} />
+        <Background w={lv.w} zone={run.zone} time={timeOfStop(run.si)} />
         <TrayBase w={lv.w} />
         {lv.urchin.map((x) => (
           <Urchin key={`u${x}`} cx={M + x * C + 50} cy={Y0 - 17} />

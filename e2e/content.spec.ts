@@ -20,7 +20,6 @@ it.describe('new islands', () => {
         si: 0,
         seed: 7,
         plan,
-        road: [null, null, null, null, null],
         level,
         placed: [],
         moves: 0,

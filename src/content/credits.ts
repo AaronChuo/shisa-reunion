@@ -28,5 +28,3 @@ export const photoUrl = (place: PlaceId) => `/places/${place}.webp`;
 
 /** Zones added in v0.27 have no photo: their postcard shows the zone's own painted scene, made for the game */
 export const SCENE_PLACES: PlaceId[] = ['chatan', 'onna', 'yanbaru', 'kaichu', 'nanjo', 'ishigaki'];
-
-export const sceneUrl = (place: PlaceId) => `/scenes/${place}/day.webp`;

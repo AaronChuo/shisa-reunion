@@ -51,6 +51,13 @@ describe('saved progress', () => {
     expect([p.run?.zone, p.run?.zi, p.run?.si]).toEqual(['ishigaki', 13, 2]);
   });
 
+  it('lets go of the scenery roads a journey picked, now that each stop has its own time of day', () => {
+    const run = { zone: 'naha', zi: 0, si: 3, phase: 'play', plan: [[], [], [], [], []], road: [null, null, 2, null, null], level: null };
+    const p = normalizeProgress({ ...freshProgress(), run });
+    expect(p.run).not.toHaveProperty('road');
+    expect([p.run?.zone, p.run?.si]).toEqual(['naha', 3]);
+  });
+
   it('drops a journey whose zone no longer exists', () => {
     expect(normalizeProgress({ ...freshProgress(), run: { zone: 'atlantis', zi: 0, si: 0 } }).run).toBeNull();
   });

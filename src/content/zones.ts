@@ -1,4 +1,4 @@
-import type { Sight, TimeOfDay } from '../art/Sights';
+import type { TimeOfDay } from '../art/Scene';
 import type { SongId } from '../audio/songs';
 import { type GenConfig, type Move, type PieceType, rng } from '../engine';
 
@@ -28,16 +28,14 @@ export interface Tier {
   bossExtra: [number, number];
   /** Zones of this tier to finish before the next tier opens; all but one when left out */
   need?: number;
-  /** Stops (0-based) that start with a choice of two roads */
-  branches: number[];
 }
 
 export const TIERS: Tier[] = [
-  { name: '入門', counts: [1], bossExtra: [0, 0], branches: [2] },
-  { name: '初級', counts: [0.3, 0.7], bossExtra: [0, 0], branches: [2] },
-  { name: '進階', counts: [0.15, 0.55, 0.3], bossExtra: [1, 1], branches: [2] },
-  { name: '高手', counts: [0.1, 0.45, 0.45], bossExtra: [1, 2], branches: [1, 3] },
-  { name: '大師', counts: [0, 0.3, 0.5, 0.2], bossExtra: [1, 1], branches: [1, 2, 3] },
+  { name: '入門', counts: [1], bossExtra: [0, 0] },
+  { name: '初級', counts: [0.3, 0.7], bossExtra: [0, 0] },
+  { name: '進階', counts: [0.15, 0.55, 0.3], bossExtra: [1, 1] },
+  { name: '高手', counts: [0.1, 0.45, 0.45], bossExtra: [1, 2] },
+  { name: '大師', counts: [0, 0.3, 0.5, 0.2], bossExtra: [1, 1] },
 ];
 
 /** A zone's own element is this many times as likely to be drawn as one learned before */
@@ -59,16 +57,6 @@ const AVOID: [Element, Element][] = [
 /** At most two special blocks on one stop, and nothing else with two of them, for the same reason */
 const MAX_SPECIAL = 2;
 
-/**
- * A road to the next stop. Roads only change the scenery (time of day and a landmark); the stop itself is the same
- * whichever one the child picks. Every road is a real place in its zone.
- */
-export interface Road {
-  name: string;
-  time: TimeOfDay;
-  sight: Sight;
-}
-
 export interface Zone {
   id: string;
   name: string;
@@ -85,8 +73,6 @@ export interface Zone {
   /** Background music for this zone's journey */
   bgm: SongId;
   boss: { name: string; k: number; maxSols: number; stars?: number };
-  /** Three roads, one for each time of day; a branch offers two of them */
-  roads: Road[];
 }
 
 /** Stages per run; the last one is the zone's final stop */
@@ -115,11 +101,6 @@ export const ZONES: Zone[] = [
     ks: [1, 1, 2, 2],
     bgm: 'tensagu',
     boss: { name: '國際通', k: 3, maxSols: 3 },
-    roads: [
-      { name: '波之上海灘', time: 'day', sight: 'palms' },
-      { name: '國際通', time: 'dusk', sight: 'town' },
-      { name: '泊港', time: 'night', sight: 'pier' },
-    ],
   },
   {
     id: 'chatan',
@@ -133,11 +114,6 @@ export const ZONES: Zone[] = [
     ks: [2, 2, 3, 3],
     bgm: 'sunset',
     boss: { name: '日落海灘', k: 3, maxSols: 3 },
-    roads: [
-      { name: '阿拉哈海灘', time: 'day', sight: 'palms' },
-      { name: '美國村', time: 'dusk', sight: 'town' },
-      { name: '海濱步道', time: 'night', sight: 'pier' },
-    ],
   },
   {
     id: 'yomitan',
@@ -151,11 +127,6 @@ export const ZONES: Zone[] = [
     ks: [2, 2, 3, 3],
     bgm: 'tanchame',
     boss: { name: '殘波岬', k: 3, maxSols: 3 },
-    roads: [
-      { name: '紅芋田', time: 'day', sight: 'field' },
-      { name: '陶器之里', time: 'dusk', sight: 'town' },
-      { name: '座喜味城跡', time: 'night', sight: 'castle' },
-    ],
   },
   {
     id: 'onna',
@@ -169,11 +140,6 @@ export const ZONES: Zone[] = [
     ks: [2, 3, 3, 4],
     bgm: 'manzamo',
     boss: { name: '萬座毛', k: 4, maxSols: 3 },
-    roads: [
-      { name: '青之洞窟', time: 'day', sight: 'rocks' },
-      { name: '萬座毛', time: 'dusk', sight: 'cliff' },
-      { name: '月亮海灘', time: 'night', sight: 'palms' },
-    ],
   },
   {
     id: 'motobu',
@@ -187,11 +153,6 @@ export const ZONES: Zone[] = [
     ks: [2, 3, 3, 4],
     bgm: 'toshin',
     boss: { name: '翡翠海灘', k: 4, maxSols: 3 },
-    roads: [
-      { name: '翡翠海灘', time: 'day', sight: 'palms' },
-      { name: '備瀨福木林道', time: 'dusk', sight: 'forest' },
-      { name: '本部港', time: 'night', sight: 'pier' },
-    ],
   },
   {
     id: 'kouri',
@@ -205,11 +166,6 @@ export const ZONES: Zone[] = [
     ks: [2, 3, 3, 4],
     bgm: 'hana',
     boss: { name: '心形岩', k: 4, maxSols: 3 },
-    roads: [
-      { name: '古宇利大橋', time: 'day', sight: 'bridge' },
-      { name: '古宇利海灘', time: 'dusk', sight: 'palms' },
-      { name: '星空下的大橋', time: 'night', sight: 'bridge' },
-    ],
   },
   {
     id: 'yanbaru',
@@ -223,11 +179,6 @@ export const ZONES: Zone[] = [
     ks: [2, 3, 4, 4],
     bgm: 'densa',
     boss: { name: '邊戶岬', k: 4, maxSols: 3 },
-    roads: [
-      { name: '比地大瀑布', time: 'day', sight: 'waterfall' },
-      { name: '大石林山', time: 'dusk', sight: 'rocks' },
-      { name: '山原的星空', time: 'night', sight: 'forest' },
-    ],
   },
   {
     id: 'kaichu',
@@ -241,11 +192,6 @@ export const ZONES: Zone[] = [
     ks: [2, 3, 4, 4],
     bgm: 'kaichu',
     boss: { name: '伊計島', k: 4, maxSols: 3 },
-    roads: [
-      { name: '海中道路', time: 'day', sight: 'bridge' },
-      { name: '濱比嘉島', time: 'dusk', sight: 'town' },
-      { name: '伊計島', time: 'night', sight: 'palms' },
-    ],
   },
   {
     id: 'nakagusuku',
@@ -259,11 +205,6 @@ export const ZONES: Zone[] = [
     ks: [2, 3, 4, 4],
     bgm: 'arch',
     boss: { name: '石拱門', k: 4, maxSols: 3 },
-    roads: [
-      { name: '二之郭的石牆', time: 'day', sight: 'castle' },
-      { name: '中城灣', time: 'dusk', sight: 'pier' },
-      { name: '中村家住宅', time: 'night', sight: 'town' },
-    ],
   },
   {
     id: 'nanjo',
@@ -277,11 +218,6 @@ export const ZONES: Zone[] = [
     ks: [2, 3, 4, 4],
     bgm: 'nirai',
     boss: { name: '齋場御嶽', k: 4, maxSols: 3 },
-    roads: [
-      { name: '知念岬', time: 'day', sight: 'cliff' },
-      { name: '玉泉洞', time: 'dusk', sight: 'rocks' },
-      { name: '久高島', time: 'night', sight: 'palms' },
-    ],
   },
   {
     id: 'shuri',
@@ -295,11 +231,6 @@ export const ZONES: Zone[] = [
     ks: [2, 4, 4, 4],
     bgm: 'akata',
     boss: { name: '守禮之門', k: 4, maxSols: 2 },
-    roads: [
-      { name: '首里金城町石疊道', time: 'day', sight: 'town' },
-      { name: '龍潭', time: 'dusk', sight: 'castle' },
-      { name: '首里城夜景', time: 'night', sight: 'castle' },
-    ],
   },
   {
     id: 'kumejima',
@@ -313,11 +244,6 @@ export const ZONES: Zone[] = [
     ks: [2, 4, 4, 4],
     bgm: 'kumeaka',
     boss: { name: '果之濱', k: 4, maxSols: 3 },
-    roads: [
-      { name: '疊石', time: 'day', sight: 'rocks' },
-      { name: '比屋定斷崖', time: 'dusk', sight: 'cliff' },
-      { name: '久米島的星空', time: 'night', sight: 'palms' },
-    ],
   },
   {
     id: 'miyako',
@@ -331,11 +257,6 @@ export const ZONES: Zone[] = [
     ks: [2, 4, 4, 4],
     bgm: 'hounen',
     boss: { name: '砂山海灘', k: 4, maxSols: 3 },
-    roads: [
-      { name: '伊良部大橋', time: 'day', sight: 'bridge' },
-      { name: '東平安名崎', time: 'dusk', sight: 'lighthouse' },
-      { name: '前濱海灘', time: 'night', sight: 'palms' },
-    ],
   },
   {
     id: 'ishigaki',
@@ -349,11 +270,6 @@ export const ZONES: Zone[] = [
     ks: [2, 4, 4, 4],
     bgm: 'asadoya',
     boss: { name: '川平灣', k: 4, maxSols: 3 },
-    roads: [
-      { name: '竹富島', time: 'day', sight: 'town' },
-      { name: '平久保崎燈塔', time: 'dusk', sight: 'lighthouse' },
-      { name: '石垣島的星空', time: 'night', sight: 'palms' },
-    ],
   },
 ];
 
@@ -492,17 +408,11 @@ export function planRun(zi: number, learned: readonly Element[], seed: number): 
   return [own ? [own] : [], ...mid, boss].map(tidy);
 }
 
-/** Whether stop `si` of zone `zi` starts with a choice of roads */
-export const isBranch = (zi: number, si: number): boolean => TIERS[ZONES[zi].tier].branches.includes(si);
+/** The time of day at stop `si`: the first two stops by day, the next two at dusk, and the last one at night */
+export const timeOfStop = (si: number): TimeOfDay => (si < 2 ? 'day' : si < 4 ? 'dusk' : 'night');
 
-/** The two roads offered before stop `si`, drawn from the run's seed: indices into the zone's roads */
-export function roadOffer(zi: number, si: number, seed: number): [number, number] {
-  const n = ZONES[zi].roads.length;
-  const r = rng(seed + si * 613);
-  const a = Math.floor(r() * n);
-  const b = (a + 1 + Math.floor(r() * (n - 1))) % n;
-  return a < b ? [a, b] : [b, a];
-}
+/** A zone's painted background at one time of day: the artist paints the same view three times */
+export const sceneUrl = (zone: string, time: TimeOfDay = 'day') => `/scenes/${zone}/${time}.webp`;
 
 /**
  * Easier fallbacks when a demanding stage can't be generated in time. The "next stop" card shows the stop's elements

@@ -5,16 +5,15 @@ import { expect, test as it } from './fixtures';
 const save = (state: unknown) => JSON.stringify({ state: { progress: state }, version: 2 });
 const SEEN = ['coach', 'stair', 'cube', 'tower', 'bridge'];
 
-it.describe('scenery roads', () => {
-  it('lets the child pick one of two roads, and the board then shows that road’s time of day', async ({ page }) => {
-    // Naha's third stop starts with a choice of roads
+it.describe('stage backgrounds', () => {
+  it('paints the zone’s own scene behind the board, turning to dusk from the third stop', async ({ page }) => {
+    // Between Naha's second and third stops, with the next-stop card up
     const run = {
       zone: 'naha',
       zi: 0,
       si: 2,
       seed: 3,
       plan: [[], [], [], [], []],
-      road: [null, null, null, null, null],
       level: null,
       placed: [],
       moves: 0,
@@ -30,12 +29,11 @@ it.describe('scenery roads', () => {
     await page.addInitScript((s) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', s), save(state));
     await page.goto('/');
     await page.click('[data-resume]');
-    const roads = page.locator('#modal [data-card="road"]');
-    await expect(roads).toHaveCount(2);
-    const pick = roads.nth(1);
-    const time = await pick.getAttribute('data-time');
-    await pick.click();
-    await expect(page.locator(`#board [data-time="${time}"]`)).toBeAttached();
+    await page.click('#modal [data-card="next"]');
+    const scene = page.locator('#board [data-time="dusk"] image');
+    await expect(scene).toHaveAttribute('href', '/scenes/naha/dusk.webp');
+    const res = await page.request.get('/scenes/naha/dusk.webp');
+    expect(res.headers()['content-type']).toBe('image/webp');
   });
 });
 
