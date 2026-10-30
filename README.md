@@ -4,7 +4,7 @@
 
 - **玩法**：14 個分區分五個等級，沿本島西海岸往北、東海岸往南，再出海到離島繞沖繩一圈（入門那霸市 → 初級美國村、讀谷村 → 進階恩納村、美麗海、古宇利島 → 高手沖繩山原、海中道路、中城城跡、南城市 → 大師首里城、久米島、宮古島、石垣島），每趟旅程五站；每區只帶一個新積木或機關，之後的站從學過的裡面隨機抽；每區有美術畫的場景，前兩站白天、第三四站黃昏、最後一站夜晚
 - **積木與機關**：琉璃階梯、赤瓦塔、紅芋拱門、竹梯、跳跳貝、石拱橋、藤蔓、溜滑梯，可以轉方向的形狀積木金楚糕、石牆角、海灘陽傘、浪花；海膽、星砂、石門、漲潮
-- **地方明信片**：沖繩和每個地區都有一張明信片，介紹當地的風景、文化和典故，去過就收進圖鑑
+- **地方明信片**：每個地區三張插畫明信片，介紹當地的風景、文化和典故；過第一站拿到第一張，第 2、3 次走完再各拿一張，共 43 張（含沖繩）
 - **開場故事**：第一次打開時，用一本會動、會說話的小繪本認識主角西薩（シーサー，沖繩話的「獅子」）
 - **扭蛋**：傳統、海洋、美食、祭典、動物、工藝、離島七個系列，圖鑑裡可以按「念給我聽」聽故事
 - **旁白與西薩的聲音**：開場故事、西薩故事、明信片和西薩說的話，都用 Azure 台灣國語語音預先錄好，離線也能聽
@@ -45,22 +45,11 @@ pnpm build        # 產出 dist/（含 service worker）
 
 ## 授權
 
-本作保留所有權利（見 [LICENSE](LICENSE)），repo 公開只供查看。照片、字型等第三方素材依各自的授權，列在下方。
+本作保留所有權利（見 [LICENSE](LICENSE)），repo 公開只供查看。字型等第三方素材依各自的授權，列在下方。
 
 ## 致謝
 
 - 玩法靈感來自 SmartGames 的實體桌遊 Camelot Jr.（Raf Peeters 設計）。本作的美術、角色、關卡與文字皆為原創，與 SmartGames 無關
-- 明信片照片（皆來自 Wikimedia Commons，公眾領域或 CC BY）：
-  - 沖繩：[2013-07-23 Shisa on roof at Taketomijima.jpg](https://commons.wikimedia.org/wiki/File:2013-07-23_Shisa_on_roof_at_Taketomijima.jpg)，ajari，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
-  - 那霸市：[Kokusai-dori09n4260.jpg](https://commons.wikimedia.org/wiki/File:Kokusai-dori09n4260.jpg)，663highland，[CC BY 2.5](https://creativecommons.org/licenses/by/2.5)，經裁切縮小
-  - 讀谷村：[An awesome sunset at Cape Zanpa.jpg](https://commons.wikimedia.org/wiki/File:An_awesome_sunset_at_Cape_Zanpa.jpg)，Daniel Ramirez，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
-  - 美麗海：[Churaumi Aquarium main tank 'Kuroshio Sea'.jpg](https://commons.wikimedia.org/wiki/File:Churaumi_Aquarium_main_tank_%27Kuroshio_Sea%27.jpg)，Megapixie，Public domain，經裁切縮小
-  - 古宇利島：[Kouri Bridge (15130568259).jpg](https://commons.wikimedia.org/wiki/File:Kouri_Bridge_(15130568259).jpg)，Takuya ASADA，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
-  - 中城城跡：[Nakagusuku Castle28n3104.jpg](https://commons.wikimedia.org/wiki/File:Nakagusuku_Castle28n3104.jpg)，663highland，[CC BY 2.5](https://creativecommons.org/licenses/by/2.5)，經裁切縮小
-  - 宮古島：[Miyako's Irabu Bridge (52204268416).jpg](https://commons.wikimedia.org/wiki/File:Miyako%27s_Irabu_Bridge_(52204268416).jpg)，Raita Futo from Tokyo, Japan，[CC BY 2.0](https://creativecommons.org/licenses/by/2.0)，經裁切縮小
-  - 首里城：[Shurei-mon.jpeg](https://commons.wikimedia.org/wiki/File:Shurei-mon.jpeg)，nnh，Public domain，經裁切縮小
-  - 久米島：[Okinawa-kumejima Hatenohama Beach-xl.jpg](https://commons.wikimedia.org/wiki/File:Okinawa-kumejima_Hatenohama_Beach-xl.jpg)，Kumejima93_OKINAWA，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0)，經裁切縮小
-  - 美國村、恩納村、沖繩山原、海中道路、南城市、石垣島的明信片是為本作畫的地區場景
 - 配樂：九首沖繩傳統曲的旋律都已是公共財，只取旋律、由程式即時合成，不用歌詞、編曲或錄音
   - 〈てぃんさぐぬ花〉〈赤田首里殿內〉〈谷茶前〉〈唐船ドーイ〉〈花ぬ風車〉〈安里屋ユンタ〉（旋律為宮良長包 1934 年改編版，他 1939 年過世）〈デンサー節〉（相傳為宮良里賢 1768 年所作）〈豊年の歌〉：旋律讀自 [mu-tech.org](https://www.mu-tech.org/) 免費 MIDI 的主旋律聲部
   - 〈久米阿嘉節〉：大城彦五郎編《琉球楽典 工工四》（1925），[琉球大學附屬圖書館數位典藏](https://shimuchi.lib.u-ryukyu.ac.jp/collection/sakamaki/hw5823102)（原件為夏威夷大學阪巻・宝玲文庫）；與明治期手抄本《工工四》（東京藝術大學附屬圖書館藏）逐格比對

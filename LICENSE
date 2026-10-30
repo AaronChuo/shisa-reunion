@@ -17,11 +17,6 @@ modify, distribute or commercially exploit them without prior written consent.
 The materials below stay under their own licenses and are not covered by the
 reservation above.
 
-- 明信片照片 Postcard photos: public/places/*.webp
-  Wikimedia Commons, CC BY 2.0 / 2.5 / 4.0 or public domain. Authors, sources and
-  changes are listed in README.md, src/content/photos.json and the in-game photo
-  credits page.
-
 - 字型 Fonts: public/fonts/
   GenSen Rounded TW (源泉圓體, subset) and Fredoka (@fontsource/fredoka), under the
   SIL Open Font License 1.1. Full texts: public/fonts/GenSenRounded-OFL.txt and
