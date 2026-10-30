@@ -61,14 +61,17 @@ export type DexTab = 'shisa' | 'cards';
 export type Modal =
   | { kind: 'loading' }
   | { kind: 'intro'; key: IntroKey }
-  | { kind: 'win'; last: boolean }
+  /** `card`: the zone's postcard this stop earned (its first), if any */
+  | { kind: 'win'; last: boolean; card: number | null }
   | { kind: 'branch' }
-  | { kind: 'done'; zi: number; earned: number; unlocked: number[] }
+  /** `card`: the zone's postcard this journey earned (its second or third), if any */
+  | { kind: 'done'; zi: number; earned: number; unlocked: number[]; card: number | null }
   | { kind: 'confirmRun'; zi: number }
   | { kind: 'reveal'; id: string; series: Series['id']; color: string }
   | { kind: 'role'; id: string }
   | { kind: 'about' }
-  | { kind: 'place'; id: PlaceId; start: number | null }
+  /** `n`: which of the place's cards is showing */
+  | { kind: 'place'; id: PlaceId; start: number | null; n: number }
   | { kind: 'credits' }
   | { kind: 'audio' }
   | { kind: 'age' }

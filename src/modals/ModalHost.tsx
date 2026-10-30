@@ -4,8 +4,7 @@ import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
-import { PHOTOS } from '../content/credits';
-import { PLACES, type PlaceId } from '../content/places';
+import { CARD_NEEDS, cardsEarned, PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES, stopLine } from '../content/text';
 import { lockHint, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
@@ -21,11 +20,12 @@ import {
   goHome,
   goNextStop,
   setOffFrom,
+  showCard,
   startRun,
   toggleMusic,
   toggleSound,
 } from '../game/actions';
-import { PhotoCreditLine, PostcardPicture } from '../places/PostcardPicture';
+import { PostcardPicture } from '../places/PostcardPicture';
 import { type Modal, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
 import { AgeAsk, ParentSettings, ParentsButton, RestReminder } from './Family';
@@ -75,8 +75,22 @@ function Intro({ k }: { k: IntroKey }) {
   );
 }
 
+/** A postcard just earned: its small picture and its name, now in the collection */
+function NewCard({ id, n }: { id: PlaceId; n: number }) {
+  return (
+    <div className="newCard" data-new-card={`${id}:${n + 1}`}>
+      <PostcardPicture id={id} n={n} small className="newCardArt" />
+      <span>
+        收到一張明信片
+        <b>{PLACES[id].cards[n].name}</b>
+      </span>
+    </div>
+  );
+}
+
 function Win({ m }: { m: Extract<Modal, { kind: 'win' }> }) {
   const pair = useGame((s) => s.progress.pair);
+  const zone = useGame((s) => s.progress.run?.zone) as PlaceId | undefined;
   return (
     <Sheet label="過關">
       <CoinIcon className="bigCoin" />
@@ -89,6 +103,7 @@ function Win({ m }: { m: Extract<Modal, { kind: 'win' }> }) {
           福氣幣 <b className="num">+1</b>
         </span>
       </div>
+      {m.card !== null && zone && <NewCard id={zone} n={m.card} />}
       <div className="btns">
         <Cta icon={<Icon name={m.last ? 'check' : 'next'} />} data={{ 'data-next': true, 'data-focus': true }} onClick={afterWin}>
           {m.last ? '走完了' : '下一站'}
@@ -149,6 +164,7 @@ function Done({ m }: { m: Extract<Modal, { kind: 'done' }> }) {
       <p>
         這趟一共拿到 <b className="num">{m.earned}</b> 枚福氣幣{m.unlocked.length ? `，${m.unlocked.map((i) => ZONES[i].name).join('、')}打開了` : ''}。
       </p>
+      {m.card !== null && <NewCard id={Z.id as PlaceId} n={m.card} />}
       <div className="btns">
         <Cta icon={<Icon name="gacha" />} data={{ 'data-g': true, 'data-focus': true }} onClick={() => go('gacha')}>
           去扭蛋機
@@ -327,30 +343,60 @@ function About() {
   );
 }
 
-/** A place's postcard: its picture, a few things to spot, and its story to read aloud */
-function Postcard({ id, start }: { id: PlaceId; start: number | null }) {
+/**
+ * A place's postcard: one card's picture, a few things to spot and its story to read aloud. A zone's three cards sit in
+ * a row below: the ones earned can be turned to, the others say what earns them.
+ */
+function Postcard({ id, start, n }: { id: PlaceId; start: number | null; n: number }) {
   const P = PLACES[id];
+  const card = P.cards[n];
   const open = useGame((s) => s.progress.open);
   const clears = useGame((s) => s.progress.clears);
+  const seen = useGame((s) => s.progress.seen);
+  const got = cardsEarned(id, seen, clears);
   const zi = ZONES.findIndex((Z) => Z.id === id);
   const Z = ZONES[zi];
   const locked = !!Z && !open.includes(Z.id);
   return (
     <Sheet label={`${P.name}明信片`} wide>
       <div className="postcard" style={{ ['--zc' as string]: Z?.color ?? '#2D8FD0' }}>
-        <PostcardPicture id={id} className="postcardArt" />
+        <PostcardPicture key={n} id={id} n={n} className="postcardArt" />
         <Stamp label={P.name} mark={Z ? '★'.repeat(zoneStars(Z)) : '琉'} className="postcardStamp" />
       </div>
-      <PhotoCreditLine id={id} />
-      <h2>{P.name}</h2>
+      {P.cards.length > 1 && (
+        <div className="cardStrip" style={{ ['--zc' as string]: Z?.color }}>
+          {P.cards.map((c, i) =>
+            i < got ? (
+              <button
+                key={c.name}
+                type="button"
+                className={i === n ? 'cardSlot on' : 'cardSlot'}
+                aria-pressed={i === n}
+                aria-label={c.name}
+                data-card-slot={i + 1}
+                onClick={() => showCard(i)}
+              >
+                <PostcardPicture id={id} n={i} small />
+              </button>
+            ) : (
+              <div key={c.name} className={i === n ? 'cardSlot locked on' : 'cardSlot locked'} data-card-slot={i + 1}>
+                <Icon name="lock" />
+                <span>{CARD_NEEDS[i]}</span>
+              </div>
+            ),
+          )}
+        </div>
+      )}
+      {card.name !== P.name && <div className="eyebrow">{P.name}</div>}
+      <h2>{card.name}</h2>
       <div className="sights">
-        {P.sights.map((t) => (
+        {card.sights.map((t) => (
           <span key={t} className="mini">
             {t}
           </span>
         ))}
       </div>
-      <Story text={P.story} />
+      <Story key={n} text={card.story} />
       {locked && <p className="small">{lockHint(zi, clears)}</p>}
       <div className="btns">
         {start !== null && !locked ? (
@@ -373,38 +419,12 @@ function Postcard({ id, start }: { id: PlaceId; start: number | null }) {
   );
 }
 
-/** Every postcard photo with its author, licence and source, as the licences ask, and where the voices come from */
+/** Where the pictures and voices come from */
 function Credits() {
   return (
     <Sheet label="素材來源" wide>
       <h2>素材來源</h2>
-      <p className="small">明信片的照片是自己拍的，或來自 Wikimedia Commons、授權可以自由使用（公眾領域或 CC BY，標示作者即可）；插畫和西薩是遊戲原創。</p>
-      <ul className="creditList">
-        {PHOTOS.map((c) => (
-          <li key={c.place}>
-            <b>{PLACES[c.place].name}</b>
-            <span>
-              〈{c.title}〉，
-              {c.source ? (
-                <a href={c.source} target="_blank" rel="noopener noreferrer">
-                  {c.author}
-                </a>
-              ) : (
-                c.author
-              )}
-              ，
-              {c.licenseUrl ? (
-                <a href={c.licenseUrl} target="_blank" rel="noopener noreferrer">
-                  {c.license}
-                </a>
-              ) : (
-                c.license
-              )}
-              ，經裁切縮小
-            </span>
-          </li>
-        ))}
-      </ul>
+      <p className="small">明信片、關卡背景、積木和西薩，都是為這個遊戲畫的原創插畫。</p>
       <p className="small" id="voiceCredit">
         旁白和西薩說話的聲音，是用 Microsoft Azure AI 語音合成的；沒有錄好的句子，用裝置內建的語音念。
       </p>
@@ -490,7 +510,7 @@ export function ModalHost() {
       body = <About />;
       break;
     case 'place':
-      body = <Postcard id={m.id} start={m.start} />;
+      body = <Postcard id={m.id} start={m.start} n={m.n} />;
       break;
     case 'credits':
       body = <Credits />;

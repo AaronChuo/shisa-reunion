@@ -17,7 +17,7 @@
     "e2e": "playwright test",
     "fonts": "node scripts/subset-font.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "photos": "node scripts/photos.mjs",
+    "postcards": "node scripts/postcards.mjs",
     "scenes": "node scripts/scenes.mjs",
     "voice": "node --env-file-if-exists=.env.local scripts/voice.mjs",
     "bench:gen": "vitest run --config vitest.bench.config.ts scripts/bench-gen.ts",

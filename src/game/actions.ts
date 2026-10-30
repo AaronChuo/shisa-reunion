@@ -1,6 +1,6 @@
 import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
-import { type PlaceId, placeSeen } from '../content/places';
+import { cardsEarned, type PlaceId, placeSeen } from '../content/places';
 import { drawFromSeries, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { SHISA_CHEER } from '../content/story';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
@@ -206,11 +206,15 @@ function introQueue(): IntroKey[] {
   return q;
 }
 
+/** The journey (by its seed) whose arrival postcard has been shown, so reading it doesn't bring it back */
+let greeted: number | null = null;
+
 function showNextIntro(): void {
-  // Arriving somewhere new: its postcard comes first
+  // Arriving somewhere new: its first postcard comes first, once a journey, until a stop there is cleared
   const r0 = run();
-  if (r0.si === 0 && !getState().progress.seen.includes(placeSeen(r0.zone as PlaceId))) {
-    openPlace(r0.zone as PlaceId, null);
+  if (r0.si === 0 && greeted !== r0.seed && !getState().progress.seen.includes(placeSeen(r0.zone as PlaceId))) {
+    greeted = r0.seed;
+    openPlace(r0.zone as PlaceId, null, 0);
     return;
   }
   const q = introQueue();
@@ -458,13 +462,16 @@ function onWin(): void {
     s.progress.tokens += 1;
     cur.earned += 1;
     cur.phase = last ? 'done' : 'branch';
+    // The first stop cleared in a zone puts its first postcard in the collection
+    const first = !s.progress.seen.includes(placeSeen(cur.zone as PlaceId));
+    if (first) s.progress.seen.push(placeSeen(cur.zone as PlaceId));
     if (last) {
       s.progress.clears[cur.zone] = (s.progress.clears[cur.zone] ?? 0) + 1;
       const was = s.progress.open;
       cur.opened = openFor(s.progress.clears).filter((id) => !was.includes(id));
       s.progress.open = ZONES.map((Z) => Z.id).filter((id) => was.includes(id) || cur.opened?.includes(id));
     }
-    s.ui.modal = { kind: 'win', last };
+    s.ui.modal = { kind: 'win', last, card: first ? 0 : null };
   });
   // The next stop is built while the coin shows and the next-stop card is read
   if (!last) {
@@ -508,10 +515,13 @@ export function goNextStop(): void {
 function finishRun(): void {
   const r = run();
   const unlocked = (r.opened ?? []).map((id) => ZONES.findIndex((Z) => Z.id === id)).filter((i) => i >= 0);
+  // The zone's second and third journeys each bring one more of its postcards
+  const times = getState().progress.clears[r.zone] ?? 0;
+  const card = times === 2 || times === 3 ? times - 1 : null;
   mut((s) => {
     s.progress.run = null;
     s.ui.busy = false;
-    s.ui.modal = { kind: 'done', zi: r.zi, earned: r.earned, unlocked };
+    s.ui.modal = { kind: 'done', zi: r.zi, earned: r.earned, unlocked, card };
   });
 }
 
@@ -658,15 +668,22 @@ export function finishReveal(next: 'keep' | 'use'): void {
 
 // ---------- postcards ----------
 /**
- * Shows a place's postcard. `start` is the zone to set off for from it (opened from the map), or null when it is read
- * on arrival. Reading it puts it in the collection, except for zones still locked.
+ * Shows a place's postcard: card `n`, or else the newest one earned (the first, as a preview, before any). `start` is
+ * the zone to set off for from it (opened from the map), or null when it is read on arrival or in the collection.
+ * Okinawa's card is collected by reading it; a zone's cards are earned by playing there.
  */
-export function openPlace(id: PlaceId, start: number | null): void {
+export function openPlace(id: PlaceId, start: number | null, n?: number): void {
   mut((s) => {
-    s.ui.modal = { kind: 'place', id, start };
-    const zone = ZONES.find((Z) => Z.id === id);
-    const locked = zone && !s.progress.open.includes(zone.id);
-    if (!locked && !s.progress.seen.includes(placeSeen(id))) s.progress.seen.push(placeSeen(id));
+    const p = s.progress;
+    s.ui.modal = { kind: 'place', id, start, n: n ?? Math.max(cardsEarned(id, p.seen, p.clears) - 1, 0) };
+    if (id === 'okinawa' && !p.seen.includes(placeSeen(id))) p.seen.push(placeSeen(id));
+  });
+}
+
+/** Turns the open postcard to another of the place's cards */
+export function showCard(n: number): void {
+  mut((s) => {
+    if (s.ui.modal?.kind === 'place') s.ui.modal.n = n;
   });
 }
 

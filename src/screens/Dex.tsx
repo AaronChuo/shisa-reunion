@@ -1,6 +1,6 @@
 import { Icon } from '../art/Icons';
 import { ShisaIcon } from '../art/Shisa';
-import { PLACE_ORDER, PLACES, placeSeen } from '../content/places';
+import { CARD_NEEDS, CARD_TOTAL, cardsEarned, PLACE_ORDER, PLACES } from '../content/places';
 import { SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { askRole, go, openAbout, openCredits, openPlace, setDexTab } from '../game/actions';
 import { PostcardPicture } from '../places/PostcardPicture';
@@ -10,14 +10,15 @@ export function Dex() {
   const owned = useGame((s) => s.progress.owned);
   const seen = useGame((s) => s.progress.seen);
   const clears = useGame((s) => s.progress.clears);
-  const got = PLACE_ORDER.filter((id) => id === 'okinawa' || seen.includes(placeSeen(id)) || (clears[id] ?? 0) > 0);
+  const earned = Object.fromEntries(PLACE_ORDER.map((id) => [id, cardsEarned(id, seen, clears)]));
+  const got = PLACE_ORDER.reduce((n, id) => n + earned[id], 0);
   const pair = useGame((s) => s.progress.pair);
   const hero = VARIANT_BY_ID[pair[0]];
   const goal = VARIANT_BY_ID[pair[1]];
   const tab = useGame((s) => s.ui.dexTab);
   const tabs = [
     { id: 'shisa', label: '西薩', count: `${owned.length}/${VARIANTS.length}` },
-    { id: 'cards', label: '明信片', count: `${got.length}/${PLACE_ORDER.length}` },
+    { id: 'cards', label: '明信片', count: `${got}/${CARD_TOTAL}` },
   ] as const;
   return (
     <section id="dex" className="screen scroll">
@@ -100,29 +101,36 @@ export function Dex() {
         </div>
       ) : (
         <div className="dexPage" role="tabpanel" id="page-cards" aria-labelledby="tab-cards">
-          {/* Postcards: Okinawa, then each place once it has been visited */}
+          {/* Postcards: Okinawa's, then each zone's three, earned by playing there */}
           <section className="dexSeries" style={{ ['--sc' as string]: '#2D8FD0' }}>
             <h3>
               <i />
               地區明信片{' '}
               <small className="num">
-                {got.length}/{PLACE_ORDER.length}
+                {got}/{CARD_TOTAL}
               </small>
             </h3>
-            <div className="pcGrid">
-              {PLACE_ORDER.map((id) =>
-                got.includes(id) ? (
-                  <button key={id} type="button" className="pcTile" data-place={id} onClick={() => openPlace(id, null)}>
-                    <PostcardPicture id={id} />
-                    <span>{PLACES[id].name}</span>
-                  </button>
-                ) : (
-                  <div key={id} className="pcTile locked" data-place={id}>
-                    <Icon name="lock" />
-                    <span>還沒去過</span>
+            <div className="pcPlaces">
+              {PLACE_ORDER.map((id) => (
+                <div key={id} className="pcPlace" data-place={id}>
+                  <h4>{PLACES[id].name}</h4>
+                  <div className="pcGrid">
+                    {PLACES[id].cards.map((c, i) =>
+                      i < earned[id] ? (
+                        <button key={c.name} type="button" className="pcTile" data-card={`${id}:${i + 1}`} onClick={() => openPlace(id, null, i)}>
+                          <PostcardPicture id={id} n={i} small />
+                          <span>{c.name}</span>
+                        </button>
+                      ) : (
+                        <div key={c.name} className="pcTile locked" data-card={`${id}:${i + 1}`}>
+                          <Icon name="lock" />
+                          <span>{CARD_NEEDS[i]}</span>
+                        </div>
+                      ),
+                    )}
                   </div>
-                ),
-              )}
+                </div>
+              ))}
             </div>
             <button type="button" className="linkBtn" id="creditsBtn" onClick={openCredits}>
               素材來源

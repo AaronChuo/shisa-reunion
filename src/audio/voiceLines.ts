@@ -11,7 +11,7 @@ export function voiceLines(): { text: string; as: Voice }[] {
     ...Object.values(RULES),
     ABOUT_SHISA.story,
     ...VARIANTS.map((v) => v.story),
-    ...Object.values(PLACES).map((p) => p.story),
+    ...Object.values(PLACES).flatMap((p) => p.cards.map((c) => c.story)),
   ];
   return [
     ...narrator.map((text) => ({ text, as: 'narrator' as const })),

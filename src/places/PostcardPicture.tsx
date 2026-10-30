@@ -1,47 +1,18 @@
 import { useState } from 'react';
-import { PHOTO_BY_PLACE, photoUrl, SCENE_PLACES } from '../content/credits';
-import { PLACES, type PlaceId } from '../content/places';
-import { sceneUrl } from '../content/zones';
-import { PostcardArt } from './PostcardArt';
+import { cardUrl, PLACES, type PlaceId } from '../content/places';
+import { OkinawaMap } from './PostcardArt';
 
-/** The postcard's photo, or the zone's painted scene where there is no photo; if it can't load, a drawn picture stands in */
-export function PostcardPicture({ id, className }: { id: PlaceId; className?: string }) {
+/** A postcard's picture: card `n` of the place, large or small for the grid; Okinawa's map is drawn, and stands in if a picture can't load */
+export function PostcardPicture({ id, n, small = false, className }: { id: PlaceId; n: number; small?: boolean; className?: string }) {
   const [failed, setFailed] = useState(false);
-  const alt = PLACES[id].sights.join('、');
-  const src = PHOTO_BY_PLACE[id] ? photoUrl(id) : SCENE_PLACES.includes(id) ? sceneUrl(id) : null;
-  if (failed || !src) {
+  const alt = PLACES[id].cards[n].sights.join('、');
+  if (failed || id === 'okinawa') {
     return (
       <svg className={className} viewBox="0 0 400 240" role="img" aria-label={alt}>
-        <PostcardArt id={id} />
+        <OkinawaMap />
       </svg>
     );
   }
-  return <img className={className} src={src} width={1000} height={600} alt={alt} loading="lazy" onError={() => setFailed(true)} />;
-}
-
-/** A one-line credit for the photo: author and licence, linked to its source */
-export function PhotoCreditLine({ id }: { id: PlaceId }) {
-  const c = PHOTO_BY_PLACE[id];
-  if (!c) return null;
-  return (
-    <p className="photoCredit">
-      照片：
-      {c.source ? (
-        <a href={c.source} target="_blank" rel="noopener noreferrer">
-          {c.author}
-        </a>
-      ) : (
-        c.author
-      )}
-      ，
-      {c.licenseUrl ? (
-        <a href={c.licenseUrl} target="_blank" rel="noopener noreferrer">
-          {c.license}
-        </a>
-      ) : (
-        c.license
-      )}
-      ，經裁切縮小
-    </p>
-  );
+  const [w, h] = small ? [320, 192] : [960, 576];
+  return <img className={className} src={cardUrl(id, n, small)} width={w} height={h} alt={alt} loading="lazy" onError={() => setFailed(true)} />;
 }

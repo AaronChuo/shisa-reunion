@@ -2415,29 +2415,41 @@ h1 {
   min-height: 40px;
   padding: 0 12px;
 }
+/* The collection: each place's cards in a row of three under its name, two places side by side on a wide screen */
+.pcPlaces {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
+  gap: 8px 22px;
+}
+.pcPlace {
+  display: grid;
+  gap: 6px;
+}
+.pcPlace h4 {
+  margin: 4px 0 0;
+  font-size: 15px;
+}
 .pcGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-@media (max-width: 520px) {
-  .pcGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 .pcTile {
   display: grid;
   justify-items: center;
   align-content: center;
   gap: 4px;
-  min-height: 96px;
-  padding: 6px;
-  border-radius: 14px;
+  min-width: 0;
+  min-height: 84px;
+  padding: 5px;
+  border-radius: 12px;
   border: 2px solid var(--line);
   background: var(--card);
   cursor: pointer;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.25;
+  text-align: center;
 }
 .pcTile svg {
   width: 100%;
@@ -2463,32 +2475,81 @@ h1 {
   object-fit: cover;
   border-radius: 8px;
 }
-.photoCredit {
-  margin: -4px 0 0;
-  font-size: 12px;
-  color: var(--muted);
+.postcard img.postcardArt {
+  background: var(--line);
 }
-.photoCredit a,
-.creditList a {
-  color: inherit;
-}
-.creditList {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* A zone's three cards under the postcard: the one showing is ringed in the zone's colour */
+.cardStrip {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  width: 100%;
-  text-align: start;
-  font-size: 14px;
+  width: min(100%, 360px);
 }
-.creditList li {
+.cardSlot {
   display: grid;
-  gap: 2px;
+  place-items: center;
+  aspect-ratio: 5 / 3;
+  padding: 0;
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background: var(--card);
+  overflow: hidden;
+  cursor: pointer;
 }
-.creditList span {
+.cardSlot.on {
+  border-color: var(--zc, #2d8fd0);
+}
+.cardSlot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cardSlot.locked {
+  align-content: center;
+  gap: 2px;
+  border: 2px dashed var(--line);
   color: var(--muted);
-  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: default;
+}
+.cardSlot.locked.on {
+  border-style: solid;
+  border-color: var(--zc, #2d8fd0);
+}
+.cardSlot.locked svg {
+  width: 20px;
+  height: 20px;
+}
+/* A card just earned, on the win and journey-done sheets */
+.newCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 14px;
+  background: #eef7fb;
+  border: 2px solid #bfdcea;
+  font-weight: 700;
+}
+.newCard .newCardArt {
+  width: 96px;
+  height: auto;
+  aspect-ratio: 5 / 3;
+  object-fit: cover;
+  border-radius: 6px;
+  transform: rotate(-3deg);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+}
+.newCard span {
+  display: grid;
+  font-size: 14px;
+  color: var(--muted);
+}
+.newCard b {
+  font-size: 18px;
+  color: var(--ink);
 }
 .linkBtn {
   justify-self: end;

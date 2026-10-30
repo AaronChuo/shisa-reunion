@@ -1,8 +1,7 @@
 import { existsSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { speakable } from '../audio/speech';
-import { FREE_LICENSE, OWN_PHOTO, PHOTO_BY_PLACE, SCENE_PLACES } from './credits';
-import { PLACE_ORDER, PLACES } from './places';
+import { CARD_TOTAL, cardsEarned, cardUrl, PLACE_ORDER, PLACES, placeSeen } from './places';
 import { ABOUT_SHISA, SERIES, VARIANTS } from './shisa';
 import { PIECE_NAMES, RULES } from './text';
 import { ZONES } from './zones';
@@ -36,37 +35,44 @@ describe('shisa collection', () => {
 });
 
 describe('place postcards', () => {
-  it('has a postcard for Okinawa and for every zone', () => {
+  it('has one card for Okinawa and three for every zone', () => {
     expect(PLACE_ORDER).toEqual(['okinawa', ...ZONES.map((z) => z.id)]);
+    expect(PLACES.okinawa.cards).toHaveLength(1);
+    for (const Z of ZONES) expect(PLACES[Z.id as keyof typeof PLACES].cards, Z.id).toHaveLength(3);
+    expect(CARD_TOTAL).toBe(1 + 3 * ZONES.length);
   });
 
-  it.each(PLACE_ORDER.map((id) => [PLACES[id].name, PLACES[id]]))('tells %s in a short paragraph with a few sights', (_, p) => {
-    expect(spoken(p.story)).toBeGreaterThanOrEqual(60);
-    expect(spoken(p.story)).toBeLessThanOrEqual(110);
-    expect(p.sights.length).toBeGreaterThanOrEqual(2);
-    expect(p.sights.length).toBeLessThanOrEqual(3);
+  const cards = PLACE_ORDER.flatMap((id) => PLACES[id].cards.map((c, n) => [`${PLACES[id].name} ${c.name}`, id, n, c] as const));
+
+  it.each(cards)('tells %s in a short paragraph a parent can read aloud, with a few things to spot', (_, id, n, c) => {
+    // A zone's first card tells the whole zone; the others, just the sight
+    expect(spoken(c.story)).toBeGreaterThanOrEqual(n === 0 ? 60 : 40);
+    expect(spoken(c.story)).toBeLessThanOrEqual(110);
+    expect(c.story.replace(/(?<=[\u4e00-\u9fff])（[\u3040-\u30FF]+）/g, '')).not.toMatch(/[\u3040-\u30FF]/);
+    expect(c.sights.length, id).toBeGreaterThanOrEqual(2);
+    expect(c.sights.length, id).toBeLessThanOrEqual(3);
+  });
+
+  it.each(cards.filter(([, id]) => id !== 'okinawa'))('has an illustration of %s, large and small', (_, id, n) => {
+    for (const small of [false, true]) {
+      const file = `public${cardUrl(id, n, small)}`;
+      expect(existsSync(file), file).toBe(true);
+      expect(statSync(file).size).toBeLessThan((small ? 30 : 250) * 1024);
+    }
   });
 });
 
-describe('postcard pictures', () => {
-  it.each(PLACE_ORDER.filter((id) => !SCENE_PLACES.includes(id)))('has a freely licensed, credited photo for %s', (id) => {
-    const c = PHOTO_BY_PLACE[id];
-    expect(c, id).toBeDefined();
-    // Public domain, CC0 or CC BY only: fine for an app store release as long as the credit is shown
-    expect(c.license).toMatch(FREE_LICENSE);
-    expect(c.author.length).toBeGreaterThan(0);
-    // Downloaded photos must point back to their Commons page; our own have no source
-    if (c.license !== OWN_PHOTO) expect(c.source).toMatch(/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
-    const file = `public/places/${id}.webp`;
-    expect(existsSync(file), file).toBe(true);
-    expect(statSync(file).size).toBeLessThan(200 * 1024);
+describe('earning postcards', () => {
+  it('gives Okinawa’s card from the start', () => {
+    expect(cardsEarned('okinawa', [], {})).toBe(1);
   });
 
-  it.each(SCENE_PLACES)('shows the zone’s painted scene for %s, which has no photo', (id) => {
-    expect(PHOTO_BY_PLACE[id]).toBeUndefined();
-    const file = `public/scenes/${id}/day.webp`;
-    expect(existsSync(file), file).toBe(true);
-    expect(statSync(file).size).toBeLessThan(200 * 1024);
+  it('gives a zone’s first card with its first stop cleared, the next two with its second and third journey', () => {
+    expect(cardsEarned('onna', [], {})).toBe(0);
+    expect(cardsEarned('onna', [placeSeen('onna')], {})).toBe(1);
+    expect(cardsEarned('onna', [], { onna: 1 })).toBe(1);
+    expect(cardsEarned('onna', [placeSeen('onna')], { onna: 2 })).toBe(2);
+    expect(cardsEarned('onna', [placeSeen('onna')], { onna: 7 })).toBe(3);
   });
 });
 

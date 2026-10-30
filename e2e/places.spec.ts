@@ -1,7 +1,9 @@
 import { expect, test as it, type Page } from '@playwright/test';
-import { ZONES } from '../src/content/zones';
+import { CARD_TOTAL } from '../src/content/places';
+import { relax, stageCfg, ZONES } from '../src/content/zones';
+import { generate } from '../src/engine';
 import { freshProgress } from '../src/state/store';
-import { progress } from './helpers';
+import { dismissIntros, progress, solveByDragging, waitForLevel } from './helpers';
 
 // Plain Playwright: the postcards show as they do for a new player (only the opening story is marked as seen, and who is playing is set)
 async function open(page: Page, extra: Record<string, unknown> = {}) {
@@ -11,20 +13,70 @@ async function open(page: Page, extra: Record<string, unknown> = {}) {
 }
 
 it.describe('place postcards', () => {
-  it('shows the Naha postcard on the first trip there, then carries on to the new-block card', async ({ page }) => {
+  it('shows Naha’s first card on the first trip there, and collects it once the first stop is cleared', async ({ page }) => {
     await open(page);
     await page.click('#goBtn');
     await expect(page.locator('#modal[data-kind="place"]')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('#modal h2')).toHaveText('國際通');
     await expect(page.locator('#modal .tale p')).toContainText('國際通');
+    // Not yet earned: its slot says what earns it
+    await expect(page.locator('#modal [data-card-slot="1"]')).toContainText('過第一站');
     await page.click('#modal [data-ok]');
     await expect(page.locator('#modal[data-kind="intro"]')).toBeVisible();
+    expect((await progress(page)).seen).not.toContain('place:naha');
+    await solveByDragging(page, await waitForLevel(page));
+    await expect(page.locator('#modal[data-kind="win"] [data-new-card="naha:1"]')).toContainText('國際通');
     expect((await progress(page)).seen).toContain('place:naha');
+  });
+
+  it('brings a zone’s second card with its second journey', async ({ page }) => {
+    // Naha's last stop, on the way to finishing it a second time
+    const level = generate(stageCfg(0, 4, []), 5, relax);
+    const run = {
+      zone: 'naha',
+      zi: 0,
+      si: 4,
+      seed: 5,
+      plan: [[], [], [], [], []],
+      level,
+      placed: [],
+      moves: 0,
+      hist: [],
+      orient: level.inv.map(() => 0),
+      shell: 2,
+      conch: 1,
+      earned: 4,
+      rerolls: 0,
+      phase: 'play',
+    };
+    await open(page, {
+      seen: ['story', 'place:naha', 'coach', 'stair', 'cube', 'tower', 'bridge', 'bar'],
+      clears: { naha: 1 },
+      open: ['naha', 'chatan', 'yomitan'],
+      run,
+    });
+    await page.click('[data-resume]');
+    await dismissIntros(page);
+    await solveByDragging(page, level);
+    await page.locator('#modal[data-kind="win"] [data-next]').click();
+    await expect(page.locator('#modal[data-kind="done"] [data-new-card="naha:2"]')).toContainText('波上宮');
+    await page.click('#modal [data-h]');
+    // From the map pin, the newest card shows first; the first can be turned to, the third says what earns it
+    await page.click('.islandWrap [data-zone="0"]');
+    const art = page.locator('#modal img.postcardArt');
+    await expect(art).toHaveAttribute('src', '/postcards/naha/2.webp');
+    await expect.poll(() => art.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+    await expect(page.locator('#modal [data-card-slot="3"]')).toContainText('走完 3 次');
+    await page.click('#modal [data-card-slot="1"]');
+    await expect(page.locator('#modal h2')).toHaveText('國際通');
+    await expect(art).toHaveAttribute('src', '/postcards/naha/1.webp');
   });
 
   it('opens a postcard from a map pin, with a button that sets off for that place', async ({ page }) => {
     await open(page);
     await page.click('.islandWrap [data-zone="0"]');
-    await expect(page.locator('#modal[data-kind="place"] h2')).toHaveText('那霸市');
+    await expect(page.locator('#modal[data-kind="place"] .eyebrow')).toHaveText('那霸市');
+    await expect(page.locator('#modal[data-kind="place"] h2')).toHaveText('國際通');
     await page.click('#modal [data-go-place]');
     await expect.poll(async () => (await progress(page)).run?.zone).toBe('naha');
   });
@@ -54,23 +106,13 @@ it.describe('place postcards', () => {
     expect(btn?.height).toBeLessThan(70);
   });
 
-  it('shows a newer zone’s painted scene on its postcard, with no photo credit', async ({ page }) => {
-    await open(page, { open: ['naha', 'chatan', 'yomitan'] });
-    await page.click(`.islandWrap [data-zone="${ZONES.findIndex((z) => z.id === 'chatan')}"]`);
-    await expect(page.locator('#modal[data-kind="place"] h2')).toHaveText('美國村');
-    const img = page.locator('#modal img.postcardArt');
-    await expect(img).toHaveAttribute('src', '/scenes/chatan/day.webp');
-    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
-    await expect(page.locator('#modal .photoCredit')).toHaveCount(0);
-  });
-
   it('has a postcard for Okinawa itself and collects postcards in the collection', async ({ page }) => {
     await open(page);
     await page.click('#okinawaBtn');
     await expect(page.locator('#modal')).toContainText('琉球王國');
-    // A real photo, with its author and licence credited under it
-    await expect.poll(() => page.locator('#modal img.postcardArt').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-    await expect(page.locator('#modal .photoCredit')).toContainText('CC BY');
+    // Okinawa's card is a drawn map, and has no row of other cards
+    await expect(page.locator('#modal svg.postcardArt')).toBeVisible();
+    await expect(page.locator('#modal .cardStrip')).toHaveCount(0);
     await page.click('#modal [data-ok]');
     await page.click('[data-go="dex"]');
     // Postcards have their own page; the collection opens on the shisa
@@ -78,13 +120,14 @@ it.describe('place postcards', () => {
     await expect(page.locator('.pcTile')).toHaveCount(0);
     await page.click('#tab-cards');
     await expect(page.locator('.pcTile:not(.locked)')).toHaveCount(1);
-    await expect(page.locator('.pcTile.locked')).toHaveCount(ZONES.length);
+    await expect(page.locator('.pcTile.locked')).toHaveCount(CARD_TOTAL - 1);
+    await expect(page.locator('#page-cards [data-place="onna"] .pcTile.locked')).toHaveText(['過第一站', '走完 2 次', '走完 3 次']);
     // Thumbnails keep the postcard's shape
-    const tile = await page.locator('.pcTile[data-place="okinawa"] img').boundingBox();
+    const tile = await page.locator('.pcTile[data-card="okinawa:1"] svg').boundingBox();
     expect(tile && tile.width / tile.height).toBeCloseTo(5 / 3, 1);
     await page.click('#creditsBtn');
-    // Photos for Okinawa and the eight zones that have one; the newer zones show their painted scene
-    await expect(page.locator('#modal .creditList li')).toHaveCount(9);
+    // All the pictures are drawn for the game, so there are no photo credits
+    await expect(page.locator('#modal')).toContainText('原創插畫');
     // The narration is synthesized, and says so
     await expect(page.locator('#voiceCredit')).toContainText('Azure');
     // Leaving and coming back finds the same page
