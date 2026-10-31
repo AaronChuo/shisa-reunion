@@ -45,6 +45,7 @@ it.describe('playing without reading', () => {
     await page.click('[data-pick="celadon"]');
     await expect(page.locator('#modal .roleCard')).toHaveCount(2);
     await page.click('#modal [data-role="0"]');
+    await expect(page.locator('#modal')).toHaveCount(0);
     expect((await progress(page)).pair).toEqual(['celadon', 'terracotta']);
   });
 });

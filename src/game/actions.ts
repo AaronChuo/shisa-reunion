@@ -2,7 +2,7 @@ import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
 import { ageOf, handOut } from '../content/age';
 import { cardsEarned, type PlaceId, placeSeen } from '../content/places';
-import { drawFromSeries, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
+import { drawFromSeries, pairWith, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { SHISA_CHEER } from '../content/story';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
@@ -659,8 +659,8 @@ export function openCapsule(): void {
   });
 }
 
-/** After a capsule opens: keep the new shisa, or send it out right away as the one that sets out */
-export function finishReveal(next: 'keep' | 'use'): void {
+/** After a capsule opens: keep the new shisa (null), or put it in the pair right away to set out (0) or wait (1) */
+export function finishReveal(role: 0 | 1 | null): void {
   const id = getState().ui.pulled;
   mut((s) => {
     s.ui.pull = 'idle';
@@ -668,7 +668,7 @@ export function finishReveal(next: 'keep' | 'use'): void {
     s.ui.capColor = null;
     s.ui.modal = null;
   });
-  if (next === 'use' && id) chooseRole(id, 0);
+  if (role !== null && id) chooseRole(id, role);
 }
 
 // ---------- postcards ----------
@@ -765,10 +765,7 @@ export function askRole(id: string): void {
 /** role 0 = the one that sets out (open mouth), 1 = the one waiting (closed mouth) */
 export function chooseRole(id: string, role: 0 | 1): void {
   mut((s) => {
-    const pair = s.progress.pair;
-    const other = role === 0 ? 1 : 0;
-    if (pair[other] === id) pair[other] = pair[role];
-    pair[role] = id;
+    s.progress.pair = pairWith(s.progress.pair, id, role);
     s.ui.modal = null;
   });
   sfx.hello();

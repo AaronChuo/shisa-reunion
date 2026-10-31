@@ -2,7 +2,7 @@ import { existsSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { speakable } from '../audio/speech';
 import { CARD_TOTAL, cardsEarned, cardUrl, PLACE_ORDER, PLACES, placeSeen } from './places';
-import { ABOUT_SHISA, SERIES, VARIANTS } from './shisa';
+import { ABOUT_SHISA, pairWith, SERIES, VARIANTS } from './shisa';
 import { PIECE_NAMES, RULES } from './text';
 import { ZONES } from './zones';
 
@@ -31,6 +31,21 @@ describe('shisa collection', () => {
 
   it('explains what a shisa is', () => {
     expect(spoken(ABOUT_SHISA.story)).toBeGreaterThan(80);
+  });
+});
+
+describe('who plays which part', () => {
+  it('puts a new shisa in place of the one setting out or the one waiting', () => {
+    expect(pairWith(['terracotta', 'celadon'], 'goya', 0)).toEqual(['goya', 'celadon']);
+    expect(pairWith(['terracotta', 'celadon'], 'goya', 1)).toEqual(['terracotta', 'goya']);
+  });
+
+  it('swaps the two when one takes the other’s part', () => {
+    expect(pairWith(['terracotta', 'celadon'], 'celadon', 0)).toEqual(['celadon', 'terracotta']);
+  });
+
+  it('leaves the pair as it is when a shisa keeps its part', () => {
+    expect(pairWith(['terracotta', 'celadon'], 'terracotta', 0)).toEqual(['terracotta', 'celadon']);
   });
 });
 

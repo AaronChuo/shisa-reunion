@@ -23,8 +23,8 @@ it.describe('a full journey', () => {
     await page.locator('#turnBtn').click();
     await page.locator('#openBtn').click();
     await page.locator('#capsule').click();
-    // One tap sends the new shisa out as the one that sets out; no second question
-    await page.locator('#modal [data-use]').click();
+    // One tap on the picture of the pair with the new shisa setting out puts it there
+    await page.locator('#modal [data-role="0"]').click();
     await expect(page.locator('#modal')).toHaveCount(0);
     p = await progress(page);
     expect(p.tokens).toBe(4);

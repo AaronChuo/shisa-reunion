@@ -910,9 +910,36 @@ h1 {
   transform: translateY(2px);
   box-shadow: 0 2px 0 var(--line);
 }
-.roleCard svg {
-  width: 92px;
-  height: 100px;
+/* Each card is the pair as it would be; the shisa being placed glows and hops when its card is picked */
+.pairPic {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+}
+.pairPic .fresh {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.roleCard.picked .fresh {
+  animation: hop 0.5s ease-out;
+}
+.roles.decided .roleCard:not(.picked) {
+  opacity: 0.45;
+  transition: opacity 0.2s;
+}
+/* The question above the cards, with a button that reads it out */
+.sheet .askAloud {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  color: var(--ink);
+  font-weight: 700;
+  text-align: left;
+}
+.askAloud .readBtn {
+  flex: none;
+  padding: 0;
 }
 .roleCard .rn {
   font-size: 21px;

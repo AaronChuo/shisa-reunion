@@ -1,11 +1,11 @@
-import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Blocks, CardIcon, CoinIcon, Icon, Stamp, TapHand } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
-import { ShisaArt, ShisaIcon } from '../art/Shisa';
+import { ShisaArt, Star4 } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
 import { CARD_NEEDS, cardsEarned, PLACES, type PlaceId } from '../content/places';
-import { ABOUT_SHISA, SERIES, VARIANT_BY_ID } from '../content/shisa';
+import { ABOUT_SHISA, pairWith, ROLE_ASK, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES, stopLine } from '../content/text';
 import { lockHint, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { sizeOf } from '../engine';
@@ -253,12 +253,8 @@ function Reveal({ id, seriesId, color }: { id: string; seriesId: string; color: 
             {v.rare && <span className="rare">　稀有！</span>}
           </p>
           <Story text={v.story} />
-          <div className="btns">
-            <Cta icon={<ShisaIcon v={v} open />} data={{ 'data-use': true }} onClick={() => finishReveal('use')}>
-              換牠出場
-            </Cta>
-          </div>
-          <button type="button" className="iconBtn" data-keep onClick={() => finishReveal('keep')}>
+          <RoleChoice id={id} onPick={finishReveal} />
+          <button type="button" className="iconBtn" data-keep onClick={() => finishReveal(null)}>
             <Icon name="check" />
             <span>先收著</span>
           </button>
@@ -274,34 +270,87 @@ function Reveal({ id, seriesId, color }: { id: string; seriesId: string; color: 
   );
 }
 
-/** A collected shisa: its story, read-aloud, and which of the pair it plays */
-function Role({ id }: { id: string }) {
-  const v = VARIANT_BY_ID[id];
-  const pair = useGame((s) => s.progress.pair);
-  const series = SERIES.find((x) => x.id === v.series);
+/** A question for children who can't read yet: the words, and a button that reads them out */
+function AskAloud({ text }: { text: string }) {
+  const { supported, speaking, toggle } = useReadAloud(text);
   return (
-    <Sheet label={v.name}>
-      <div className="eyebrow">
-        {series?.name}
-        {v.rare ? '・稀有' : ''}
-      </div>
-      <h2>{v.name}</h2>
-      <Story text={v.story} />
-      {/* The two jobs as pictures: the open mouth sets out walking, the closed mouth waits at home */}
-      <div className="roles">
+    <p className="askAloud">
+      {supported && (
+        <button
+          type="button"
+          className={speaking ? 'iconBtn readBtn on' : 'iconBtn readBtn'}
+          data-ask
+          aria-label={speaking ? '停下來' : '念給我聽'}
+          aria-pressed={speaking}
+          onClick={toggle}
+        >
+          <Icon name={speaking ? 'soundOff' : 'soundOn'} />
+        </button>
+      )}
+      <span>{text}</span>
+    </p>
+  );
+}
+
+/** The pair as it would be: the one setting out walks over to the one waiting; the shisa being placed glows */
+function PairPic({ pair, fresh }: { pair: [string, string]; fresh: 0 | 1 }) {
+  return (
+    <svg className="pairPic" viewBox="0 0 200 116" aria-hidden="true">
+      <rect x={4} y={100} width={192} height={9} rx={4.5} fill="#EADBB8" />
+      <path d="M84,72 h24" stroke="#4C6A73" strokeWidth={5} strokeDasharray="0.1 10" strokeLinecap="round" />
+      <path d="M112,64 l11,8 l-11,8 Z" fill="#4C6A73" />
+      {([0, 1] as const).map((role) => (
+        <g key={role} transform={`translate(${role === 0 ? 46 : 154},104)`}>
+          {role === fresh && (
+            <>
+              <ellipse cx={0} cy={-44} rx={38} ry={48} fill="#FFE9A8" />
+              <Star4 x={-34} y={-86} r={7} fill="#F5B92E" className="twinkle" />
+              <Star4 x={33} y={-72} r={5} fill="#F5B92E" className="twinkle" />
+            </>
+          )}
+          <g className={role === fresh ? 'fresh' : undefined}>
+            <ShisaArt v={VARIANT_BY_ID[pair[role]]} open={role === 0} />
+          </g>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/** How long the picked card's shisa hops before the sheet closes */
+const PICK_MS = 550;
+
+/**
+ * Which of the pair a shisa plays, asked with a picture of each pair as it would be rather than with words: the shisa
+ * glows in its new place with its mouth open or closed, and the one it replaces is not in the picture.
+ */
+function RoleChoice({ id, onPick }: { id: string; onPick: (role: 0 | 1) => void }) {
+  const pair = useGame((s) => s.progress.pair);
+  const [picked, setPicked] = useState<0 | 1 | null>(null);
+  const timer = useRef(0);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const pick = (role: 0 | 1) => {
+    if (picked !== null) return;
+    setPicked(role);
+    timer.current = window.setTimeout(() => onPick(role), PICK_MS);
+  };
+  return (
+    <>
+      <AskAloud text={ROLE_ASK} />
+      <div className={picked === null ? 'roles' : 'roles decided'}>
         {([0, 1] as const).map((role) => {
           const on = pair[role] === id;
           return (
             <button
               key={role}
               type="button"
-              className={on ? 'roleCard on' : 'roleCard'}
+              className={['roleCard', on && 'on', picked === role && 'picked'].filter(Boolean).join(' ')}
               data-role={role}
               data-focus={role === 0 ? true : undefined}
               aria-pressed={on}
-              onClick={() => chooseRole(id, role)}
+              onClick={() => pick(role)}
             >
-              <ShisaIcon v={v} open={role === 0} />
+              <PairPic pair={pairWith(pair, id, role)} fresh={role} />
               <span className="rn">{role === 0 ? '出發' : '等待'}</span>
               <small>{role === 0 ? '張嘴，去找朋友' : '閉嘴，等朋友來'}</small>
               {on && (
@@ -313,6 +362,23 @@ function Role({ id }: { id: string }) {
           );
         })}
       </div>
+    </>
+  );
+}
+
+/** A collected shisa: its story, read-aloud, and which of the pair it plays */
+function Role({ id }: { id: string }) {
+  const v = VARIANT_BY_ID[id];
+  const series = SERIES.find((x) => x.id === v.series);
+  return (
+    <Sheet label={v.name}>
+      <div className="eyebrow">
+        {series?.name}
+        {v.rare ? '・稀有' : ''}
+      </div>
+      <h2>{v.name}</h2>
+      <Story text={v.story} />
+      <RoleChoice id={id} onPick={(role) => chooseRole(id, role)} />
       <button type="button" className="iconBtn" data-cancel onClick={closeModal}>
         <Icon name="close" />
         <span>關起來</span>

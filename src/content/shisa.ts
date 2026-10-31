@@ -108,6 +108,21 @@ export const ABOUT_SHISA = {
     '牠們常常一對出現：張嘴的把福氣接進來，閉嘴的把福氣守住。台灣金門也有守護村子的「風獅爺」，是西薩的遠房親戚喔。',
 };
 
+/** Asked when a shisa can join the pair, in the words of the two picture cards */
+export const ROLE_ASK = '要讓牠張開嘴巴去找朋友，還是閉著嘴巴等朋友來？';
+
+/**
+ * The pair with `id` playing `role` (0 sets out with its mouth open, 1 waits with it closed): it takes the place of
+ * the one there, or the two swap if it already plays the other part.
+ */
+export function pairWith(pair: readonly [string, string], id: string, role: 0 | 1): [string, string] {
+  const next: [string, string] = [pair[0], pair[1]];
+  const other = role === 0 ? 1 : 0;
+  if (next[other] === id) next[other] = next[role];
+  next[role] = id;
+  return next;
+}
+
 const v = (
   id: string,
   name: string,

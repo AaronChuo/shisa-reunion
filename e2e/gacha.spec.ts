@@ -90,6 +90,37 @@ it.describe('a gacha machine you work by hand', () => {
     expect((await progress(page)).tokens).toBe(1);
   });
 
+  it.describe('a shisa just out of its capsule', () => {
+    async function pullOne(page: Page) {
+      await open(page, 1);
+      await page.locator('#coinBtn').click();
+      await page.locator('#turnBtn').click();
+      await page.locator('#openBtn').click();
+      await page.locator('#capsule').click();
+    }
+
+    it('joins the pair as the one waiting when that picture is picked', async ({ page }) => {
+      await pullOne(page);
+      // Two pictures of the pair as it would be, the new shisa glowing in each, and the question to hear
+      await expect(page.locator('#modal .roleCard .fresh')).toHaveCount(2);
+      await expect(page.locator('#modal .askAloud')).toContainText('閉著嘴巴');
+      await expect(page.locator('#modal [data-ask]')).toBeVisible();
+      await page.locator('#modal [data-role="1"]').click();
+      await expect(page.locator('#modal')).toHaveCount(0);
+      const p = await progress(page);
+      expect(p.pair).toEqual(['terracotta', p.owned[2]]);
+    });
+
+    it('goes into the collection and leaves the pair as it was when kept for later', async ({ page }) => {
+      await pullOne(page);
+      await page.locator('#modal [data-keep]').click();
+      await expect(page.locator('#modal')).toHaveCount(0);
+      const p = await progress(page);
+      expect(p.owned).toHaveLength(3);
+      expect(p.pair).toEqual(['terracotta', 'celadon']);
+    });
+  });
+
   it.describe('on a phone set to less motion', () => {
     it.use({ reducedMotion: 'reduce' });
 

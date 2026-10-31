@@ -1,5 +1,5 @@
 import { PLACES } from '../content/places';
-import { ABOUT_SHISA, VARIANTS } from '../content/shisa';
+import { ABOUT_SHISA, ROLE_ASK, VARIANTS } from '../content/shisa';
 import { SHISA_CALL, SHISA_CHEER, SHISA_HELLO, SHISA_REST, STORY } from '../content/story';
 import { RULES } from '../content/text';
 import type { Voice } from './voice';
@@ -10,6 +10,7 @@ export function voiceLines(): { text: string; as: Voice }[] {
     ...STORY.flatMap((p) => (p.after ? [p.say, p.after] : [p.say])),
     ...Object.values(RULES),
     ABOUT_SHISA.story,
+    ROLE_ASK,
     ...VARIANTS.map((v) => v.story),
     ...Object.values(PLACES).flatMap((p) => p.cards.map((c) => c.story)),
   ];
