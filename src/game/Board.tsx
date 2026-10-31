@@ -255,12 +255,12 @@ export function Board() {
         {lv.tide && <Water w={lv.w} level={g.water} rise={rise} />}
         <g id="goal" transform={`translate(${M + (lv.goal.x + 0.5) * C},${Y0 - lv.goal.y * C})`}>
           <g className={ui.cheer ? 'bob cheer' : 'bob'}>
-            <ShisaArt v={goal} open={false} />
+            <ShisaArt v={goal} open={false} smile={ui.cheer} />
           </g>
         </g>
         <g id="hero" ref={heroRef} transform={heroTransform(heroPos)}>
           <g className={ui.cheer ? 'bob cheer' : 'bob'}>
-            <ShisaArt v={hero} open />
+            <ShisaArt v={hero} open smile={ui.cheer} />
           </g>
         </g>
         {land && landPiece && (

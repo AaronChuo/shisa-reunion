@@ -1,5 +1,5 @@
 import { expect, test as it } from './fixtures';
-import { dismissIntros, progress, solveByDragging, waitForLevel } from './helpers';
+import { animationOf, dismissIntros, progress, solveByDragging, waitForLevel } from './helpers';
 
 it.describe('a full journey', () => {
   it('clears all five stops of Naha by dragging blocks, then pulls a new shisa', async ({ page }) => {
@@ -45,6 +45,25 @@ it.describe('a full journey', () => {
   });
 });
 
+it.describe('the two shisa on the board', () => {
+  it('blink now and then, and smile instead once they meet', async ({ page }) => {
+    await page.goto('/');
+    await page.click('.zone [data-zone="0"]');
+    const lv = await waitForLevel(page);
+    for (const who of ['#hero', '#goal']) {
+      await expect(page.locator(`${who} .lid`)).toHaveCount(2);
+      expect(await animationOf(page, `${who} .lid`)).toBe('blink');
+      await expect(page.locator(`${who} [data-smile]`)).toHaveCount(0);
+    }
+    await solveByDragging(page, lv);
+    await expect(page.locator('#modal[data-kind="win"]')).toBeVisible();
+    for (const who of ['#hero', '#goal']) {
+      await expect(page.locator(`${who} [data-smile]`)).toHaveCount(1);
+      await expect(page.locator(`${who} .lid`)).toHaveCount(0);
+    }
+  });
+});
+
 it.describe('a phone set to less motion', () => {
   it.use({ reducedMotion: 'reduce' });
 
@@ -63,5 +82,15 @@ it.describe('a phone set to less motion', () => {
     await expect(page.locator('#modal[data-kind="win"]')).toBeVisible();
     // Frame by frame along the road, not one jump to the end
     expect(await page.evaluate(() => (window as unknown as { heroMoves: number }).heroMoves)).toBeGreaterThan(10);
+  });
+
+  it('keeps the eyes open instead of blinking, and still smiles when the two meet', async ({ page }) => {
+    await page.goto('/');
+    await page.click('.zone [data-zone="0"]');
+    const lv = await waitForLevel(page);
+    expect(await animationOf(page, '#hero .lid')).toBe('none');
+    await expect(page.locator('#hero .lid').first()).toHaveCSS('opacity', '0');
+    await solveByDragging(page, lv);
+    await expect(page.locator('#hero [data-smile]')).toHaveCount(1);
   });
 });

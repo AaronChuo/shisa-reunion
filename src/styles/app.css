@@ -1652,6 +1652,11 @@ h1 {
   transform-box: fill-box;
   transform-origin: 50% 50%;
 }
+/* A shisa's eyelids (Lids in Shisa.tsx): open nearly all the time, shut for the last fiftieth of each turn */
+.lid {
+  opacity: 0;
+  animation: blink 6s linear infinite;
+}
 /* A finger acting out the drag a hint asks for: press the block, carry it, let go */
 .dragDemo {
   position: fixed;
@@ -1805,6 +1810,16 @@ h1 {
     transform: rotateY(540deg) scale(0.4);
   }
 }
+@keyframes blink {
+  0%,
+  97.6% {
+    opacity: 0;
+  }
+  98%,
+  100% {
+    opacity: 1;
+  }
+}
 @keyframes twinkle {
   50% {
     transform: scale(0.5);
@@ -1849,9 +1864,9 @@ h1 {
   }
 }
 /*
- * Less motion stops what only decorates (bobbing, glows, twinkles, waves). What tells the story or shows the child what
- * to do still moves: the capsule coming out (without its spin), the coin and crank demos and the drag demo, which mean
- * nothing standing still.
+ * Less motion stops what only decorates (bobbing, blinking, glows, twinkles, waves). What tells the story or shows the
+ * child what to do still moves: the capsule coming out (without its spin), the coin and crank demos and the drag demo,
+ * which mean nothing standing still.
  */
 @media (prefers-reduced-motion: reduce) {
   .drop,
@@ -1862,6 +1877,7 @@ h1 {
   .ghostLine,
   .rise,
   .twinkle,
+  .lid,
   .starGlint,
   .cta::before,
   .cta .ci,

@@ -232,8 +232,16 @@ function Storm({ blown, onBlow }: { blown: boolean; onBlow: () => void }) {
   );
 }
 
-/** Page 4: a stair drops into place and the setting-out shisa walks up it to its friend */
+/** When the walk over reaches the friend and the hearts come in (`.walkOver` and `.hearts` in app.css) */
+const MEET_MS = 3100;
+
+/** Page 4: a stair drops into place and the setting-out shisa walks up it to its friend; the two smile as they meet */
 function Build() {
+  const [met, setMet] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setMet(true), MEET_MS);
+    return () => window.clearTimeout(t);
+  }, []);
   return (
     <>
       <Sky />
@@ -247,12 +255,12 @@ function Build() {
       </g>
       <g transform={`translate(290,${GROUND - 60})`}>
         <g className="bob">
-          <ShisaArt v={goal()} open={false} />
+          <ShisaArt v={goal()} open={false} smile={met} />
         </g>
       </g>
       {/* Walks along the ground, up the steps, across the top, to its friend */}
       <g className="walkOver">
-        <ShisaArt v={hero()} open />
+        <ShisaArt v={hero()} open smile={met} />
       </g>
       <g className="hearts">
         {[-20, 0, 20].map((dx, i) => (
@@ -276,12 +284,12 @@ function Go() {
       <House />
       <g transform="translate(184,118)">
         <g className="cheerStory">
-          <ShisaArt v={hero()} open />
+          <ShisaArt v={hero()} open smile />
         </g>
       </g>
       <g transform="translate(216,118)">
         <g className="cheerStory" style={{ animationDelay: '0.2s' }}>
-          <ShisaArt v={goal()} open={false} />
+          <ShisaArt v={goal()} open={false} smile />
         </g>
       </g>
     </>

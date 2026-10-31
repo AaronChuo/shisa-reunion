@@ -1,4 +1,4 @@
-import { type ReactNode, useId } from 'react';
+import { type ReactNode, useId, useState } from 'react';
 import type { Variant } from '../content/shisa';
 
 const f1 = (v: number) => +v.toFixed(1);
@@ -565,12 +565,39 @@ function BackHat({ v }: { v: Variant }) {
   );
 }
 
+/** Seconds between the blinks of each pair of lids: at least `min`, plus up to `spread`, picked once per shisa */
+const BLINKS = [
+  { id: 'a', min: 5, spread: 2 },
+  { id: 'b', min: 8, spread: 3 },
+];
+
+/**
+ * Eyelids the colour of the face, shut for a moment now and then. Each shisa has two pairs that blink at their own
+ * pace, so its blinks never fall into a rhythm, and now and then come twice in a row (see `.lid` in app.css).
+ */
+function Lids({ face, dark }: { face: string; dark: string }) {
+  const [paces] = useState(() =>
+    BLINKS.map(({ id, min, spread }) => {
+      const s = min + Math.random() * spread;
+      return { id, style: { animationDuration: `${f1(s)}s`, animationDelay: `-${f1(Math.random() * s)}s` } };
+    }),
+  );
+  return paces.map(({ id, style }) => (
+    <g key={id} className="lid" style={style}>
+      <circle cx={-8} cy={-59} r={6.5} fill={face} />
+      <circle cx={8} cy={-59} r={6.5} fill={face} />
+      <path d="M-13,-59 q5,3 10,0 M3,-59 q5,3 10,0" fill="none" stroke={dark} strokeWidth={2.6} strokeLinecap="round" />
+    </g>
+  ));
+}
+
 /**
  * A shisa standing with its feet at (0, 0), about 90 units tall.
  * open = the one that sets out (阿, open mouth); closed = the one waiting (吽).
  * sil = locked silhouette for collection slots not yet pulled.
+ * smile = eyes curved up with joy, for when the two find each other.
  */
-export function ShisaArt({ v, open, sil = false }: { v: Variant; open: boolean; sil?: boolean }) {
+export function ShisaArt({ v, open, sil = false, smile = false }: { v: Variant; open: boolean; sil?: boolean; smile?: boolean }) {
   const id = useId();
   const body = sil ? '#BFCFCC' : v.body;
   const face = sil ? '#BFCFCC' : v.face;
@@ -616,10 +643,17 @@ export function ShisaArt({ v, open, sil = false }: { v: Variant; open: boolean; 
       ) : (
         <>
           <path d="M-15,-66 q6,-6 11,-1 M4,-67 q5,-5 11,1" fill="none" stroke={dark} strokeWidth={3.5} strokeLinecap="round" />
-          <circle cx={-8} cy={-59} r={5.5} fill="#fff" />
-          <circle cx={8} cy={-59} r={5.5} fill="#fff" />
-          <circle cx={-7} cy={-58.5} r={3} fill="#1d1d1d" />
-          <circle cx={9} cy={-58.5} r={3} fill="#1d1d1d" />
+          {smile ? (
+            <path data-smile d="M-13,-57 Q-8,-65 -3,-57 M3,-57 Q8,-65 13,-57" fill="none" stroke={dark} strokeWidth={3.2} strokeLinecap="round" />
+          ) : (
+            <>
+              <circle cx={-8} cy={-59} r={5.5} fill="#fff" />
+              <circle cx={8} cy={-59} r={5.5} fill="#fff" />
+              <circle cx={-7} cy={-58.5} r={3} fill="#1d1d1d" />
+              <circle cx={9} cy={-58.5} r={3} fill="#1d1d1d" />
+              <Lids face={face} dark={dark} />
+            </>
+          )}
           <ellipse cx={0} cy={-51} rx={7} ry={4.5} fill={v.nose ?? dark} />
           {open ? (
             <>

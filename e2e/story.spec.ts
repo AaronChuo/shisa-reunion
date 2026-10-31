@@ -46,7 +46,12 @@ it.describe('the opening story', () => {
     await page.mouse.up();
     await expect(page.locator('#story .storyText')).toContainText('吹散');
     await next(page);
+    // The two smile once the walk over reaches the friend, and are still smiling as they set off
+    await expect(page.locator('#story')).toHaveAttribute('data-page', 'build');
+    await expect(page.locator('#story [data-smile]')).toHaveCount(0);
+    await expect(page.locator('#story [data-smile]')).toHaveCount(2);
     await next(page);
+    await expect(page.locator('#story [data-smile]')).toHaveCount(2);
     await page.click('#storyGo');
     await expect(page.locator('#story')).toHaveCount(0);
     await waitForLevel(page);
