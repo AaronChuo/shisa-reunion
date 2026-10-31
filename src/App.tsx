@@ -31,12 +31,14 @@ export function App() {
   useEffect(() => installMusic(), []);
   useEffect(() => installSpeechUnlock(), []);
   useEffect(() => installPlayClock(), []);
-  // The first time the game opens, the story introduces the two shisa
+  // The first time the game opens, a grown-up says who is playing (answerAge then plays the story); once that is
+  // known, the story introduces the two shisa
   useEffect(() => {
-    if (!getState().progress.seen.includes('story')) openStory();
+    const p = getState().progress;
+    if (p.age !== null && !p.seen.includes('story')) openStory();
   }, []);
   const story = useGame((s) => s.ui.story);
-  // Once nobody has said who is playing, a grown-up is asked on the map
+  // While nobody has said who is playing, a grown-up is asked
   const modal = useGame((s) => s.ui.modal);
   const age = useGame((s) => s.progress.age);
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-check whenever the screen, a modal, the story or the age changes

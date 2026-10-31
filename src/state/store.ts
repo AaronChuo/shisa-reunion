@@ -23,8 +23,10 @@ export interface Run {
   moves: number;
   hist: { placed: Placed[]; moves: number }[];
   orient: number[];
+  /** Hint shells left */
   shell: number;
-  conch: number;
+  /** Rerolls left; null for as many as wanted */
+  conch: number | null;
   earned: number;
   rerolls: number;
   phase: Phase;

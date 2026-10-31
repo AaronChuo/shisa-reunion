@@ -4,8 +4,21 @@ import { animationOf, progress, waitForLevel } from './helpers';
 // These tests use the plain Playwright test, so the game opens as it does for a brand-new player
 const next = (page: Page) => page.click('#storyNext');
 
+it.describe('the first time the game opens', () => {
+  it('asks a grown-up who is playing, then plays the story', async ({ page }) => {
+    await page.goto('/');
+    const ask = page.locator('#modal[data-kind="age"]');
+    await expect(ask).toBeVisible();
+    await expect(page.locator('#story')).toHaveCount(0);
+    await page.click('.ageCard[data-age="kid"]');
+    await expect(ask).toHaveCount(0);
+    await expect(page.locator('#story')).toBeVisible();
+    expect((await progress(page)).age).toBe('kid');
+  });
+});
+
 it.describe('the opening story', () => {
-  // A brand-new player, except that a grown-up has already said who is playing (asked on the map otherwise)
+  // A brand-new player, except that a grown-up has already said who is playing (asked before the story otherwise)
   it.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       if (!localStorage.getItem('shisa-reunion')) localStorage.setItem('shisa-reunion', JSON.stringify({ state: { progress: { age: 'little' } }, version: 2 }));

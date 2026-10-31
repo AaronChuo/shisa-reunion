@@ -25,8 +25,8 @@ it.describe('playing without reading', () => {
     await page.click('#goBtn');
     const lv = await waitForLevel(page);
     await expect(page.locator('.dragDemo')).toBeVisible();
-    // The demonstration is free: the hint shells are untouched
-    expect((await progress(page)).run?.shell).toBe(2);
+    // The demonstration is free: the youngest still have two hint shells for each block
+    expect((await progress(page)).run?.shell).toBe(lv.inv.length * 2);
     await solveByDragging(page, lv);
     await expect(page.locator('.dragDemo')).toHaveCount(0);
   });
@@ -58,7 +58,7 @@ it.describe('走走看', () => {
     await expect(page.locator('#bubble')).toContainText(/卡住|走不動/);
     // Back where it started, ready to build, and free to try again
     await expect(page.locator('#tryBtn')).toBeEnabled();
-    expect((await progress(page)).run?.shell).toBe(2);
+    expect((await progress(page)).run?.shell).toBe(lv.inv.length * 2);
     await page.click('#tryBtn');
     await expect(page.locator('#tryBtn')).toBeEnabled();
     await solveByDragging(page, lv);

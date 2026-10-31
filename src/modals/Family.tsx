@@ -4,7 +4,7 @@ import { ShisaArt } from '../art/Shisa';
 import { AGE_ORDER, AGES, type Age, REST_CHOICES } from '../content/age';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { closeModal } from '../game/actions';
-import { ackRest, chooseAge, openParents, restoreProgress, setRestMin } from '../game/family';
+import { ackRest, answerAge, chooseAge, openParents, restoreProgress, setRestMin } from '../game/family';
 import { decodeBackup, encodeBackup, summary } from '../state/backup';
 import { getState, type Progress, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
@@ -84,7 +84,7 @@ function AgeChoices({ value, onPick, big }: { value: Age | null; onPick: (a: Age
   );
 }
 
-/** Asked once on the map: a grown-up says who is playing, which sets how much the game helps */
+/** Asked the first time the game opens: a grown-up says who is playing, which sets how much the game helps */
 export function AgeAsk() {
   return (
     <Sheet label="誰要來玩" wide>
@@ -92,8 +92,8 @@ export function AgeAsk() {
       <h2 tabIndex={-1} data-focus>
         誰要來玩？
       </h2>
-      <p>請大人幫忙選。年紀小，手指會常常出來示範，也會提醒休息。</p>
-      <AgeChoices value={null} onPick={chooseAge} big />
+      <p>請大人幫忙選。年紀越小，提示和換題越多，手指也會常常出來示範。</p>
+      <AgeChoices value={null} onPick={answerAge} big />
       <p className="small">之後可以在「聲音設定」裡按住「大人設定」改。</p>
     </Sheet>
   );
@@ -114,7 +114,7 @@ export function ParentSettings() {
       <div className="setting">
         <h3>誰在玩</h3>
         <AgeChoices value={age} onPick={chooseAge} />
-        <p className="small">{age ? AGES[age].detail : '還沒選；先照 3–5 歲的方式幫忙'}</p>
+        <p className="small">{age ? AGES[age].detail : '還沒選；先照未滿 6 歲的方式幫忙'}</p>
       </div>
       <div className="setting">
         <h3>休息提醒</h3>

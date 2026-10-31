@@ -100,11 +100,10 @@ export function Tray() {
             提示 <b>{run.shell}</b>
           </span>
         </button>
-        <button type="button" className="iconBtn" id="rerollBtn" onClick={reroll} disabled={run.conch <= 0}>
+        <button type="button" className="iconBtn" id="rerollBtn" onClick={reroll} disabled={run.conch !== null && run.conch <= 0}>
           <ConchIcon />
-          <span>
-            換題 <b>{run.conch}</b>
-          </span>
+          {/* As many rerolls as wanted show no count */}
+          <span>換題 {run.conch !== null && <b>{run.conch}</b>}</span>
         </button>
       </div>
     </aside>

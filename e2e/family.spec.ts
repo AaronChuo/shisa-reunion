@@ -1,12 +1,29 @@
 import type { Page } from '@playwright/test';
+import { relax, stageCfg } from '../src/content/zones';
+import { generate } from '../src/engine';
 import { expect, test as it } from './fixtures';
-import { progress } from './helpers';
+import { dismissIntros, progress, solveByDragging, waitForLevel } from './helpers';
 
 const KEY = 'shisa-reunion';
 
 /** A save with these progress fields; anything left out is filled in as for a new player */
 const seed = (page: Page, p: Record<string, unknown>) =>
   page.addInitScript(([key, s]) => localStorage.getItem(key) || localStorage.setItem(key, s), [KEY, JSON.stringify({ state: { progress: p }, version: 2 })]);
+
+/** A journey through Naha, on its first stop with the level built, holding these hint shells and rerolls */
+function nahaRun(shell: number, conch: number | null) {
+  const level = generate(stageCfg(0, 0, []), 5, relax);
+  const run = { zone: 'naha', zi: 0, si: 0, seed: 5, plan: [[], [], [], [], []], level, placed: [], moves: 0, hist: [], orient: level.inv.map(() => 0) };
+  return { ...run, shell, conch, earned: 0, rerolls: 0, phase: 'play' };
+}
+
+/** Clears the stop on the board and sets off for the next one */
+async function clearStop(page: Page) {
+  await solveByDragging(page, await waitForLevel(page));
+  await page.locator('#modal[data-kind="win"] [data-next]').click();
+  await page.locator('#modal[data-kind="branch"] [data-card]').first().click();
+  return waitForLevel(page);
+}
 
 /** The keyboard opens the grown-ups' settings at once (a finger has to hold the button) */
 async function openParents(page: Page) {
@@ -17,7 +34,7 @@ async function openParents(page: Page) {
 }
 
 it.describe('who is playing', () => {
-  it('asks a grown-up once on the map, and remembers the answer', async ({ page }) => {
+  it('asks a grown-up on the map once for a save that never answered, and remembers the answer', async ({ page }) => {
     await page.addInitScript(() => {
       (window as unknown as { keepAgeUnset: boolean }).keepAgeUnset = true;
     });
@@ -41,6 +58,58 @@ it.describe('who is playing', () => {
     await page.goto('/');
     await page.clock.fastForward(20_000);
     await expect(page.locator('#goBtn .tapHand')).toHaveCount(0);
+  });
+
+  it('lets the youngest reroll as often as they like, with twice as many hints as blocks', async ({ page }) => {
+    await page.goto('/');
+    await page.click('.zone [data-zone="0"]');
+    const lv = await waitForLevel(page);
+    const run = (await progress(page)).run;
+    expect(run?.shell).toBe(lv.inv.length * 2);
+    expect(run?.conch).toBeNull();
+    await expect(page.locator('#rerollBtn b')).toHaveCount(0);
+    await page.click('#rerollBtn');
+    await expect(page.locator('#rerollBtn')).toBeEnabled();
+    expect((await progress(page)).run?.conch).toBeNull();
+  });
+
+  it('hands 6–11 as many hints as blocks and two rerolls on arriving at every stop', async ({ page }) => {
+    await seed(page, { age: 'kid', seen: ['coach'], run: nahaRun(0, 0) });
+    await page.goto('/');
+    await page.click('[data-resume]');
+    await dismissIntros(page);
+    await expect(page.locator('#hintBtn')).toBeDisabled();
+    await expect(page.locator('#rerollBtn')).toBeDisabled();
+    const lv = await clearStop(page);
+    const run = (await progress(page)).run;
+    expect(run?.shell).toBe(lv.inv.length);
+    expect(run?.conch).toBe(2);
+    await expect(page.locator('#rerollBtn b')).toHaveText('2');
+  });
+
+  it('gives 12 and up the zone’s stars in hints and two rerolls, for the whole journey', async ({ page }) => {
+    await seed(page, { age: 'big', seen: ['coach'] });
+    await page.goto('/');
+    await page.click('.zone [data-zone="0"]');
+    await waitForLevel(page);
+    // Naha has one star
+    expect((await progress(page)).run).toMatchObject({ shell: 1, conch: 2 });
+    await expect(page.locator('#hintBtn b')).toHaveText('1');
+
+    // What is left carries over to the next stop
+    await page.evaluate(
+      (r) => {
+        const s = JSON.parse(localStorage.getItem('shisa-reunion') ?? '{}');
+        s.state.progress.run = r;
+        localStorage.setItem('shisa-reunion', JSON.stringify(s));
+      },
+      nahaRun(0, 1),
+    );
+    await page.reload();
+    await page.click('[data-resume]');
+    await clearStop(page);
+    expect((await progress(page)).run).toMatchObject({ si: 1, shell: 0, conch: 1 });
+    await expect(page.locator('#hintBtn')).toBeDisabled();
   });
 });
 

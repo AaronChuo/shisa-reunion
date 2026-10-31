@@ -2,7 +2,7 @@ import { speak } from '../audio/speech';
 import { AGES, type Age } from '../content/age';
 import { SHISA_REST } from '../content/story';
 import { getState, mut, type Progress } from '../state/store';
-import { goHome } from './actions';
+import { goHome, openStory } from './actions';
 
 // The grown-ups' side of the game: who is playing, and a gentle reminder to rest after a while.
 
@@ -17,6 +17,12 @@ export function chooseAge(age: Age): void {
     s.progress.restMin = AGES[age].restMin;
     if (s.ui.modal?.kind === 'age') s.ui.modal = null;
   });
+}
+
+/** The answer to the question asked the first time the game opens; a new player then sees the opening story */
+export function answerAge(age: Age): void {
+  chooseAge(age);
+  if (!getState().progress.seen.includes('story')) openStory();
 }
 
 export function setRestMin(min: number | null): void {
@@ -42,7 +48,7 @@ export function openParents(): void {
   });
 }
 
-/** Asked once, on the map, when nobody has said yet who is playing */
+/** Asked once, when nobody has said yet who is playing: before the opening story for a new player, on the map for an older save */
 export function askAgeIfNeeded(): void {
   const { progress: p, ui } = getState();
   if (p.age === null && ui.screen === 'home' && !ui.modal && !ui.story) {

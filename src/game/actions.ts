@@ -1,10 +1,11 @@
 import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
+import { ageOf, handOut } from '../content/age';
 import { cardsEarned, type PlaceId, placeSeen } from '../content/places';
 import { drawFromSeries, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { SHISA_CHEER } from '../content/story';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
-import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES } from '../content/zones';
+import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { canLift, DEFS, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, walkAsFar, waterAt } from '../engine';
 import { type DexTab, getState, mut, type Run, type Screen } from '../state/store';
 import { restBetweenStops } from './family';
@@ -127,8 +128,9 @@ export function startRun(zi: number): void {
       moves: 0,
       hist: [],
       orient: [],
-      shell: 2,
-      conch: 1,
+      // Handed out once the first stop is built (see buildStage)
+      shell: 0,
+      conch: 0,
       earned: 0,
       rerolls: 0,
       phase: 'play',
@@ -170,6 +172,8 @@ async function buildStage(): Promise<void> {
     const cur = s.progress.run;
     if (!cur) return;
     Object.assign(cur, { level: lv, placed: [], moves: 0, hist: [], phase: 'play', orient: lv.inv.map(() => 0) });
+    // Arriving at a stop, rather than rerolling it, hands out hint shells and rerolls by who is playing
+    if (cur.rerolls === 0) Object.assign(cur, handOut(ageOf(s.progress.age), cur.si, lv.inv.length, zoneStars(ZONES[cur.zi])));
   });
   enterStage();
 }
@@ -582,11 +586,12 @@ export function hint(free = false): void {
 
 export function reroll(): void {
   const st = getState();
-  if (st.ui.busy || !st.progress.run || st.progress.run.conch <= 0) return;
+  const conch = st.progress.run?.conch;
+  if (st.ui.busy || conch === undefined || (conch !== null && conch <= 0)) return;
   mut((s) => {
     const r = s.progress.run;
     if (!r) return;
-    r.conch -= 1;
+    if (r.conch !== null) r.conch -= 1;
     r.rerolls += 1;
   });
   sfx.pop();
