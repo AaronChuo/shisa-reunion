@@ -1,6 +1,6 @@
 # ADR-0008：給還不識字的孩子用的按鈕
 
-- 狀態：已採用（手指與提示貝的時間在 v0.21 改成依年齡設定，見 [ADR-0023](0023-who-is-playing.md)；「減少動態效果」的規則在 v0.26.1 改掉，見 [ADR-0028](0028-less-motion-keeps-the-story.md)）
+- 狀態：已採用（手指與提示貝的時間在 v0.21 改成依年齡設定，見 [ADR-0023](0023-who-is-playing.md)；「減少動態效果」的規則在 v0.26.1 改掉，見 [ADR-0028](0028-less-motion-keeps-the-story.md)；扭蛋開獎與選角卡在 v0.32 改成畫出換完的那一對，見 [ADR-0033](0033-pick-a-part-by-the-pair-it-makes.md)）
 - 日期：2026-10-16
 
 ## 背景
