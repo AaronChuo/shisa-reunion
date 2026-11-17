@@ -11,7 +11,7 @@
 - **三線音樂**：程式即時合成的三線，依場景播放沖繩傳統民謠；音效也用三線、太鼓、三板
 - **用手玩扭蛋機**：拖福氣幣進投幣口、手指轉把手，玻璃罩裡的扭蛋會滾、會撞
 - **不識字也會玩**：每個畫面一顆會呼吸的主要按鈕，配圖示；第一關有手指示範怎麼拖積木；「走走看」讓西薩走到路斷的地方，看見缺在哪裡
-- **大人設定**：第一次打開時選誰在玩（未滿 6 歲、6–11 歲、12 歲以上），決定提示和換題的多寡；玩久了提醒休息，還有進度備份碼，換裝置也能接著玩
+- **大人設定**：第一次打開時選誰在玩（未滿 6 歲、6–11 歲、12 歲以上），決定提示和換題的多寡；玩久了提醒休息，還有進度備份碼，換裝置也能接著玩；贊助連結也只放在這裡
 - **PWA**：可以加到主畫面，沒有網路也能玩
 
 線上試玩：<https://shisa-reunion.vercel.app>（iPad／iPhone 請用 Safari 打開 → 分享 → 加入主畫面）
@@ -55,3 +55,7 @@ pnpm build        # 產出 dist/（含 service worker）
   - 〈久米阿嘉節〉：大城彦五郎編《琉球楽典 工工四》（1925），[琉球大學附屬圖書館數位典藏](https://shimuchi.lib.u-ryukyu.ac.jp/collection/sakamaki/hw5823102)（原件為夏威夷大學阪巻・宝玲文庫）；與明治期手抄本《工工四》（東京藝術大學附屬圖書館藏）逐格比對
   - 〈島風〉〈搭路小調〉〈石拱門〉〈夕陽海堤〉〈萬座毛〉〈海上的路〉〈東方的海〉是原創曲
 - 字型：[源泉圓體 GenSen Rounded](https://github.com/ButTaiwan/gensen-font)、[Fredoka](https://fonts.google.com/specimen/Fredoka)，皆為 SIL Open Font License 1.1，授權檔見 `public/fonts/`
+
+## 贊助
+
+遊戲免費、沒有廣告。喜歡的話，歡迎到 [Portaly](https://portaly.cc/aaronchuo/support)（新台幣）或 [Ko-fi](https://ko-fi.com/aaroncho)（美元）贊助。

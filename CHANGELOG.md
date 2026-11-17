@@ -2,6 +2,13 @@
 
 格式參考 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本採用[語意化版本](https://semver.org/lang/zh-TW/)。
 
+## [0.33.0] - 2026-11-17
+
+### 新增
+
+- 大人設定最下面多了「給大人的小角落」：「請小狂喝杯咖啡」用瀏覽器打開 Portaly 的贊助頁。整個遊戲只有這裡連到外面，孩子不會點出去
+- GitHub repo 頁面的 Sponsor 按鈕，連到 Ko-fi 和 Portaly
+
 ## [0.32.3] - 2026-11-17
 
 ### 變更
