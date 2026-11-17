@@ -415,10 +415,10 @@ export const timeOfStop = (si: number): TimeOfDay => (si < 2 ? 'day' : si < 4 ? 
 export const sceneUrl = (zone: string, time: TimeOfDay = 'day') => `/scenes/${zone}/${time}.webp`;
 
 /**
- * Easier fallbacks when a demanding stage can't be generated in time. The "next stop" card shows the stop's elements
- * and its block count but not the width of the ground, so the steps that keep what the card showed come first: more
- * solutions allowed, no required moves and at most one urchin and one star, then narrower ground. Only after that are
- * elements dropped, and last a block.
+ * Easier fallbacks when a demanding stage can't be generated in time. The stop's elements were planned for the whole
+ * journey and its block count is what the player expects, so the steps that keep them come first: more solutions
+ * allowed, no required moves and at most one urchin and one star, then narrower ground. Only after that are elements
+ * dropped, and last a block.
  */
 export function relax(cfg: GenConfig, step: number): GenConfig {
   const c: GenConfig = { ...cfg, must: cfg.must.slice(), need: cfg.need.slice() };
