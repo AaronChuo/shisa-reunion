@@ -10,10 +10,14 @@ import { getState, type Progress, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
 import { Sheet } from './Sheet';
 
-// The grown-ups' corner: who is playing, the rest reminder and progress backups, behind a button that has to be held,
-// plus the two things the game shows a child because of them: the age question and the rest reminder.
+// The grown-ups' corner: who is playing, the rest reminder, progress backups and a way to support the game, behind a
+// button that has to be held, plus the two things the game shows a child because of them: the age question and the rest
+// reminder.
 
 const HOLD_MS = 1500;
+
+/** Where a grown-up can support the game; it leaves the game, so only the grown-ups' settings link to it */
+export const SUPPORT_URL = 'https://portaly.cc/aaronchuo/support';
 
 /**
  * Opens the grown-ups' settings only after being held down for a moment, so a tapping child doesn't wander in;
@@ -101,7 +105,7 @@ export function AgeAsk() {
 
 const restLabel = (m: number | null) => (m === null ? '不提醒' : `${m} 分鐘`);
 
-/** Who is playing, the rest reminder, and progress backups */
+/** Who is playing, the rest reminder, progress backups, and supporting the game */
 export function ParentSettings() {
   const age = useGame((s) => s.progress.age);
   const restMin = useGame((s) => s.progress.restMin);
@@ -147,6 +151,17 @@ export function ParentSettings() {
             <span>還原進度</span>
           </button>
         </div>
+      </div>
+      <div className="setting" id="support">
+        <h3>給大人的小角落</h3>
+        <p className="small">西薩搭搭路免費、沒有廣告，也不會向孩子收錢。如果你和孩子玩得開心，歡迎請小狂喝杯咖啡，支持西薩去更多地方、認識更多夥伴。</p>
+        <div className="btns">
+          <a className="iconBtn" id="supportLink" href={SUPPORT_URL} target="_blank" rel="noopener">
+            <Icon name="cup" />
+            <span>請小狂喝杯咖啡</span>
+          </a>
+        </div>
+        <p className="small">贊助完全自願，按下去會用瀏覽器打開 Portaly 的贊助頁。謝謝你！</p>
       </div>
       <div className="btns">
         <Cta icon={<Icon name="check" />} data={{ 'data-focus': true }} nudge={false} onClick={closeModal}>

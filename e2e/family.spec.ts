@@ -132,6 +132,17 @@ it.describe("grown-ups' settings", () => {
     expect((await progress(page)).restMin).toBe(45);
   });
 
+  it('hold the only link out of the game, to the support page in a new tab', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#goBtn')).toBeVisible();
+    await expect(page.locator('a[href*="portaly"]')).toHaveCount(0);
+    await openParents(page);
+    const link = page.locator('#modal #supportLink');
+    await expect(link).toHaveAttribute('href', 'https://portaly.cc/aaronchuo/support');
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toContainText('請小狂喝杯咖啡');
+  });
+
   it('remind the child to rest at a break once the chosen time has passed', async ({ page }) => {
     await page.clock.install();
     await seed(page, { age: 'little', restMin: 15 });

@@ -87,6 +87,11 @@ fieldset {
   font-weight: 700;
   white-space: nowrap;
 }
+/* A link that leaves the game, dressed as a button */
+a.iconBtn {
+  color: inherit;
+  text-decoration: none;
+}
 .iconBtn:active {
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--line);

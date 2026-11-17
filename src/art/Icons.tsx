@@ -94,6 +94,14 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M20 4v5h-5" />
     </>
   ),
+  // A cup of coffee with steam, for buying the maker a coffee
+  cup: (
+    <>
+      <path d="M4 10h12v4a6 6 0 0 1-12 0z" />
+      <path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16" />
+      <path d="M8 3.5c-.8 1 .8 2 0 3.2M12 3.5c-.8 1 .8 2 0 3.2" />
+    </>
+  ),
   // A capsule machine: the dome full of capsules on top of the coin box
   gacha: (
     <>
