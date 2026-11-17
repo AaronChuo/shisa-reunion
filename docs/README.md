@@ -1,6 +1,6 @@
 # 西薩搭搭路發展計畫
 
-> 狀態：v0.35.0（2026-11-17）。遊戲正式名稱「西薩搭搭路」（[ADR-0019](adr/0019-official-name.md)）；repo、網址與存檔仍用 `shisa-reunion`。待辦記在 [GitHub Issues](https://github.com/AaronChuo/shisa-reunion/issues)。
+> 狀態：v0.35.1（2026-11-17）。遊戲正式名稱「西薩搭搭路」（[ADR-0019](adr/0019-official-name.md)）；repo、網址與存檔仍用 `shisa-reunion`。待辦記在 [GitHub Issues](https://github.com/AaronChuo/shisa-reunion/issues)。
 
 ## 1. 目標
 
@@ -139,7 +139,7 @@ docs/adr/      架構決策紀錄
 
 決策見 [ADR-0007](adr/0007-culture-stories-and-read-aloud.md)、[ADR-0013](adr/0013-one-new-element-per-zone.md)、[ADR-0014](adr/0014-wide-ground-and-scenery-roads.md)、[ADR-0016](adr/0016-three-new-zones.md)、[ADR-0018](adr/0018-bigger-ground.md)、[ADR-0029](adr/0029-fourteen-zones.md)、[ADR-0030](adr/0030-painted-scenes-and-time-by-stop.md)。
 
-14 個分區照地圖順序繞沖繩一圈：沿本島西海岸往北到山原，從東海岸往南到南城，再出海到久米島、宮古島、石垣島。
+14 個分區照地圖順序繞沖繩一圈：沿本島西海岸往北到山原，從東海岸往南到南城，再出海到久米島、宮古島、石垣島。地圖上本島北部畫得比較短、南部畫得比較高也比較寬，讓南部的分區不擠在一起；宮古島和石垣島在下方的小框裡。手機上地圖是滿寬，差不多一個螢幕高。
 
 | 分區 | 等級 | 新元素（第一站教學） | 最後一站 |
 | --- | --- | --- | --- |
