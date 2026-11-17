@@ -1,6 +1,6 @@
 # 西薩搭搭路發展計畫
 
-> 狀態：v0.32.0（2026-11-01）。遊戲正式名稱「西薩搭搭路」（[ADR-0019](adr/0019-official-name.md)）；repo、網址與存檔仍用 `shisa-reunion`。待辦記在 [GitHub Issues](https://github.com/AaronChuo/shisa-reunion/issues)。
+> 狀態：v0.32.1（2026-11-17）。遊戲正式名稱「西薩搭搭路」（[ADR-0019](adr/0019-official-name.md)）；repo、網址與存檔仍用 `shisa-reunion`。待辦記在 [GitHub Issues](https://github.com/AaronChuo/shisa-reunion/issues)。
 
 ## 1. 目標
 
