@@ -1,9 +1,7 @@
 import { sfx } from '../audio/sfx';
-import { speak } from '../audio/speech';
 import { ageOf, handOut } from '../content/age';
 import { cardsEarned, type PlaceId, placeSeen } from '../content/places';
 import { drawFromSeries, pairWith, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
-import { SHISA_CHEER } from '../content/story';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { canLift, DEFS, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, walkAsFar, waterAt } from '../engine';
@@ -479,7 +477,6 @@ function onWin(): void {
     prepareLevel(stageCfg(r.zi, r.si + 1, r.plan[r.si + 1] ?? []), stageSeed(r, r.si + 1, 0));
   }
   sfx.coin();
-  if (getState().progress.sound) speak(SHISA_CHEER, undefined, 'shisa');
 }
 
 export function afterWin(): void {

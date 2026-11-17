@@ -21,7 +21,7 @@ describe('recorded narration', () => {
   it('names a recording after what is said and how', () => {
     expect(voiceKey('我是西薩！', 'narrator')).toMatch(/^[0-9a-f]{16}$/);
     expect(voiceKey('我是西薩！', 'shisa')).not.toBe(voiceKey('我是西薩！', 'narrator'));
-    expect(voiceKey('西薩團聚了！', 'shisa')).not.toBe(voiceKey('我是西薩！', 'shisa'));
+    expect(voiceKey('西薩！', 'shisa')).not.toBe(voiceKey('我是西薩！', 'shisa'));
   });
 
   it('records the reading of a Japanese word, not the kana', () => {
