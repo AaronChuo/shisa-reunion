@@ -401,9 +401,10 @@ h1 {
   .zones {
     order: -1;
   }
+  /* A phone shows the map the full width of the screen, which makes it about the screen's height */
   .islandWrap {
     width: 100%;
-    max-width: 300px;
+    max-width: 420px;
     margin: 0 auto;
   }
 }
@@ -1882,9 +1883,6 @@ h1 {
   }
   .homeTools .iconBtn {
     padding: 0 9px;
-  }
-  .islandWrap {
-    max-width: 280px;
   }
   /* The shisa pair sits beside the title, and the go button beside its text */
   .pairArt {

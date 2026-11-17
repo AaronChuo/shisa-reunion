@@ -27,135 +27,123 @@ function smooth(pts: [number, number][]): string {
   return `${d}Z`;
 }
 
-// Okinawa main island, roughly: Naha in the south-west, Cape Hedo at the north tip
+// Okinawa main island, roughly: Naha in the south-west, Cape Hedo at the north tip. The north is drawn shorter and the
+// south taller and wider than they really are, so the many zones down south have room
 const ISLAND: [number, number][] = [
-  [118, 540],
-  [150, 528],
-  [172, 505],
-  [190, 478],
-  [205, 452],
-  [232, 432],
-  [252, 420],
-  [244, 402],
-  [228, 398],
-  [234, 378],
-  [250, 356],
-  [262, 328],
-  [272, 298],
-  [284, 262],
-  [296, 226],
-  [307, 190],
-  [318, 150],
-  [330, 110],
-  [342, 72],
-  [352, 40],
-  [342, 22],
-  [328, 28],
-  [314, 54],
-  [302, 92],
-  [290, 130],
-  [276, 166],
-  [262, 190],
-  [242, 200],
-  [214, 196],
-  [186, 204],
-  [164, 222],
-  [158, 246],
-  [174, 264],
-  [202, 268],
-  [226, 272],
-  [234, 290],
-  [226, 314],
-  [212, 338],
-  [194, 348],
-  [175, 352],
-  [170, 370],
-  [184, 388],
-  [190, 412],
-  [178, 436],
-  [156, 452],
-  [136, 464],
-  [122, 482],
-  [114, 506],
-  [110, 526],
+  [103, 570],
+  [145, 552],
+  [174, 519],
+  [197, 480],
+  [216, 442],
+  [252, 413],
+  [278, 396],
+  [267, 370],
+  [246, 364],
+  [253, 335],
+  [271, 303],
+  [282, 262],
+  [289, 220],
+  [296, 194],
+  [306, 168],
+  [317, 142],
+  [328, 114],
+  [340, 85],
+  [352, 57],
+  [362, 34],
+  [352, 21],
+  [338, 26],
+  [324, 44],
+  [312, 72],
+  [300, 99],
+  [286, 125],
+  [272, 142],
+  [252, 150],
+  [224, 147],
+  [196, 152],
+  [174, 165],
+  [168, 183],
+  [183, 196],
+  [212, 199],
+  [237, 201],
+  [247, 214],
+  [239, 242],
+  [224, 277],
+  [203, 291],
+  [180, 297],
+  [173, 323],
+  [190, 349],
+  [197, 384],
+  [181, 419],
+  [153, 442],
+  [127, 459],
+  [109, 486],
+  [98, 520],
+  [93, 549],
 ];
-// Yaeyama islands, about 400 km south-west of Naha, drawn in an inset in the sea at the bottom left (their real direction)
-const IRIOMOTE: [number, number][] = [
-  [66, 598],
-  [74, 584],
-  [90, 578],
-  [108, 580],
-  [124, 588],
-  [130, 604],
-  [122, 620],
-  [104, 628],
-  [84, 626],
-  [70, 616],
-];
+// Ishigaki, about 400 km south-west of Naha, and Miyako, about 300 km, in an inset in the sea at the bottom (their real
+// direction); Taketomi is the dot beside Ishigaki, Irabu the islet just west of Miyako
 const ISHIGAKI: [number, number][] = [
-  [188, 624],
-  [196, 610],
-  [206, 600],
-  [214, 582],
-  [221, 574],
-  [224, 584],
-  [218, 598],
-  [216, 614],
-  [208, 630],
-  [196, 634],
+  [132, 660],
+  [140, 646],
+  [150, 636],
+  [158, 618],
+  [165, 610],
+  [168, 620],
+  [162, 634],
+  [160, 650],
+  [152, 666],
+  [140, 670],
 ];
-
-// Miyako, about 300 km south-west of Naha, on the right of the same inset; Irabu island just west of it
 const MIYAKO: [number, number][] = [
-  [268, 588],
-  [282, 580],
-  [298, 582],
-  [306, 594],
-  [300, 606],
-  [288, 616],
-  [276, 612],
-  [270, 600],
+  [271, 630],
+  [285, 622],
+  [301, 624],
+  [309, 636],
+  [303, 648],
+  [291, 658],
+  [279, 654],
+  [273, 642],
 ];
 const IRABU: [number, number][] = [
-  [250, 590],
-  [258, 584],
-  [264, 592],
-  [258, 600],
+  [253, 632],
+  [261, 626],
+  [267, 634],
+  [261, 642],
 ];
 // Kume island, about 100 km west of the main island
 const KUME: [number, number][] = [
-  [64, 394],
-  [76, 386],
-  [90, 388],
-  [98, 398],
-  [92, 410],
-  [78, 414],
-  [66, 408],
+  [58, 394],
+  [70, 386],
+  [84, 388],
+  [92, 398],
+  [86, 410],
+  [72, 414],
+  [60, 408],
 ];
 
 type Side = 'L' | 'R' | 'B';
 /** Map pin per zone (same order as ZONES) and which side its name goes on */
 const PINS: [number, number, Side][] = [
-  [130, 480, 'L'],
-  [192, 412, 'L'],
-  [184, 366, 'L'],
-  [242, 312, 'L'],
-  [190, 232, 'L'],
-  [206, 170, 'L'],
-  [314, 108, 'L'],
-  [254, 412, 'R'],
-  [220, 446, 'R'],
-  [148, 526, 'R'],
-  [174, 466, 'B'],
-  [80, 400, 'B'],
-  [286, 598, 'B'],
-  [208, 606, 'B'],
+  [119, 483, 'B'],
+  [200, 384, 'L'],
+  [190, 317, 'L'],
+  [257, 239, 'L'],
+  [200, 173, 'L'],
+  [216, 128, 'L'],
+  [324, 83, 'L'],
+  [280, 384, 'R'],
+  [236, 433, 'R'],
+  [142, 549, 'R'],
+  [176, 462, 'B'],
+  [74, 400, 'B'],
+  [290, 640, 'R'],
+  [150, 640, 'R'],
 ];
 const ISLAND_PATH = smooth(ISLAND);
 const P = (i: number) => `${PINS[i][0]},${PINS[i][1]}`;
 // Up the west coast to Yanbaru, down the east coast past the Kaichu Road to Nanjo, back to Shuri, out west to Kume,
-// then over the sea to Miyako and Ishigaki
-const ROUTE = `M${P(0)} Q150,440 ${P(1)} Q176,390 ${P(2)} Q206,326 ${P(3)} Q232,262 ${P(4)} Q178,196 ${P(5)} Q262,120 ${P(6)} Q330,290 ${P(7)} Q240,436 ${P(8)} Q200,496 ${P(9)} Q170,500 ${P(10)} Q120,446 ${P(11)} Q210,530 ${P(12)} Q250,640 ${P(13)}`;
+// then down the west side and round the south tip to Miyako, and on to Ishigaki
+const ROUTE = `M${P(0)} Q145,425 ${P(1)} Q179,352 ${P(2)} Q217,259 ${P(3)} Q243,194 ${P(4)} Q188,147 ${P(5)} Q272,92 ${P(6)} Q350,214 ${P(7)} Q262,419 ${P(8)} Q210,506 ${P(9)} Q171,512 ${P(10)} Q106,433 ${P(11)} C40,600 200,600 ${P(12)} Q220,680 ${P(13)}`;
 
 /** Where "go" takes a child: the unfinished journey, else the first open zone not yet finished, else the furthest one */
 export function nextZone(p: Progress): number {
@@ -168,27 +156,25 @@ function IslandMap({ here }: { here: number }) {
   const open = useGame((s) => s.progress.open);
   const font = 'GenSen Rounded TW, PingFang TC, sans-serif';
   return (
-    <svg viewBox="40 0 340 660" role="img" aria-label="沖繩地圖">
-      <rect x={40} y={0} width={340} height={660} fill="#BFE6EE" />
-      {[40, 110, 180, 250, 320, 390, 460, 530, 600].map((y) => (
+    <svg viewBox="40 0 340 704" role="img" aria-label="沖繩地圖">
+      <rect x={40} y={0} width={340} height={704} fill="#BFE6EE" />
+      {[40, 110, 180, 250, 320, 390, 460, 530].map((y) => (
         <path key={y} d={`M${50 + (y % 140)},${y} q10,-6 20,0 t20,0`} stroke="#E6F7FA" strokeWidth={3} fill="none" strokeLinecap="round" />
       ))}
       <path d={ISLAND_PATH} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={10} strokeLinejoin="round" />
       <path d={ISLAND_PATH} fill="#9CCF8C" />
-      <path d="M210,176 L214,194" stroke="#8C7F6B" strokeWidth={3} strokeLinecap="round" />
-      <ellipse cx={206} cy={170} rx={11} ry={7.5} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={4} />
+      {/* Kouri island and its bridge */}
+      <path d="M220,132 L224,145" stroke="#8C7F6B" strokeWidth={3} strokeLinecap="round" />
+      <ellipse cx={216} cy={128} rx={11} ry={7.5} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={4} />
       <g>
-        <rect x={48} y={552} width={270} height={102} rx={14} fill="#CBEEF3" stroke="#8FC9D3" strokeWidth={2.5} strokeDasharray="6 6" />
-        <text x={58} y={571} fontSize={12} fontWeight={700} fill="#3F7480" fontFamily={font}>
+        <rect x={48} y={598} width={324} height={98} rx={14} fill="#CBEEF3" stroke="#8FC9D3" strokeWidth={2.5} strokeDasharray="6 6" />
+        <text x={58} y={687} fontSize={12} fontWeight={700} fill="#3F7480" fontFamily={font}>
           八重山・宮古（本島西南方 300–400 公里）
         </text>
-        {[IRIOMOTE, ISHIGAKI, MIYAKO, IRABU].map((pts) => (
+        {[ISHIGAKI, MIYAKO, IRABU].map((pts) => (
           <path key={pts[0][0]} d={smooth(pts)} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke" />
         ))}
-        <circle cx={166} cy={608} r={7} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={3} />
-        <text x={98} y={636} fontSize={11} textAnchor="middle" fill="#5E7F86" fontFamily={font}>
-          西表島
-        </text>
+        <circle cx={118} cy={664} r={6} fill="#F3E3B8" stroke="#E2C98C" strokeWidth={3} />
       </g>
       <path d={smooth(KUME)} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke" />
       <path d={ROUTE} stroke="#C8452F" strokeWidth={3} strokeDasharray="2 8" strokeLinecap="round" fill="none" opacity={0.75} />
@@ -223,7 +209,7 @@ function IslandMap({ here }: { here: number }) {
           </g>
         );
       })}
-      <g transform="translate(350,520)">
+      <g transform="translate(346,500)">
         <circle r={20} fill="#fff" opacity={0.7} />
         <path d="M0,-15 L5,0 L0,15 L-5,0 Z" fill="#C8452F" />
         <text y={-22} textAnchor="middle" fontSize={12} fontWeight={700} fill="#173944" fontFamily="Fredoka, sans-serif">

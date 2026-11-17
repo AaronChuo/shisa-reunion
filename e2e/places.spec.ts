@@ -97,6 +97,8 @@ it.describe('place postcards', () => {
     const covered = await page.evaluate(() =>
       [...document.querySelectorAll<SVGGElement>('.islandWrap [data-zone]')]
         .filter((g) => {
+          // The map can be taller than the window: bring each pin into view before looking at what lies on top of it
+          g.scrollIntoView({ block: 'center' });
           const r = g.querySelector('circle')?.getBoundingClientRect();
           if (!r) return true;
           return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('[data-zone]') !== g;
