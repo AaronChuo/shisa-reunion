@@ -87,6 +87,12 @@ fieldset {
   font-weight: 700;
   white-space: nowrap;
 }
+/* Clears something for good: red, so it never looks like the way on */
+.iconBtn.danger {
+  color: #b23a26;
+  border-color: #e3a99c;
+  box-shadow: 0 3px 0 #e3a99c;
+}
 /* A link that leaves the game, dressed as a button */
 a.iconBtn {
   color: inherit;
@@ -2652,4 +2658,94 @@ h1 {
 .restArt {
   width: 180px;
   height: 116px;
+}
+
+/* ---------- title screen ---------- */
+/* Fills the whole screen, under the notch too, with the painted scene of the zone the player is heading for */
+#title {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: max(28px, calc(env(safe-area-inset-top, 0px) + 16px)) 16px 0;
+  background: #bfe6ee center 42% / cover no-repeat;
+  overflow: hidden;
+}
+.titleLogo {
+  width: min(92vw, 600px);
+  height: auto;
+  margin-top: 4vh;
+  overflow: visible;
+  filter: drop-shadow(0 5px 0 rgba(23, 57, 68, 0.28));
+}
+.logoBlock {
+  animation: logoDrop 0.55s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+@keyframes logoDrop {
+  from {
+    transform: translateY(-160px);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+}
+/* The roof's eaves are the house's full width; the wall stands a little inside them */
+.titleHouse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(88vw, 50vh, 520px);
+}
+.titlePair {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.titlePair svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.titlePair:active svg {
+  transform: translateY(-6px);
+}
+.titleWall {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 84%;
+  margin-top: -4px;
+  padding: 22px 12px max(26px, calc(env(safe-area-inset-bottom, 0px) + 18px));
+  background: #f4eada;
+  border: 4px solid #8c7f6b;
+  border-bottom: 0;
+  /* The shade under the eaves */
+  box-shadow: inset 0 12px 0 rgba(23, 57, 68, 0.1);
+}
+.titleWhere {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.titleVer {
+  position: absolute;
+  right: 12px;
+  bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  color: #fff;
+  font-size: 12px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }

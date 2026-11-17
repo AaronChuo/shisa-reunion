@@ -1,4 +1,4 @@
-// Background music. Nine traditional Okinawan songs (public domain, melody only, transposed to C) and seven originals
+// Background music. Nine traditional Okinawan songs (public domain, melody only, transposed to C) and eight originals
 // in the Ryukyu scale. Eight were read from the melody line of mu-tech.org's MIDI files; the Kume song from a printed
 // kunkunshi of 1925, checked against a Meiji-era manuscript.
 
@@ -40,6 +40,17 @@ export function parseMelody(src: string): { events: NoteEvent[]; beats: number }
 const song = (name: string, bpm: number, perc: PercPattern, melody: string): Song => ({ name, bpm, perc, ...parseMelody(melody) });
 
 export const SONGS = {
+  // The game's own song, for the title screen and the top of the queue: "西薩搭搭路" is the short-short-short-short-long
+  // figure that opens it, and comes back at the end of each half
+  theme: song(
+    '西薩搭搭路',
+    116,
+    'lively',
+    `G4:.5 B4:.5 C5:.5 C5:.5 E5:2 | C5:.5 B4:.5 G4:.5 F4:.5 G4:2 | E4:.5 F4:.5 G4:.5 G4:.5 B4:1 G4:1 | F4:.5 E4:.5 C4:.5 E4:.5 F4:2 |
+     G4:.5 B4:.5 C5:.5 C5:.5 E5:2 | F5:.5 E5:.5 C5:.5 B4:.5 C5:1 G4:1 | F4:.5 G4:.5 B4:.5 G4:.5 F4:.5 E4:.5 F4:1 | C4:3 r:1 |
+     E5~:1 C5:.5 E5:.5 F5:1 E5:1 | C5:.5 B4:.5 C5:.5 E5:.5 C5:2 | B4~:1 G4:.5 B4:.5 C5:1 B4:1 | G4:.5 F4:.5 G4:.5 B4:.5 G4:2 |
+     E4:.5 F4:.5 G4:.5 B4:.5 C5:.5 B4:.5 G4:1 | F4:.5 E4:.5 F4:.5 G4:.5 E4:2 | G4:.5 B4:.5 C5:.5 C5:.5 E5:1 C5:1 | B4:.5 C5:.5 G4:1 C4:1 r:1`,
+  ),
   shimakaze: song(
     '島風',
     84,

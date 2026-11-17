@@ -56,7 +56,27 @@ export interface Progress {
   restMin: number | null;
 }
 
-export type Screen = 'home' | 'play' | 'gacha' | 'dex';
+export type Screen = 'title' | 'home' | 'play' | 'gacha' | 'dex';
+
+const TITLE_KEY = 'shisa-reunion:title';
+
+/** Whether this visit has been through the title screen already, so a reload in the middle of play goes back to the map */
+export function titleSeen(): boolean {
+  try {
+    return sessionStorage.getItem(TITLE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markTitleSeen(seen = true): void {
+  try {
+    if (seen) sessionStorage.setItem(TITLE_KEY, '1');
+    else sessionStorage.removeItem(TITLE_KEY);
+  } catch {
+    // Private browsing without storage: the title just shows again on the next reload
+  }
+}
 
 /** The collection's pages */
 export type DexTab = 'shisa' | 'cards';
@@ -139,7 +159,7 @@ export const freshProgress = (): Progress => ({
 });
 
 const freshUi = (): Ui => ({
-  screen: 'home',
+  screen: titleSeen() ? 'home' : 'title',
   modal: null,
   sel: -1,
   hint: null,

@@ -4,7 +4,7 @@ import { ShisaArt } from '../art/Shisa';
 import { AGE_ORDER, AGES, type Age, REST_CHOICES } from '../content/age';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { closeModal } from '../game/actions';
-import { ackRest, answerAge, chooseAge, openParents, restoreProgress, setRestMin } from '../game/family';
+import { ackRest, answerAge, chooseAge, openParents, restoreProgress, setRestMin, startOver } from '../game/family';
 import { decodeBackup, encodeBackup, summary } from '../state/backup';
 import { getState, type Progress, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
@@ -109,9 +109,10 @@ const restLabel = (m: number | null) => (m === null ? '不提醒' : `${m} 分鐘
 export function ParentSettings() {
   const age = useGame((s) => s.progress.age);
   const restMin = useGame((s) => s.progress.restMin);
-  const [view, setView] = useState<'main' | 'save' | 'load'>('main');
+  const [view, setView] = useState<'main' | 'save' | 'load' | 'over'>('main');
   if (view === 'save') return <SaveBackup back={() => setView('main')} />;
   if (view === 'load') return <LoadBackup back={() => setView('main')} />;
+  if (view === 'over') return <StartOver back={() => setView('main')} save={() => setView('save')} />;
   return (
     <Sheet label="大人設定" wide>
       <h2>大人設定</h2>
@@ -152,6 +153,16 @@ export function ParentSettings() {
           </button>
         </div>
       </div>
+      <div className="setting">
+        <h3>重新開始</h3>
+        <p className="small">清掉這台裝置上的進度，從開場畫面重新玩起，例如換另一個孩子玩。</p>
+        <div className="btns">
+          <button type="button" className="iconBtn" id="startOverBtn" onClick={() => setView('over')}>
+            <Icon name="reset" />
+            <span>重新開始</span>
+          </button>
+        </div>
+      </div>
       <div className="setting" id="support">
         <h3>給大人的小角落</h3>
         <p className="small">西薩搭搭路免費、沒有廣告，也不會向孩子收錢。如果你和孩子玩得開心，歡迎請小狂喝杯咖啡，支持西薩去更多地方、認識更多夥伴。</p>
@@ -180,6 +191,31 @@ const progressLine = (p: Progress) => {
 function today(): string {
   const d = new Date();
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Asks once more before clearing this device's progress, with a backup a tap away */
+function StartOver({ back, save }: { back: () => void; save: () => void }) {
+  const p = getState().progress;
+  return (
+    <Sheet label="重新開始" wide>
+      <h2>從頭開始？</h2>
+      <p>{progressLine(p)}，全部會清掉，回到開場畫面。聲音和音樂的設定會留著。</p>
+      <p className="small">清掉之後就找不回來了。先備份一份，之後還能用「還原進度」拿回來。</p>
+      <div className="btns">
+        <button type="button" className="iconBtn" id="startOverSave" onClick={save}>
+          <Icon name="book" />
+          <span>先備份</span>
+        </button>
+        <button type="button" className="iconBtn danger" id="startOverYes" onClick={startOver}>
+          <Icon name="reset" />
+          <span>清掉，從頭開始</span>
+        </button>
+      </div>
+      <button type="button" className="linkBtn" data-focus onClick={back}>
+        不要，回大人設定
+      </button>
+    </Sheet>
+  );
 }
 
 /** The code for this device's progress, to copy or keep as a file */

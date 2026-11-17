@@ -26,7 +26,7 @@ it.describe('sound', () => {
     await countSounds(page);
     await page.goto('/');
     await page.click('h1');
-    expect(await bgm(page)).toBe('shimakaze');
+    expect(await bgm(page)).toBe('theme');
     await expect.poll(() => sounds(page)).toBeGreaterThan(3);
 
     await page.click('#audioBtn');
@@ -40,12 +40,12 @@ it.describe('sound', () => {
 
   it('keeps one queue going across the map, the gacha and the collection, and plays the zone song on a journey', async ({ page }) => {
     await page.goto('/');
-    expect(await bgm(page)).toBe('shimakaze');
+    expect(await bgm(page)).toBe('theme');
     expect(await queue(page)).toBe('lobby');
     await page.click('[data-go="gacha"]');
-    expect(await bgm(page)).toBe('shimakaze');
+    expect(await bgm(page)).toBe('theme');
     await page.click('[data-go="dex"]');
-    expect(await bgm(page)).toBe('shimakaze');
+    expect(await bgm(page)).toBe('theme');
     await page.click('[data-go="home"]');
     await page.click('.zone [data-zone="0"]');
     await waitForLevel(page);
@@ -53,7 +53,7 @@ it.describe('sound', () => {
     expect(await queue(page)).toBe('');
     // Back from the journey, the queue picks up at the song it was on
     await page.click('#toHome');
-    expect(await bgm(page)).toBe('shimakaze');
+    expect(await bgm(page)).toBe('theme');
     expect(await queue(page)).toBe('lobby');
   });
 

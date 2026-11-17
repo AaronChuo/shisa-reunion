@@ -1,12 +1,14 @@
 import { expect, test as it, type Page } from '@playwright/test';
 import { animationOf, progress, waitForLevel } from './helpers';
 
-// These tests use the plain Playwright test, so the game opens as it does for a brand-new player
+// These tests use the plain Playwright test, so the game opens as it does for a brand-new player: the title screen first
 const next = (page: Page) => page.click('#storyNext');
+const start = (page: Page) => page.click('#titleGo');
 
 it.describe('the first time the game opens', () => {
   it('asks a grown-up who is playing, then plays the story', async ({ page }) => {
     await page.goto('/');
+    await start(page);
     const ask = page.locator('#modal[data-kind="age"]');
     await expect(ask).toBeVisible();
     await expect(page.locator('#story')).toHaveCount(0);
@@ -27,6 +29,7 @@ it.describe('the opening story', () => {
 
   it('opens the first time and teaches the name before setting off on the first stop', async ({ page }) => {
     await page.goto('/');
+    await start(page);
     await expect(page.locator('#story')).toBeVisible();
     // Page 1 waits until a shisa has been tapped, which says its name
     await expect(page.locator('#storyNext')).toBeDisabled();
@@ -62,6 +65,7 @@ it.describe('the opening story', () => {
 
   it('can be skipped, stays away after that, and plays again from the map', async ({ page }) => {
     await page.goto('/');
+    await start(page);
     await page.click('#skipStory');
     await expect(page.locator('#story')).toHaveCount(0);
     await page.reload();
@@ -76,6 +80,7 @@ it.describe('the opening story', () => {
 
     it('still shows the swipe and blows the two apart, without the spin', async ({ page }) => {
       await page.goto('/');
+      await start(page);
       await page.click('#story [data-shisa="0"]');
       await next(page);
       await next(page);

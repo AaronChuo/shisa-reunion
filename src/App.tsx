@@ -12,6 +12,7 @@ import { Dex } from './screens/Dex';
 import { Gacha } from './screens/Gacha';
 import { Home } from './screens/Home';
 import { Play } from './screens/Play';
+import { Title } from './screens/Title';
 import { type GameState, getState, useGame } from './state/store';
 import { Opening } from './story/Opening';
 
@@ -31,10 +32,10 @@ export function App() {
   useEffect(() => installSpeechUnlock(), []);
   useEffect(() => installPlayClock(), []);
   // The first time the game opens, a grown-up says who is playing (answerAge then plays the story); once that is
-  // known, the story introduces the two shisa
+  // known, the story introduces the two shisa. Both wait for the title screen (enterGame), unless this visit is past it.
   useEffect(() => {
-    const p = getState().progress;
-    if (p.age !== null && !p.seen.includes('story')) openStory();
+    const { progress: p, ui } = getState();
+    if (ui.screen !== 'title' && p.age !== null && !p.seen.includes('story')) openStory();
   }, []);
   const story = useGame((s) => s.ui.story);
   // While nobody has said who is playing, a grown-up is asked
@@ -49,6 +50,7 @@ export function App() {
   }, [scene]);
   return (
     <>
+      {screen === 'title' && <Title />}
       {screen === 'home' && <Home />}
       {screen === 'play' && <Play />}
       {screen === 'gacha' && <Gacha />}

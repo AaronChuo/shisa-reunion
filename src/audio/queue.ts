@@ -2,12 +2,12 @@ import { cardsEarned, type PlaceId } from '../content/places';
 import { ZONES } from '../content/zones';
 import { SONGS, type SongId } from './songs';
 
-// Outside a journey (the map, the gacha machines, the collection) one queue of songs keeps playing whatever screen is
-// up: the game's own songs first, then the song of every zone the player has been to, in the order of the loop around
-// Okinawa. Each song plays for about a minute and a half, then the next one starts.
+// Outside a journey (the title, the map, the gacha machines, the collection) one queue of songs keeps playing whatever
+// screen is up: the game's own songs first, then the song of every zone the player has been to, in the order of the loop
+// around Okinawa. Each song plays for about a minute and a half, then the next one starts.
 
-/** The songs that always open the queue */
-export const LOBBY_SONGS: SongId[] = ['shimakaze', 'michi'];
+/** The songs that always open the queue, the game's theme first so it greets the title screen */
+export const LOBBY_SONGS: SongId[] = ['theme', 'shimakaze', 'michi'];
 
 /** About how long each song in the queue plays, in seconds; it always ends at the end of a time through */
 export const LOBBY_SECONDS = 90;

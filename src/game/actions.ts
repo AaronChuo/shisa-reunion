@@ -5,7 +5,7 @@ import { drawFromSeries, pairWith, type Series, VARIANT_BY_ID, VARIANTS } from '
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { canLift, DEFS, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, walkAsFar, waterAt } from '../engine';
-import { type DexTab, getState, mut, type Run, type Screen } from '../state/store';
+import { type DexTab, getState, markTitleSeen, mut, type Run, type Screen } from '../state/store';
 import { restBetweenStops } from './family';
 import { generateLevel, prepareLevel } from './generator';
 
@@ -698,6 +698,14 @@ export function setOffFrom(zi: number): void {
 }
 
 // ---------- the opening story ----------
+/** The title screen's button: on to the map, where a new player is asked who is playing and then shown the story */
+export function enterGame(): void {
+  markTitleSeen();
+  goHome();
+  const p = getState().progress;
+  if (p.age !== null && !p.seen.includes('story')) openStory();
+}
+
 export function openStory(): void {
   hush();
   mut((s) => {

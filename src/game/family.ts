@@ -1,7 +1,7 @@
 import { speak } from '../audio/speech';
 import { AGES, type Age } from '../content/age';
 import { SHISA_REST } from '../content/story';
-import { getState, mut, type Progress } from '../state/store';
+import { freshProgress, getState, markTitleSeen, mut, type Progress } from '../state/store';
 import { goHome, openStory } from './actions';
 
 // The grown-ups' side of the game: who is playing, and a gentle reminder to rest after a while.
@@ -40,6 +40,21 @@ export function restoreProgress(p: Progress): void {
     s.ui.modal = null;
   });
   goHome();
+}
+
+/**
+ * A new game on this device: everything is cleared except the sound and music switches, and the game goes back to the
+ * title screen; on the way in, the next player is asked who is playing and shown the story.
+ */
+export function startOver(): void {
+  playMs = 0;
+  goHome();
+  mut((s) => {
+    const { sound, music } = s.progress;
+    s.progress = { ...freshProgress(), sound, music };
+    s.ui.screen = 'title';
+  });
+  markTitleSeen(false);
 }
 
 export function openParents(): void {

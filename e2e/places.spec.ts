@@ -5,11 +5,13 @@ import { generate } from '../src/engine';
 import { freshProgress } from '../src/state/store';
 import { dismissIntros, progress, solveByDragging, waitForLevel } from './helpers';
 
-// Plain Playwright: the postcards show as they do for a new player (only the opening story is marked as seen, and who is playing is set)
+// Plain Playwright: the postcards show as they do for a new player (only the opening story is marked as seen, and who is playing is set),
+// in through the title screen
 async function open(page: Page, extra: Record<string, unknown> = {}) {
   const save = JSON.stringify({ state: { progress: { ...freshProgress(), seen: ['story'], age: 'little', ...extra } }, version: 2 });
   await page.addInitScript((s) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', s), save);
   await page.goto('/');
+  await page.click('#titleGo');
 }
 
 it.describe('place postcards', () => {

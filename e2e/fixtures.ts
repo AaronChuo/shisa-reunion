@@ -1,8 +1,12 @@
 import { test as base, expect } from '@playwright/test';
 import { PLACE_ORDER, placeSeen } from '../src/content/places';
 
-/** Marks the opening story and every postcard as seen, and sets who is playing, on top of whatever save a test has seeded */
+/**
+ * Marks the opening story and every postcard as seen, and sets who is playing, on top of whatever save a test has seeded;
+ * also skips the title screen, as a reload in the middle of a visit does, unless a test sets window.keepTitle first
+ */
 function storySeen(extra: string[]) {
+  if (!(window as unknown as { keepTitle?: boolean }).keepTitle) sessionStorage.setItem('shisa-reunion:title', '1');
   const key = 'shisa-reunion';
   const raw = localStorage.getItem(key);
   const save = raw ? JSON.parse(raw) : { state: { progress: {} }, version: 2 };
@@ -16,8 +20,8 @@ function storySeen(extra: string[]) {
 }
 
 /**
- * Most tests are about the game, not the opening story or the postcards, so those start out seen. The script is added just before
- * the first navigation, so it runs after any save a test seeds with its own init script.
+ * Most tests are about the game, not the title screen, the opening story or the postcards, so those start out seen. The script is
+ * added just before the first navigation, so it runs after any save a test seeds with its own init script.
  */
 export const test = base.extend({
   page: async ({ page }, use) => {
