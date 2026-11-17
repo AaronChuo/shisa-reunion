@@ -1,7 +1,6 @@
 // Who is playing, chosen by a grown-up the first time the game opens and changeable in the grown-ups' settings. It sets
 // how much the game helps along: the hint shells and rerolls a stop or a journey comes with, the finger that points at
-// the main button, the hint shell that wiggles when a child seems stuck, how loudly 走走看 offers itself, and the
-// default for the rest reminder.
+// the main button, the hint shell that wiggles when a child seems stuck, and the default for the rest reminder.
 
 export type Age = 'little' | 'kid' | 'big';
 
@@ -19,8 +18,6 @@ export interface AgeSetting {
   nudgeMs: number | null;
   /** Idle time on a stop before the hint shell wiggles; null for none */
   stuckMs: number | null;
-  /** 走走看 sits up front, coloured, rather than as a plain button */
-  tryFirst: boolean;
   /** Minutes of play before a rest reminder, as the default for this age; null for none */
   restMin: number | null;
 }
@@ -34,7 +31,6 @@ export const AGES: Record<Age, AgeSetting> = {
     rerolls: null,
     nudgeMs: 4500,
     stuckMs: 25_000,
-    tryFirst: true,
     restMin: 20,
   },
   kid: {
@@ -45,7 +41,6 @@ export const AGES: Record<Age, AgeSetting> = {
     rerolls: 2,
     nudgeMs: 8000,
     stuckMs: 45_000,
-    tryFirst: false,
     restMin: 30,
   },
   big: {
@@ -56,7 +51,6 @@ export const AGES: Record<Age, AgeSetting> = {
     rerolls: 2,
     nudgeMs: null,
     stuckMs: null,
-    tryFirst: false,
     restMin: null,
   },
 };

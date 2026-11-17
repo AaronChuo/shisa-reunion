@@ -133,8 +133,6 @@ export interface Ui {
   spin: number;
   /** The opening story is showing */
   story: boolean;
-  /** The hero is on a 走走看 walk, which ends wherever the road runs out */
-  trying: boolean;
   /** The collection page last looked at, kept while the game is open */
   dexTab: DexTab;
 }
@@ -178,7 +176,6 @@ const freshUi = (): Ui => ({
   capColor: null,
   spin: 0,
   story: false,
-  trying: false,
   dexTab: 'shisa',
 });
 

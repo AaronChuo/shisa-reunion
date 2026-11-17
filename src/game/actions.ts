@@ -4,7 +4,7 @@ import { cardsEarned, type PlaceId, placeSeen } from '../content/places';
 import { drawFromSeries, pairWith, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
-import { canLift, DEFS, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, walkAsFar, waterAt } from '../engine';
+import { canLift, DEFS, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, waterAt } from '../engine';
 import { type DexTab, getState, markTitleSeen, mut, type Run, type Screen } from '../state/store';
 import { restBetweenStops } from './family';
 import { generateLevel, prepareLevel } from './generator';
@@ -66,7 +66,7 @@ export function go(screen: Screen): void {
 export function goHome(): void {
   hush();
   mut((s) => {
-    Object.assign(s.ui, { screen: 'home', modal: null, busy: false, walking: null, trying: false, cheer: false, sel: -1, hint: null });
+    Object.assign(s.ui, { screen: 'home', modal: null, busy: false, walking: null, cheer: false, sel: -1, hint: null });
   });
 }
 
@@ -389,47 +389,6 @@ function checkWin(): void {
         s.ui.walking = path as PathStep[];
       }),
     380,
-  );
-}
-
-/**
- * 走走看: the hero sets off on the road as it stands, stops where it runs out, then hops back to the start, so a
- * child sees where the road is missing. As often as they like, at no cost.
- */
-export function tryWalk(): void {
-  const st = getState();
-  const r = st.progress.run;
-  if (st.ui.busy || !r?.level) return;
-  const lv = r.level;
-  const path = walkAsFar(gridNow(), lv.hero, lv.goal);
-  mut((s) => {
-    Object.assign(s.ui, { sel: -1, hint: null });
-  });
-  if (path.length <= 1) {
-    sfx.bad();
-    say('還走不動，先放一塊積木看看', 2200);
-    return;
-  }
-  hush();
-  mut((s) => {
-    Object.assign(s.ui, { busy: true, trying: true, walking: path as PathStep[] });
-  });
-}
-
-/** Called by the board when a 走走看 walk has gone as far as the road goes */
-export function tryDone(at: { x: number; y: number; flip: boolean }): void {
-  mut((s) => {
-    s.ui.walking = null;
-    s.ui.heroAt = at;
-  });
-  sfx.bad();
-  say('走到這裡就卡住了！', 1700);
-  setTimeout(
-    () =>
-      mut((s) => {
-        if (s.ui.trying) Object.assign(s.ui, { heroAt: null, picked: [], busy: false, trying: false });
-      }),
-    1700,
   );
 }
 
