@@ -133,7 +133,7 @@ export function Background({ w, zone, time }: { w: number; zone: string; time: T
   );
 }
 
-/** The wooden tray the blocks stand on, with dashed column guides */
+/** The wooden tray the blocks stand on, a notch under each column */
 export function TrayBase({ w }: { w: number }) {
   return (
     <>
@@ -141,17 +141,6 @@ export function TrayBase({ w }: { w: number }) {
       <rect x={M - 12} y={Y0 + 5} width={w * C + 24} height={8} rx={4} fill="#E8CB9C" />
       {Array.from({ length: w }, (_, x) => (
         <rect key={`slot${x}`} x={M + x * C + 28} y={Y0 + 22} width={44} height={11} rx={5.5} fill="#8E6435" opacity={0.28} />
-      ))}
-      {Array.from({ length: w - 1 }, (_, i) => (
-        <path
-          key={`guide${i}`}
-          d={`M${M + (i + 1) * C},${Y0 - 6} V${Y0 - 500}`}
-          stroke="#fff"
-          strokeOpacity={0.6}
-          strokeWidth={2}
-          strokeDasharray="2 10"
-          strokeLinecap="round"
-        />
       ))}
     </>
   );
