@@ -9,7 +9,6 @@ it.describe('a full journey', () => {
       const lv = await waitForLevel(page);
       await solveByDragging(page, lv);
       await page.locator('#modal[data-kind="win"] [data-next]').click();
-      if (si < 4) await page.locator('#modal[data-kind="branch"] [data-card]').first().click();
     }
     await expect(page.locator('#modal[data-kind="done"]')).toBeVisible();
     let p = await progress(page);

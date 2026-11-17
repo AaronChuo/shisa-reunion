@@ -21,7 +21,6 @@ function nahaRun(shell: number, conch: number | null) {
 async function clearStop(page: Page) {
   await solveByDragging(page, await waitForLevel(page));
   await page.locator('#modal[data-kind="win"] [data-next]').click();
-  await page.locator('#modal[data-kind="branch"] [data-card]').first().click();
   return waitForLevel(page);
 }
 

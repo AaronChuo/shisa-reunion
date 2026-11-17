@@ -7,7 +7,7 @@ const SEEN = ['coach', 'stair', 'cube', 'tower', 'bridge'];
 
 it.describe('stage backgrounds', () => {
   it('paints the zone’s own scene behind the board, turning to dusk from the third stop', async ({ page }) => {
-    // Between Naha's second and third stops, with the next-stop card up
+    // Between Naha's second and third stops
     const run = {
       zone: 'naha',
       zi: 0,
@@ -28,8 +28,8 @@ it.describe('stage backgrounds', () => {
     const state = { ...freshProgress(), seen: SEEN, run };
     await page.addInitScript((s) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', s), save(state));
     await page.goto('/');
+    // A journey saved between stops, back when a next-stop card waited there, sets straight off for the stop
     await page.click('[data-resume]');
-    await page.click('#modal [data-card="next"]');
     const scene = page.locator('#board [data-time="dusk"] image');
     await expect(scene).toHaveAttribute('href', '/scenes/naha/dusk.webp');
     const res = await page.request.get('/scenes/naha/dusk.webp');

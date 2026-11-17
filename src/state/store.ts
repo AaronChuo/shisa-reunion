@@ -8,6 +8,7 @@ import type { IntroKey } from '../content/text';
 import { type Element, openFor, planRun, ZONES } from '../content/zones';
 import type { Level, PathStep, Placed, Placement } from '../engine';
 
+/** Building a stop, just cleared one (`branch`), setting off for the next (`choose`), or the whole journey done */
 export type Phase = 'play' | 'branch' | 'choose' | 'done';
 
 export interface Run {
@@ -65,7 +66,6 @@ export type Modal =
   | { kind: 'intro'; key: IntroKey }
   /** `card`: the zone's postcard this stop earned (its first), if any */
   | { kind: 'win'; last: boolean; card: number | null }
-  | { kind: 'branch' }
   /** `card`: the zone's postcard this journey earned (its second or third), if any */
   | { kind: 'done'; zi: number; earned: number; unlocked: number[]; card: number | null }
   | { kind: 'confirmRun'; zi: number }

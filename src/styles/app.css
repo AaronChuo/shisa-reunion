@@ -879,14 +879,6 @@ h1 {
   width: 30px;
   height: 30px;
 }
-.blocks {
-  width: auto;
-  height: 12px;
-}
-.mini .blocks {
-  width: auto;
-  height: 12px;
-}
 /* Which job a shisa does, shown by its mouth: open sets out, closed waits */
 .roles {
   display: grid;
@@ -1023,81 +1015,6 @@ h1 {
 }
 .dexIntro .foot {
   margin: 0;
-}
-.paths {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  width: 100%;
-}
-@media (max-width: 520px) {
-  .paths {
-    grid-template-columns: 1fr;
-  }
-}
-.pathCard {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  padding: 14px 10px;
-  border-radius: 18px;
-  border: 2px solid var(--line);
-  background: var(--bg);
-  cursor: pointer;
-  text-align: center;
-  box-shadow: 0 4px 0 var(--line);
-}
-.pathCard:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 var(--line);
-}
-.pathCard svg {
-  width: 92px;
-  height: 70px;
-}
-.pathCard .elIcons {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  align-items: flex-end;
-}
-.pathCard .elIcons svg {
-  width: 66px;
-  height: 54px;
-}
-.pathCard .elIcons svg:only-child {
-  width: 92px;
-  height: 70px;
-}
-.pathCard .pn {
-  font-size: 21px;
-  font-weight: 700;
-}
-.pathCard .pl {
-  color: var(--muted);
-  font-size: 14px;
-}
-.pathCard .pc {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 4px;
-}
-.mini {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--card);
-  border: 1.5px solid var(--line);
-  font-size: 13px;
-  font-weight: 700;
-}
-.mini svg {
-  width: 18px;
-  height: 18px;
 }
 .switches {
   display: grid;

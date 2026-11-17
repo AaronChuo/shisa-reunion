@@ -144,12 +144,8 @@ export function resumeRun(): void {
   const r = getState().progress.run;
   if (!r) return;
   if (r.phase === 'play' && r.level) enterStage();
-  else if (r.phase === 'branch' || r.phase === 'choose') {
-    mut((s) => {
-      s.ui.screen = 'play';
-    });
-    showBranch();
-  } else void buildStage();
+  else if (r.phase === 'branch' || r.phase === 'choose') nextStop();
+  else void buildStage();
 }
 
 async function buildStage(): Promise<void> {
@@ -489,10 +485,12 @@ function onWin(): void {
 export function afterWin(): void {
   if (run().phase === 'done') finishRun();
   // A long while of play rests here, between stops, rather than in the middle of building a road
-  else if (!restBetweenStops()) showBranch();
+  else if (!restBetweenStops()) nextStop();
 }
 
-export function showBranch(): void {
+/** Sets off for the next stop, which was already being built while the coin showed */
+export function nextStop(): void {
+  sfx.hello();
   mut((s) => {
     const r = s.progress.run;
     if (!r) return;
@@ -500,16 +498,6 @@ export function showBranch(): void {
       r.si += 1;
       r.phase = 'choose';
     }
-    s.ui.modal = { kind: 'branch' };
-  });
-}
-
-/** Sets off for the stop shown on the "next stop" card */
-export function goNextStop(): void {
-  sfx.hello();
-  mut((s) => {
-    const r = s.progress.run;
-    if (!r) return;
     r.rerolls = 0;
     s.ui.modal = null;
   });

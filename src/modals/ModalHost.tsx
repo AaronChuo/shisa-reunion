@@ -1,13 +1,13 @@
 import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Blocks, CardIcon, CoinIcon, Icon, Stamp, TapHand } from '../art/Icons';
+import { CardIcon, CoinIcon, Icon, Stamp, TapHand } from '../art/Icons';
 import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, Star4 } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
 import { CARD_NEEDS, cardsEarned, PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, pairWith, ROLE_ASK, SERIES, VARIANT_BY_ID } from '../content/shisa';
-import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES, stopLine } from '../content/text';
-import { lockHint, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
+import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
+import { lockHint, ZONES, zoneStars } from '../content/zones';
 import { sizeOf } from '../engine';
 import {
   ackIntro,
@@ -18,7 +18,6 @@ import {
   finishReveal,
   go,
   goHome,
-  goNextStop,
   setOffFrom,
   showCard,
   startRun,
@@ -108,48 +107,6 @@ function Win({ m }: { m: Extract<Modal, { kind: 'win' }> }) {
         <Cta icon={<Icon name={m.last ? 'check' : 'next'} />} data={{ 'data-next': true, 'data-focus': true }} onClick={afterWin}>
           {m.last ? '走完了' : '下一站'}
         </Cta>
-      </div>
-    </Sheet>
-  );
-}
-
-/** Between stops: one card that shows what the next stop has */
-function NextStop() {
-  const run = useGame((s) => s.progress.run);
-  if (run?.phase !== 'choose') return null;
-  const Z = ZONES[run.zi];
-  const boss = run.si === STAGES - 1;
-  const els = run.plan[run.si] ?? [];
-  const k = stageCfg(run.zi, run.si, els).k;
-  const blocks = (
-    <span className="mini">
-      <Blocks n={k} />
-      <b className="num">{k}</b> 塊
-    </span>
-  );
-  return (
-    <Sheet label="下一站">
-      <div className="eyebrow">
-        {Z.name} · 第 {run.si + 1} 站
-      </div>
-      <h2>{boss ? '最後一站' : '下一站'}</h2>
-      <div className="paths">
-        <button type="button" className="pathCard" data-card={boss ? 'boss' : 'next'} data-focus onClick={() => goNextStop()}>
-          {boss ? (
-            <CardIcon k="boss" />
-          ) : els.length ? (
-            <span className="elIcons">
-              {els.map((e) => (
-                <CardIcon key={e} k={e} />
-              ))}
-            </span>
-          ) : (
-            <CardIcon k="build" />
-          )}
-          <span className="pn">{boss ? Z.boss.name : `第 ${run.si + 1} 站`}</span>
-          <span className="pl">{boss ? `最後一站，${els.length ? stopLine(els) : '比較難'}` : stopLine(els)}</span>
-          <span className="pc">{blocks}</span>
-        </button>
       </div>
     </Sheet>
   );
@@ -556,9 +513,6 @@ export function ModalHost() {
       break;
     case 'win':
       body = <Win m={m} />;
-      break;
-    case 'branch':
-      body = <NextStop />;
       break;
     case 'done':
       body = <Done m={m} />;

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { Element } from '../content/zones';
 import { C, M, Y0 } from '../game/geometry';
 import { PieceArt } from './PieceArt';
-import { GateArt, StarSand, Sun, Urchin } from './Scene';
+import { GateArt, StarSand, Urchin } from './Scene';
 
 const STROKE = { fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
 
@@ -132,17 +132,6 @@ export function TapHand({ className = 'tapHand', x, y, size }: { className?: str
 }
 
 /** A row of little blocks, one per piece, so the count can be seen without reading the number */
-export function Blocks({ n }: { n: number }) {
-  const colors = ['#F3A83F', '#2D8FD0', '#CD4A31', '#8C56AA'];
-  return (
-    <svg className="blocks" viewBox={`0 0 ${n * 13 - 2} 11`} aria-hidden="true">
-      {Array.from({ length: n }, (_, i) => (
-        <rect key={i} x={i * 13} y={0} width={11} height={11} rx={2.5} fill={colors[i % colors.length]} />
-      ))}
-    </svg>
-  );
-}
-
 export function CoinArt() {
   return (
     <>
@@ -204,9 +193,9 @@ export function Stamp({ label, mark, className, x, y, size }: { label: string; m
   );
 }
 
-export type CardIconKey = Element | 'boss' | 'build';
+export type CardIconKey = Element;
 
-/** Small pictures for the next-stop card, rule chips and first-time intros */
+/** Small pictures of each element, for rule chips and first-time intros */
 export function CardIcon({ k, className }: { k: CardIconKey; className?: string }) {
   const box = (vb: string, inner: ReactNode) => (
     <svg className={className} viewBox={vb} aria-hidden="true">
@@ -238,27 +227,5 @@ export function CardIcon({ k, className }: { k: CardIconKey; className?: string 
       return box('-50 -10 200 220', <PieceArt t="vine" o={0} />);
     case 'star':
       return box('0 0 92 70', <StarSand cx={46} cy={58} />);
-    case 'build':
-      // Plain building: blocks with a dotted path over them
-      return box(
-        '0 0 92 70',
-        <>
-          <rect x={10} y={44} width={22} height={22} rx={3} fill="#F3A83F" stroke="#9C6224" strokeWidth={3} />
-          <rect x={35} y={44} width={22} height={22} rx={3} fill="#2D8FD0" stroke="#1E5E8C" strokeWidth={3} />
-          <rect x={35} y={19} width={22} height={22} rx={3} fill="#CD4A31" stroke="#86281A" strokeWidth={3} />
-          <rect x={60} y={44} width={22} height={22} rx={3} fill="#8C56AA" stroke="#5A3470" strokeWidth={3} />
-          <path d="M18,36 Q30,6 50,8 Q66,10 72,30" stroke="#3FA36B" strokeWidth={4} fill="none" strokeDasharray="2 6" strokeLinecap="round" />
-        </>,
-      );
-    case 'boss':
-      return box(
-        '-6 -16 112 120',
-        <>
-          <path d="M-2,22 L14,4 L86,4 L102,22 Z" fill="#CD4A31" stroke="#86281A" strokeWidth={3} />
-          <rect x={6} y={22} width={88} height={70} fill="#F2EEE6" stroke="#8C7F6B" strokeWidth={3} />
-          <rect x={34} y={46} width={32} height={46} rx={16} fill="#B8332A" />
-          <Sun cx={50} cy={36} r={5} color="#FFD45E" />
-        </>,
-      );
   }
 }
