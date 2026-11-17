@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ZONES } from '../content/zones';
 import { ksSamples, midiOf, noteFreq, PRESETS } from './ks';
-import { HOME_SONG, PERC, SHOP_SONG, SONGS } from './songs';
+import { LOBBY_SECONDS, LOBBY_SONGS, lobbyLoops, lobbyQueue, nextInQueue, songSeconds } from './queue';
+import { PERC, SONGS } from './songs';
 
 const SR = 44100;
 
@@ -55,8 +56,8 @@ describe('background music', () => {
     }
   });
 
-  it('gives every zone, the map and the shop screens a song', () => {
-    for (const id of [HOME_SONG, SHOP_SONG, ...ZONES.map((z) => z.bgm)]) expect(SONGS[id]).toBeDefined();
+  it('gives every zone and the queue songs that exist', () => {
+    for (const id of [...LOBBY_SONGS, ...ZONES.map((z) => z.bgm)]) expect(SONGS[id]).toBeDefined();
     expect(new Set(ZONES.map((z) => z.bgm)).size).toBe(ZONES.length);
   });
 
@@ -67,5 +68,38 @@ describe('background music', () => {
         expect(beat).toBeLessThan(4);
       }
     }
+  });
+});
+
+describe('the queue outside a journey', () => {
+  it('holds only the game’s own songs for a new player', () => {
+    expect(lobbyQueue([], {})).toEqual(LOBBY_SONGS);
+  });
+
+  it('adds the song of each zone with a stop cleared, in the order of the loop around Okinawa', () => {
+    const shuri = ZONES.find((z) => z.id === 'shuri');
+    const naha = ZONES.find((z) => z.id === 'naha');
+    if (!shuri || !naha) throw new Error('missing zone');
+    // Shuri cleared once, Naha only reached with its first postcard
+    expect(lobbyQueue(['place:naha'], { shuri: 1 })).toEqual([...LOBBY_SONGS, naha.bgm, shuri.bgm]);
+  });
+
+  it('plays each song about a minute and a half, ending at the end of a time through', () => {
+    for (const id of Object.keys(SONGS) as (keyof typeof SONGS)[]) {
+      const sec = lobbyLoops(id) * songSeconds(id);
+      expect(Number.isInteger(lobbyLoops(id))).toBe(true);
+      expect(sec).toBeGreaterThan(LOBBY_SECONDS * 0.6);
+      expect(sec).toBeLessThan(LOBBY_SECONDS * 1.5);
+    }
+  });
+
+  it('goes on to the next song and back to the top after the last', () => {
+    const q = lobbyQueue(['place:naha'], {});
+    expect(nextInQueue(q, q[0])).toBe(q[1]);
+    expect(nextInQueue(q, q[q.length - 1])).toBe(q[0]);
+  });
+
+  it('starts over at the top when the song it was on is no longer queued', () => {
+    expect(nextInQueue(LOBBY_SONGS, 'asadoya')).toBe(LOBBY_SONGS[0]);
   });
 });

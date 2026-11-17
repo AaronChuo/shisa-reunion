@@ -19,6 +19,7 @@ async function countSounds(page: Page) {
 }
 const sounds = (page: Page) => page.evaluate(() => (window as unknown as { __sounds: number }).__sounds);
 const bgm = (page: Page) => page.evaluate(() => document.documentElement.dataset.bgm);
+const queue = (page: Page) => page.evaluate(() => document.documentElement.dataset.queue);
 
 it.describe('sound', () => {
   it('starts the map music after the first tap and stops it when music is switched off', async ({ page }) => {
@@ -37,15 +38,23 @@ it.describe('sound', () => {
     expect(await sounds(page)).toBe(before);
   });
 
-  it('switches to the zone song on a journey and the shop song at the gacha', async ({ page }) => {
+  it('keeps one queue going across the map, the gacha and the collection, and plays the zone song on a journey', async ({ page }) => {
     await page.goto('/');
+    expect(await bgm(page)).toBe('shimakaze');
+    expect(await queue(page)).toBe('lobby');
+    await page.click('[data-go="gacha"]');
+    expect(await bgm(page)).toBe('shimakaze');
+    await page.click('[data-go="dex"]');
+    expect(await bgm(page)).toBe('shimakaze');
+    await page.click('[data-go="home"]');
     await page.click('.zone [data-zone="0"]');
     await waitForLevel(page);
     expect(await bgm(page)).toBe('tensagu');
+    expect(await queue(page)).toBe('');
+    // Back from the journey, the queue picks up at the song it was on
     await page.click('#toHome');
     expect(await bgm(page)).toBe('shimakaze');
-    await page.click('[data-go="gacha"]');
-    expect(await bgm(page)).toBe('michi');
+    expect(await queue(page)).toBe('lobby');
   });
 
   it('plays a sanshin note when a block is placed', async ({ page }) => {

@@ -227,7 +227,3 @@ export const PERC: Record<PercPattern, [number, 'taiko' | 'sanba', number][]> = 
     [3.5, 'sanba', 1],
   ],
 };
-
-/** What plays where: the map, the gacha and collection screens, and each zone's journey */
-export const HOME_SONG: SongId = 'shimakaze';
-export const SHOP_SONG: SongId = 'michi';

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { installAudioUnlock } from './audio/context';
-import { installMusic, setScene } from './audio/music';
-import { HOME_SONG, SHOP_SONG, type SongId } from './audio/songs';
+import { installMusic, setLobby, setScene } from './audio/music';
+import type { SongId } from './audio/songs';
 import { installSpeechUnlock } from './audio/speech';
 import { STAGES, ZONES } from './content/zones';
 import { openStory } from './game/actions';
@@ -15,12 +15,11 @@ import { Play } from './screens/Play';
 import { type GameState, getState, useGame } from './state/store';
 import { Opening } from './story/Opening';
 
-/** Which song belongs to what is on screen: the map, the shop screens, or the current zone's journey */
+/** What plays for what is on screen: the current zone's song on a journey, the queue everywhere else */
 function sceneOf(s: GameState): string {
   const run = s.progress.run;
-  if (s.ui.screen === 'gacha' || s.ui.screen === 'dex') return SHOP_SONG;
   if (s.ui.screen === 'play' && run) return `${ZONES[run.zi].bgm}${run.si === STAGES - 1 ? '-boss' : ''}`;
-  return HOME_SONG;
+  return 'lobby';
 }
 
 export function App() {
@@ -44,6 +43,7 @@ export function App() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-check whenever the screen, a modal, the story or the age changes
   useEffect(() => askAgeIfNeeded(), [screen, modal, story, age]);
   useEffect(() => {
+    if (scene === 'lobby') return setLobby();
     const [id, boss] = scene.split('-');
     setScene(id as SongId, boss === 'boss');
   }, [scene]);
