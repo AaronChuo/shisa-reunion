@@ -378,9 +378,18 @@ h1 {
 .homeBody {
   display: grid;
   grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
   gap: 16px;
   margin-top: 14px;
   align-items: start;
+}
+/* Beside a big map: the go card on top of the zone list */
+.homeBody > .islandWrap {
+  grid-row: 1 / span 2;
+}
+.homeBody > .goCard,
+.homeBody > .zones {
+  grid-column: 2;
 }
 .islandWrap {
   background: #bfe6ee;
@@ -397,9 +406,26 @@ h1 {
 @media (max-width: 760px) {
   .homeBody {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
   }
-  .zones {
-    order: -1;
+  .homeBody > .islandWrap,
+  .homeBody > .goCard {
+    grid-row: auto;
+    grid-column: auto;
+  }
+  /* A phone picks a zone on the map, so the list goes; the go card stays at the bottom of the screen while the map scrolls */
+  .homeBody > .zones {
+    display: none;
+  }
+  .homeBody > .goCard {
+    position: sticky;
+    bottom: 8px;
+    z-index: 5;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    box-shadow: 0 8px 22px rgba(23, 57, 68, 0.22);
   }
   /* A phone shows the map the full width of the screen, which makes it about the screen's height */
   .islandWrap {
@@ -485,7 +511,11 @@ h1 {
 .zone.here {
   border-color: var(--zc);
 }
-/* The map pin of the next zone to play pulses */
+/* A pin tapped with a finger or mouse shows the ring, not a focus outline; the keyboard still gets one */
+.pin:focus:not(:focus-visible) {
+  outline: none;
+}
+/* The map pin of the picked zone pulses */
 .pinRing {
   transform-box: fill-box;
   transform-origin: 50% 50%;
@@ -1883,6 +1913,13 @@ h1 {
   }
   .goCard .t {
     flex-basis: 130px;
+  }
+  /* The zone's name and line get the whole width; the go button and the postcard share the row below */
+  .homeBody > .goCard .t {
+    flex-basis: 100%;
+  }
+  .goCard #cardBtn {
+    order: 3;
   }
 }
 

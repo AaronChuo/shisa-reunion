@@ -51,8 +51,9 @@ it.describe('wide ground on a narrow screen', () => {
     };
     await page.addInitScript((s) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', s), save(state));
     await page.goto('/');
-    // Yanbaru is 9 columns wide: too wide to fit 250 px with fingertip-sized cells
-    await page.click(`.zone [data-zone="${all.indexOf('yanbaru')}"]`);
+    // Yanbaru is 9 columns wide: too wide to fit 250 px with fingertip-sized cells. A narrow screen picks it on the map
+    await page.click(`.islandWrap [data-zone="${all.indexOf('yanbaru')}"]`);
+    await page.click('#goBtn');
     const box = page.locator('.boardScroll.scrollX');
     await expect(box).toBeVisible({ timeout: 15_000 });
     const { sw, cw } = await box.evaluate((el) => ({ sw: el.scrollWidth, cw: el.clientWidth }));

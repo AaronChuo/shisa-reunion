@@ -63,8 +63,9 @@ it.describe('place postcards', () => {
     await page.locator('#modal[data-kind="win"] [data-next]').click();
     await expect(page.locator('#modal[data-kind="done"] [data-new-card="naha:2"]')).toContainText('波上宮');
     await page.click('#modal [data-h]');
-    // From the map pin, the newest card shows first; the first can be turned to, the third says what earns it
+    // Picked on the map, its postcard on the go card shows the newest card first; the first can be turned to, the third says what earns it
     await page.click('.islandWrap [data-zone="0"]');
+    await page.click('#cardBtn');
     const art = page.locator('#modal img.postcardArt');
     await expect(art).toHaveAttribute('src', '/postcards/naha/2.webp');
     await expect.poll(() => art.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
@@ -74,9 +75,14 @@ it.describe('place postcards', () => {
     await expect(art).toHaveAttribute('src', '/postcards/naha/1.webp');
   });
 
-  it('opens a postcard from a map pin, with a button that sets off for that place', async ({ page }) => {
-    await open(page);
+  it('picks a place on the map, whose postcard on the go card has a button that sets off for it', async ({ page }) => {
+    await open(page, { open: ['naha', 'chatan', 'yomitan'], clears: { naha: 1 } });
+    // The next zone to play is picked to begin with
+    await expect(page.locator('#goCard')).toContainText('下一站：美國村');
     await page.click('.islandWrap [data-zone="0"]');
+    await expect(page.locator('#goCard')).toContainText('那霸市');
+    await expect(page.locator('#goCard')).toContainText('走完 1 次');
+    await page.click('#cardBtn');
     await expect(page.locator('#modal[data-kind="place"] .eyebrow')).toHaveText('那霸市');
     await expect(page.locator('#modal[data-kind="place"] h2')).toHaveText('國際通');
     await page.click('#modal [data-go-place]');
@@ -87,9 +93,46 @@ it.describe('place postcards', () => {
     await open(page);
     // Shuri (大師) opens once three of the four 高手 zones are finished
     await page.click(`.islandWrap [data-zone="${ZONES.findIndex((z) => z.id === 'shuri')}"]`);
+    await expect(page.locator('#goCard')).toContainText('走完 3 個高手地區才會打開');
+    await expect(page.locator('#goBtn')).toBeDisabled();
+    await page.click('#cardBtn');
     await expect(page.locator('#modal')).toContainText('走完 3 個高手地區才會打開');
     await expect(page.locator('#modal [data-go-place]')).toHaveCount(0);
     expect((await progress(page)).seen).not.toContain('place:shuri');
+  });
+
+  it('sets off for the zone picked on the map', async ({ page }) => {
+    await open(page, { open: ['naha', 'chatan', 'yomitan'], clears: { naha: 1 } });
+    await page.click('.islandWrap [data-zone="2"]');
+    await expect(page.locator('#goCard')).toContainText('讀谷村');
+    await page.click('#goBtn');
+    await expect.poll(async () => (await progress(page)).run?.zone).toBe('yomitan');
+  });
+
+  it('carries on a journey in its own zone, and asks before setting off for another', async ({ page }) => {
+    const run = {
+      zone: 'yomitan',
+      zi: 2,
+      si: 1,
+      seed: 1,
+      level: null,
+      placed: [],
+      moves: 0,
+      hist: [],
+      orient: [],
+      shell: 0,
+      conch: 0,
+      earned: 1,
+      rerolls: 0,
+      phase: 'play',
+    };
+    await open(page, { open: ['naha', 'chatan', 'yomitan'], clears: { naha: 1 }, run });
+    await expect(page.locator('#goCard')).toContainText('旅程還沒走完：讀谷村');
+    await expect(page.locator('#goBtn')).toHaveText('繼續');
+    await page.click('.islandWrap [data-zone="1"]');
+    await expect(page.locator('#goBtn')).toHaveText('出發');
+    await page.click('#goBtn');
+    await expect(page.locator('#modal[data-kind="confirmRun"]')).toBeVisible();
   });
 
   it('keeps every map pin tappable, nothing laid over them', async ({ page }) => {

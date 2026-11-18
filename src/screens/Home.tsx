@@ -1,3 +1,4 @@
+import { type KeyboardEvent, useState } from 'react';
 import { CoinIcon, Icon } from '../art/Icons';
 import { ShisaArt } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
@@ -152,11 +153,18 @@ export function nextZone(p: Progress): number {
   return (open.find(({ Z }) => !(p.clears[Z.id] > 0)) ?? open[open.length - 1]).i;
 }
 
-function IslandMap({ here }: { here: number }) {
+/** The map is where a zone is picked: tapping a pin picks it, and the go card below follows */
+function IslandMap({ sel, onPick }: { sel: number; onPick: (i: number) => void }) {
   const open = useGame((s) => s.progress.open);
   const font = 'GenSen Rounded TW, PingFang TC, sans-serif';
+  const key = (e: KeyboardEvent, i: number) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    onPick(i);
+  };
   return (
-    <svg viewBox="40 0 340 704" role="img" aria-label="沖繩地圖">
+    // biome-ignore lint/a11y/useSemanticElements: SVG has no fieldset; the map groups the pins that pick a zone
+    <svg viewBox="40 0 340 704" role="group" aria-label="沖繩地圖，點地點選要去哪裡">
       <rect x={40} y={0} width={340} height={704} fill="#BFE6EE" />
       {[40, 110, 180, 250, 320, 390, 460, 530].map((y) => (
         <path key={y} d={`M${50 + (y % 140)},${y} q10,-6 20,0 t20,0`} stroke="#E6F7FA" strokeWidth={3} fill="none" strokeLinecap="round" />
@@ -178,16 +186,39 @@ function IslandMap({ here }: { here: number }) {
       </g>
       <path d={smooth(KUME)} fill="#9CCF8C" stroke="#E2C98C" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke" />
       <path d={ROUTE} stroke="#C8452F" strokeWidth={3} strokeDasharray="2 8" strokeLinecap="round" fill="none" opacity={0.75} />
-      {/* The next stop's pin pulses; the ring sits outside the pin so the tap target itself never moves */}
-      <circle className="pinRing" cx={PINS[here][0]} cy={PINS[here][1]} r={17} fill="none" stroke={ZONES[here].color} strokeWidth={4} pointerEvents="none" />
+      {/* The picked zone's pin pulses; the ring sits outside the pin so the tap target itself never moves */}
+      <circle
+        key={sel}
+        className="pinRing"
+        cx={PINS[sel][0]}
+        cy={PINS[sel][1]}
+        r={17}
+        fill="none"
+        stroke={ZONES[sel].color}
+        strokeWidth={4}
+        pointerEvents="none"
+      />
       {ZONES.map((Z, i) => {
         const [x, y, side] = PINS[i];
         const locked = !open.includes(Z.id);
         const [lx, ly, anchor] =
           side === 'L' ? ([x - 20, y + 6, 'end'] as const) : side === 'R' ? ([x + 20, y + 6, 'start'] as const) : ([x, y + 36, 'middle'] as const);
         return (
-          // biome-ignore lint/a11y/noStaticElementInteractions: the zone list below offers the same journeys as real buttons
-          <g key={Z.id} data-zone={i} className={i === here ? 'pin here' : 'pin'} style={{ cursor: 'pointer' }} onClick={() => openPlace(Z.id as PlaceId, i)}>
+          // biome-ignore lint/a11y/useSemanticElements: SVG has no button element; the pin takes focus and Enter or Space like one
+          <g
+            key={Z.id}
+            data-zone={i}
+            className={i === sel ? 'pin here' : 'pin'}
+            role="button"
+            tabIndex={0}
+            aria-pressed={i === sel}
+            aria-label={locked ? `${Z.name}（未開放）` : Z.name}
+            style={{ cursor: 'pointer' }}
+            onClick={() => onPick(i)}
+            onKeyDown={(e) => key(e, i)}
+          >
+            {/* A bigger target than the pin for small fingers; the two closest pins are 48 apart */}
+            <circle cx={x} cy={y} r={23} fill="transparent" />
             <circle cx={x} cy={y} r={17} fill={locked ? '#B9C4C2' : Z.color} stroke="#fff" strokeWidth={4} />
             <text x={x} y={y + 6} textAnchor="middle" fontSize={17} fontWeight={700} fill="#fff" fontFamily="Fredoka, sans-serif">
               {i + 1}
@@ -231,6 +262,18 @@ export function Home() {
   const goal = VARIANT_BY_ID[p.pair[1]];
   const run = p.run && p.run.phase !== 'done' ? p.run : null;
   const here = nextZone(p);
+  // The zone picked on the map; the next one to play until a pin is tapped
+  const [picked, setPicked] = useState<number | null>(null);
+  const sel = picked ?? here;
+  const S = ZONES[sel];
+  const locked = !p.open.includes(S.id);
+  const done = p.clears[S.id] ?? 0;
+  // The unfinished journey, when it is in the picked zone
+  const going = run && run.zi === sel ? run : null;
+  const pick = (i: number) => {
+    setPicked(i);
+    sfx.pop();
+  };
   return (
     <section id="home" className="screen scroll">
       <UpdatePrompt />
@@ -281,7 +324,7 @@ export function Home() {
       </header>
       <div className="homeBody">
         <div className="islandWrap">
-          <IslandMap here={here} />
+          <IslandMap sel={sel} onPick={pick} />
           {/* Okinawa's own postcard; the icon wiggles until it has been read */}
           <button
             type="button"
@@ -293,37 +336,52 @@ export function Home() {
             <span>沖繩</span>
           </button>
         </div>
-        <div className="zones">
-          {/* The one big button: carry on, or set out for the next zone to play */}
-          <div className="goCard" style={{ ['--zc' as string]: ZONES[here].color }}>
-            <div className="t">
-              {run ? '旅程還沒走完' : '下一站'}：{ZONES[here].name}
-              <small>
-                {run ? (
-                  <>
-                    第 <span className="num">{run.si + 1}</span> / <span className="num">{STAGES}</span> 站，這趟拿到 <span className="num">{run.earned}</span>{' '}
-                    枚福氣幣
-                  </>
-                ) : (
-                  ZONES[here].line
-                )}
-              </small>
-            </div>
-            <Cta
-              icon={<Icon name="play" />}
-              id="goBtn"
-              data={run ? { 'data-resume': true } : { 'data-start': true }}
-              onClick={() => (run ? resumeRun() : requestRun(here))}
-            >
-              {run ? '繼續' : '出發'}
-            </Cta>
+        {/* The one big button, for the zone picked on the map (the next one to play until another is tapped): carry on,
+            set out, or how it opens. On a phone it stays at the bottom of the screen while the map scrolls. */}
+        <div className={locked ? 'goCard locked' : 'goCard'} id="goCard" data-sel={sel} style={{ ['--zc' as string]: locked ? '#9FB0AD' : S.color }}>
+          <div className="t">
+            {going ? '旅程還沒走完：' : sel === here && !locked ? '下一站：' : ''}
+            {S.name}{' '}
+            <span className="stars" role="img" aria-label={`難度 ${zoneStars(S)}`}>
+              {'★'.repeat(zoneStars(S))}
+            </span>
+            <small>
+              {going ? (
+                <>
+                  第 <span className="num">{going.si + 1}</span> / <span className="num">{STAGES}</span> 站，這趟拿到{' '}
+                  <span className="num">{going.earned}</span> 枚福氣幣
+                </>
+              ) : locked ? (
+                lockHint(sel, p.clears)
+              ) : (
+                <>
+                  {S.line}
+                  {done > 0 && <> · 走完 {done} 次</>}
+                </>
+              )}
+            </small>
           </div>
+          <button type="button" className="iconBtn" id="cardBtn" aria-label={`${S.name}的明信片`} onClick={() => openPlace(S.id as PlaceId, sel)}>
+            <Icon name="postcard" />
+            <span>明信片</span>
+          </button>
+          <Cta
+            icon={<Icon name={locked ? 'lock' : 'play'} />}
+            id="goBtn"
+            disabled={locked}
+            data={going ? { 'data-resume': true } : { 'data-start': true }}
+            onClick={() => (going ? resumeRun() : requestRun(sel))}
+          >
+            {going ? '繼續' : locked ? '未開放' : '出發'}
+          </Cta>
+        </div>
+        <div className="zones">
           {ZONES.map((Z, i) => {
             const locked = !p.open.includes(Z.id);
             const n = p.clears[Z.id] ?? 0;
             const status = locked ? lockHint(i, p.clears) : n ? `走完 ${n} 次` : '還沒走過';
             return (
-              <div key={Z.id} className={locked ? 'zone locked' : i === here ? 'zone here' : 'zone'} style={{ ['--zc' as string]: Z.color }}>
+              <div key={Z.id} className={locked ? 'zone locked' : i === sel ? 'zone here' : 'zone'} style={{ ['--zc' as string]: Z.color }}>
                 <span className="stripe" />
                 <div>
                   <div className="zt">

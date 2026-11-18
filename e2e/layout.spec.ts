@@ -57,6 +57,37 @@ it.describe('phone layout', () => {
     expect(await noSidewaysScroll(page)).toBe(true);
   });
 
+  it('picks a zone on the map, with the go card kept on screen and nothing laid over a pin', async ({ page }) => {
+    await page.goto('/');
+    // No list of zones on a phone: the map is where a zone is picked
+    await expect(page.locator('.zone').first()).toBeHidden();
+    const vh = page.viewportSize()?.height ?? 0;
+    const card = page.locator('#goCard');
+    const onScreen = async () => {
+      const bb = await card.boundingBox();
+      return !!bb && bb.y >= 0 && bb.y + bb.height <= vh;
+    };
+    expect(await onScreen()).toBe(true);
+    const covered = await page.evaluate(() =>
+      [...document.querySelectorAll<SVGGElement>('.islandWrap [data-zone]')]
+        .filter((g) => {
+          g.scrollIntoView({ block: 'center' });
+          const r = g.querySelectorAll('circle')[1]?.getBoundingClientRect();
+          if (!r) return true;
+          return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('[data-zone]') !== g;
+        })
+        .map((g) => g.dataset.zone),
+    );
+    expect(covered).toEqual([]);
+    await page.locator('.islandWrap [data-zone="1"]').tap();
+    await expect(card).toContainText('美國村');
+    await expect(page.locator('#goBtn')).toBeDisabled();
+    expect(await onScreen()).toBe(true);
+    await page.locator('.islandWrap [data-zone="0"]').tap();
+    await expect(page.locator('#goBtn')).toBeEnabled();
+    expect(await noSidewaysScroll(page)).toBe(true);
+  });
+
   it('fits 西薩的家 and its drawer on one screen, and a tap puts a decoration in the yard', async ({ page }) => {
     await page.goto('/');
     await page.click('[data-go="house"]');
@@ -77,7 +108,7 @@ it.describe('phone layout', () => {
 
   it('fits the zone name and the tray on the play screen', async ({ page }) => {
     await page.goto('/');
-    await page.click('.zone [data-zone="0"]');
+    await page.click('#goBtn');
     await waitForLevel(page);
     const clipped = await page.evaluate(() => {
       const z = document.getElementById('zoneName');
@@ -90,7 +121,7 @@ it.describe('phone layout', () => {
 
   it('marks a picked tray block with its own border only, no focus ring around it', async ({ page }) => {
     await page.goto('/');
-    await page.click('.zone [data-zone="0"]');
+    await page.click('#goBtn');
     await waitForLevel(page);
     const card = page.locator('.tray .card').first();
     // Picked by keyboard, the strictest case: the browser would draw its focus ring here
