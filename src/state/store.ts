@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { AGE_ORDER, type Age, REST_CHOICES } from '../content/age';
+import { DECOR_BY_ID } from '../content/decor';
 import { freshHouse, type House, normalizeHouse } from '../content/house';
 import type { PlaceId } from '../content/places';
 import { type Series, STARTERS, VARIANT_BY_ID } from '../content/shisa';
@@ -57,6 +58,8 @@ export interface Progress {
   restMin: number | null;
   /** 西薩的家: what is in the yard and the picture behind it */
   house: House;
+  /** Decorations turned out of the gacha machines' round 2 (the three every house starts with aren't listed) */
+  decor: string[];
 }
 
 export type Screen = 'title' | 'home' | 'play' | 'gacha' | 'dex' | 'house';
@@ -92,7 +95,10 @@ export type Modal =
   /** `card`: the zone's postcard this journey earned (its second or third), if any */
   | { kind: 'done'; zi: number; earned: number; unlocked: number[]; card: number | null }
   | { kind: 'confirmRun'; zi: number }
+  /** A capsule opened: a shisa, or in round 2 a decoration */
   | { kind: 'reveal'; id: string; series: Series['id']; color: string }
+  /** A machine has all its shisa collected and now turns out decorations */
+  | { kind: 'upgrade'; series: Series['id'] }
   | { kind: 'role'; id: string }
   | { kind: 'about' }
   /** `n`: which of the place's cards is showing */
@@ -129,6 +135,8 @@ export interface Ui {
    * the tray (out) → tapping it opens it
    */
   pull: 'idle' | 'ready' | 'drop' | 'out';
+  /** Coins put in toward the next capsule; it takes two in round 2 for children 6 and up */
+  coins: number;
   pulled: string | null;
   /** Colour of the capsule that dropped */
   capColor: string | null;
@@ -138,6 +146,8 @@ export interface Ui {
   story: boolean;
   /** The collection page last looked at, kept while the game is open */
   dexTab: DexTab;
+  /** A decoration just sent from a capsule to the house, to hop as the house opens */
+  justIn: string | null;
 }
 
 export interface GameState {
@@ -158,6 +168,7 @@ export const freshProgress = (): Progress => ({
   age: null,
   restMin: null,
   house: freshHouse(),
+  decor: [],
 });
 
 const freshUi = (): Ui => ({
@@ -176,11 +187,13 @@ const freshUi = (): Ui => ({
   shake: null,
   gseries: 'trad',
   pull: 'idle',
+  coins: 0,
   pulled: null,
   capColor: null,
   spin: 0,
   story: false,
   dexTab: 'shisa',
+  justIn: null,
 });
 
 /** Zone order before v0.5: progress was saved as arrays in this order */
@@ -234,6 +247,8 @@ export function normalizeProgress(raw: unknown): Progress {
   // Zones never close again; the tier rules also open zones added after a save was made
   open.push(...openFor(clears));
   const seen = Array.isArray(p.seen) ? p.seen.filter((s) => typeof s === 'string') : [];
+  // Only decorations a machine turns out are listed; the starters are always there
+  const decor = Array.isArray(p.decor) ? [...new Set(p.decor)].filter((id) => typeof id === 'string' && DECOR_BY_ID[id]?.series) : [];
   return {
     tokens: typeof p.tokens === 'number' && p.tokens >= 0 ? p.tokens : 0,
     owned,
@@ -246,7 +261,8 @@ export function normalizeProgress(raw: unknown): Progress {
     run: normalizeRun(p.run),
     age: AGE_ORDER.includes(p.age as Age) ? (p.age as Age) : null,
     restMin: REST_CHOICES.includes(p.restMin as number) ? (p.restMin as number) : null,
-    house: normalizeHouse(p.house, { owned, pair, seen, clears }),
+    house: normalizeHouse(p.house, { owned, decor, pair, seen, clears }),
+    decor,
   };
 }
 

@@ -1,9 +1,10 @@
+import { DECOR_BY_ID, hasDecor, isDecor } from './decor';
 import { zonesBeen } from './places';
 import { ZONES } from './zones';
 
 // 西薩的家 (ADR-0037): the red-tile house the pair lives on, which the player decorates like a sticker book. The pair
 // stands on the ridge; the yard takes the decorations and every shisa pulled from the gacha machines, one of each, put
-// wherever they are dropped. The picture behind the house is the sky, or any zone with a stop cleared.
+// wherever they are dropped. The decorations themselves are in decor.ts. The picture behind the house is the sky, or any zone with a stop cleared.
 
 /** The house picture's own units; a sticker's place is where its feet are */
 export const HOUSE_W = 360;
@@ -12,27 +13,9 @@ export const HOUSE_H = 450;
 /** At most this many things in the house, so the picture never gets crowded and older phones keep up */
 export const HOUSE_CAP = 30;
 
-export interface Decor {
-  id: string;
-  name: string;
-  /** Width in house units; each is drawn in a 100 × 100 box with its feet at the bottom */
-  w: number;
-}
-
-/** Every house starts with these */
-export const DECOR: Decor[] = [
-  { id: 'hibiscus', name: '扶桑花盆', w: 46 },
-  { id: 'stone', name: '石敢當', w: 38 },
-  { id: 'jar', name: '水缸', w: 50 },
-];
-
-export const DECOR_BY_ID: Record<string, Decor> = Object.fromEntries(DECOR.map((d) => [d.id, d]));
-
 /** A shisa in the yard, framed like ShisaIcon (92 × 104) */
 export const SHISA_W = 56;
 export const SHISA_H = Math.round((SHISA_W * 104) / 92);
-
-export const isDecor = (id: string): boolean => id in DECOR_BY_ID;
 
 export function stickerSize(id: string): { w: number; h: number } {
   const d = DECOR_BY_ID[id];
@@ -103,7 +86,10 @@ export function backdrops(seen: string[], clears: Record<string, number>): { id:
  * Repairs a saved house: a picture that isn't open goes back to the sky; things not owned, on the roof, repeated, or
  * past the cap are dropped; places are kept inside the picture
  */
-export function normalizeHouse(raw: unknown, p: { owned: string[]; pair: readonly string[]; seen: string[]; clears: Record<string, number> }): House {
+export function normalizeHouse(
+  raw: unknown,
+  p: { owned: string[]; decor: string[]; pair: readonly string[]; seen: string[]; clears: Record<string, number> },
+): House {
   const h = (raw && typeof raw === 'object' ? raw : {}) as { bd?: unknown; placed?: unknown };
   const bd = backdrops(p.seen, p.clears).some((b) => b.open && b.id === h.bd) ? (h.bd as string) : SKY;
   const placed: Sticker[] = [];
@@ -112,7 +98,7 @@ export function normalizeHouse(raw: unknown, p: { owned: string[]; pair: readonl
     if (!s || typeof s !== 'object') continue;
     const { id, x, y } = s as Partial<Sticker>;
     if (typeof id !== 'string' || typeof x !== 'number' || typeof y !== 'number' || !Number.isFinite(x) || !Number.isFinite(y)) continue;
-    const ok = isDecor(id) || (p.owned.includes(id) && !p.pair.includes(id));
+    const ok = isDecor(id) ? hasDecor(id, p.decor) : p.owned.includes(id) && !p.pair.includes(id);
     if (ok && !placed.some((q) => q.id === id)) placed.push({ id, ...clampSpot(id, x, y) });
   }
   return { bd, placed };

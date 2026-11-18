@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { hasDecorArt } from '../house/DecorArt';
-import { backdrops, clampSpot, DECOR, freeSpot, HOUSE_CAP, HOUSE_H, HOUSE_W, normalizeHouse, SKY, type Sticker, stickerSize } from './house';
+import { DECOR } from './decor';
+import { backdrops, clampSpot, freeSpot, HOUSE_CAP, HOUSE_H, HOUSE_W, normalizeHouse, SKY, type Sticker, stickerSize } from './house';
 import { placeSeen } from './places';
 import { STARTERS, VARIANTS } from './shisa';
 import { ZONES } from './zones';
 
 const owned = [...STARTERS, 'gold', 'eisa', 'turtle'];
 const pair = [STARTERS[0], STARTERS[1]];
-const none = { seen: [] as string[], clears: {} as Record<string, number> };
+const none = { seen: [] as string[], clears: {} as Record<string, number>, decor: [] as string[] };
 
 describe('the decorations of 西薩的家', () => {
   it('each has art and an id no shisa uses, so a sticker is known by its id alone', () => {
@@ -82,6 +83,16 @@ describe('a saved house', () => {
     ]);
   });
 
+  it('keeps a decoration only once it has been turned out of a machine', () => {
+    const raw = {
+      placed: [
+        { id: 'cat', x: 100, y: 400 },
+        { id: 'lantern', x: 200, y: 400 },
+      ],
+    };
+    expect(normalizeHouse(raw, { owned, pair, ...none, decor: ['lantern'] }).placed.map((s) => s.id)).toEqual(['lantern']);
+  });
+
   it('keeps at most the cap', () => {
     const many = VARIANTS.map((v, i) => ({ id: v.id, x: 30 + (i % 10) * 30, y: 380 + (i % 3) * 20 }));
     const all = VARIANTS.map((v) => v.id);
@@ -90,6 +101,6 @@ describe('a saved house', () => {
 
   it('goes back to the sky when its picture is of a zone not visited', () => {
     expect(normalizeHouse({ bd: 'miyako', placed: [] }, { owned, pair, ...none }).bd).toBe(SKY);
-    expect(normalizeHouse({ bd: 'naha', placed: [] }, { owned, pair, seen: [], clears: { naha: 1 } }).bd).toBe('naha');
+    expect(normalizeHouse({ bd: 'naha', placed: [] }, { owned, pair, decor: [], seen: [], clears: { naha: 1 } }).bd).toBe('naha');
   });
 });

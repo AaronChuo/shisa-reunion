@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { STARTERS, VARIANTS } from '../src/content/shisa';
 import { freshProgress } from '../src/state/store';
 import { expect, test as it } from './fixtures';
 import { animationOf, progress } from './helpers';
@@ -134,5 +135,63 @@ it.describe('a gacha machine you work by hand', () => {
       await expect(page.locator('#capsule')).toHaveClass(/flyIn/);
       expect(await animationOf(page, '#capsule')).toBe('capsuleSlide');
     });
+  });
+});
+
+it.describe('round 2: decorations for 西薩的家', () => {
+  const trad = VARIANTS.filter((v) => v.series === 'trad').map((v) => v.id);
+  /** A save with every traditional shisa collected, as a player of this age */
+  async function upgraded(page: Page, age: string, tokens: number) {
+    const s = JSON.stringify({ state: { progress: { ...freshProgress(), tokens, owned: [...STARTERS, ...trad], age } }, version: 2 });
+    await page.addInitScript((v) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', v), s);
+    await page.goto('/');
+    await page.click('[data-go="gacha"]');
+  }
+
+  it('goes up to round 2 once its shisa are all in, and takes two coins a capsule from a child 6 or older', async ({ page }) => {
+    await upgraded(page, 'kid', 3);
+    // Said once, with the eight decorations still as shadows
+    await expect(page.locator('#modal[data-kind="upgrade"]')).toBeVisible();
+    await expect(page.locator('#modal .upgradeShadow')).toHaveCount(8);
+    await page.click('#modal [data-ok]');
+    await expect(page.locator('#machineBox .capsule')).toHaveCount(8);
+    await expect(page.locator('[data-series="trad"] small')).toHaveText('0/8');
+    // A hole either side of the slit; the crank turns once both are lit
+    await expect(page.locator('.coinHole')).toHaveCount(2);
+    await page.locator('#coinBtn').click();
+    await expect(page.locator('#coinBtn')).toHaveText(/再投 1 枚/);
+    await expect(page.locator('#turnBtn')).toHaveCount(0);
+    await page.locator('#coinBtn').click();
+    await page.locator('#turnBtn').click();
+    await page.locator('#openBtn').click();
+    await page.locator('#capsule').click();
+    // 放到家裡: the decoration is already in the yard when the house opens
+    await page.locator('#modal [data-to-house]').click();
+    await expect(page.locator('#house')).toBeVisible();
+    const p = await progress(page);
+    expect(p.tokens).toBe(1);
+    expect(p.decor).toHaveLength(1);
+    expect(p.house.placed.map((s) => s.id)).toEqual(p.decor);
+    await expect(page.locator(`.hStk[data-id="${p.decor[0]}"]`)).toHaveCount(1);
+    // Back at the machine the notice doesn't come again
+    await page.click('[data-go="home"]');
+    await page.click('[data-go="gacha"]');
+    await expect(page.locator('#modal')).toHaveCount(0);
+    await expect(page.locator('[data-series="trad"] small')).toHaveText('1/8');
+  });
+
+  it('takes one coin a capsule from a child under 6, and a decoration can be kept for later', async ({ page }) => {
+    await upgraded(page, 'little', 1);
+    await page.click('#modal [data-ok]');
+    await expect(page.locator('.coinHole')).toHaveCount(0);
+    await page.locator('#coinBtn').click();
+    await page.locator('#turnBtn').click();
+    await page.locator('#openBtn').click();
+    await page.locator('#capsule').click();
+    await page.locator('#modal [data-keep]').click();
+    const p = await progress(page);
+    expect(p.tokens).toBe(0);
+    expect(p.decor).toHaveLength(1);
+    expect(p.house.placed).toEqual([]);
   });
 });

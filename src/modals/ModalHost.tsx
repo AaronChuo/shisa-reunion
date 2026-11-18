@@ -4,6 +4,7 @@ import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, Star4 } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
+import { DECOR, DECOR_BY_ID, DECOR_PER_MACHINE, priceOf } from '../content/decor';
 import { CARD_NEEDS, cardsEarned, PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, pairWith, ROLE_ASK, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
@@ -18,12 +19,14 @@ import {
   finishReveal,
   go,
   goHome,
+  sendToHouse,
   setOffFrom,
   showCard,
   startRun,
   toggleMusic,
   toggleSound,
 } from '../game/actions';
+import { DecorArt, DecorIcon } from '../house/DecorArt';
 import { PostcardPicture } from '../places/PostcardPicture';
 import { type Modal, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
@@ -157,6 +160,8 @@ function ConfirmRun({ zi }: { zi: number }) {
 function Reveal({ id, seriesId, color }: { id: string; seriesId: string; color: string }) {
   const [open, setOpen] = useState(false);
   const v = VARIANT_BY_ID[id];
+  // In round 2 the capsule holds a decoration for the house instead of a shisa
+  const d = DECOR_BY_ID[id];
   const series = SERIES.find((s) => s.id === seriesId) ?? SERIES[0];
   // The shell is the one that actually rolled out of the machine
   const col = color;
@@ -188,9 +193,15 @@ function Reveal({ id, seriesId, color }: { id: string; seriesId: string; color: 
       >
         <svg className={open ? 'reveal open' : 'reveal'} viewBox="-110 -130 220 220" aria-hidden="true">
           <g className="who">
-            <g transform="translate(0,60) scale(1.7)">
-              <ShisaArt v={v} open />
-            </g>
+            {d ? (
+              <g transform="translate(-72,-96) scale(1.44)">
+                <DecorArt id={id} />
+              </g>
+            ) : (
+              <g transform="translate(0,60) scale(1.7)">
+                <ShisaArt v={v} open />
+              </g>
+            )}
           </g>
           <g className="capBot">
             <path d="M-80,-20 A80,80 0 0 0 80,-20 Z" fill="#fff" stroke="#6E7F7C" strokeWidth={4} />
@@ -201,7 +212,25 @@ function Reveal({ id, seriesId, color }: { id: string; seriesId: string; color: 
           </g>
         </svg>
       </button>
-      {open ? (
+      {open && d ? (
+        <div className="revealText">
+          <span className="newTag">NEW</span>
+          <h2>{d.name}</h2>
+          <p>
+            {d.note}
+            {d.rare && <span className="rare">　稀有！</span>}
+          </p>
+          <div className="btns">
+            <Cta icon={<Icon name="house" />} data={{ 'data-to-house': true, 'data-focus': true }} onClick={sendToHouse}>
+              放到家裡
+            </Cta>
+          </div>
+          <button type="button" className="iconBtn" data-keep onClick={() => finishReveal(null)}>
+            <Icon name="check" />
+            <span>先收著</span>
+          </button>
+        </div>
+      ) : open ? (
         <div className="revealText">
           <span className="newTag">NEW</span>
           <h2>{v.name}</h2>
@@ -442,6 +471,36 @@ function Postcard({ id, start, n }: { id: PlaceId; start: number | null; n: numb
   );
 }
 
+/** A machine with all its shisa collected goes up to round 2: its decorations for the house, still as shadows */
+function Upgrade({ seriesId }: { seriesId: string }) {
+  const se = SERIES.find((x) => x.id === seriesId) ?? SERIES[0];
+  const owned = useGame((s) => s.progress.owned);
+  const age = useGame((s) => s.progress.age);
+  const n = DECOR.filter((x) => x.series === se.id);
+  const shisa = owned.filter((id) => VARIANT_BY_ID[id]?.series === se.id).length;
+  return (
+    <Sheet label="扭蛋機升級">
+      <div className="eyebrow">{se.name}</div>
+      <h2>扭蛋機升級了！</h2>
+      <p>
+        {se.name}的 <span className="num">{shisa}</span> 隻西薩都收齊了。現在這台轉得出 <span className="num">{DECOR_PER_MACHINE}</span>{' '}
+        樣擺飾，轉到的可以放進西薩的家。
+        {priceOf(se.id, owned, age) > 1 && '升級後每轉一次要投 2 枚福氣幣。'}
+      </p>
+      <div className="upgradeRow" style={{ ['--sc' as string]: se.color }}>
+        {n.map((x) => (
+          <DecorIcon key={x.id} id={x.id} className="upgradeShadow" />
+        ))}
+      </div>
+      <div className="btns">
+        <Cta icon={<Icon name="check" />} data={{ 'data-ok': true, 'data-focus': true }} onClick={closeModal}>
+          好
+        </Cta>
+      </div>
+    </Sheet>
+  );
+}
+
 /** Where the pictures and voices come from */
 function Credits() {
   return (
@@ -525,6 +584,9 @@ export function ModalHost() {
       break;
     case 'role':
       body = <Role id={m.id} />;
+      break;
+    case 'upgrade':
+      body = <Upgrade seriesId={m.series} />;
       break;
     case 'about':
       body = <About />;

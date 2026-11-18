@@ -1,7 +1,8 @@
 import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { CoinArt, TapHand } from '../art/Icons';
 import { sfx } from '../audio/sfx';
-import { type Series, VARIANTS } from '../content/shisa';
+import { leftIn, priceOf, roundOf } from '../content/decor';
+import type { Series } from '../content/shisa';
 import { rng } from '../engine';
 import { capsuleOut, insertCoin, openCapsule, releaseCapsule } from '../game/actions';
 import { useGame } from '../state/store';
@@ -19,6 +20,8 @@ const OUTLET = { x: 208, y: 401 };
 const PURSE = { x: 284, y: 368 };
 /** Capsule shells come in bright colours that say nothing about what's inside, like a real machine */
 const SHELLS = ['#E2513C', '#F3A83F', '#2D8FD0', '#3FA36B', '#8C56AA', '#FF8FB1', '#F2C43A', '#3DA399', '#E2703A', '#6FA8D6'];
+/** Round 2's capsules, holding decorations for the house: gold and pearly pastels, so the new round looks new */
+const SHELLS2 = ['#E8B83A', '#F6D77A', '#A8DCD1', '#F7B7A3', '#B9D7F2', '#D9C2EC', '#F2C43A', '#FFE1A8'];
 /** Degrees per click of the ratchet, and per capsule */
 const NOTCH = 90;
 const TURN = 360;
@@ -56,12 +59,19 @@ function Capsule({ color, r }: { color: string; r: number }) {
  */
 export function Machine({ series }: { series: Series }) {
   const owned = useGame((s) => s.progress.owned);
+  const decor = useGame((s) => s.progress.decor);
+  const age = useGame((s) => s.progress.age);
   const tokens = useGame((s) => s.progress.tokens);
+  const coins = useGame((s) => s.ui.coins);
   const phase = useGame((s) => s.ui.pull);
   const spin = useGame((s) => s.ui.spin);
   const capColor = useGame((s) => s.ui.capColor);
   const pulled = useGame((s) => s.ui.pulled);
-  const left = useMemo(() => VARIANTS.filter((v) => v.series === series.id && !owned.includes(v.id)).length, [series.id, owned]);
+  const left = useMemo(() => leftIn(series.id, owned, decor), [series.id, owned, decor]);
+  const round = roundOf(series.id, owned);
+  // One coin a capsule, or two in round 2 for children 6 and up: the slot shows a hole for each
+  const price = priceOf(series.id, owned, age);
+  const shells = round === 2 ? SHELLS2 : SHELLS;
 
   const rand = useRef(rng(7));
   const world = useRef<World | null>(null);
@@ -115,15 +125,15 @@ export function Machine({ series }: { series: Series }) {
   };
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
 
-  // A fresh pile poured in whenever the machine changes
-  // biome-ignore lint/correctness/useExhaustiveDependencies: rebuild only when switching machines
+  // A fresh pile poured in whenever the machine changes, or goes up to round 2
+  // biome-ignore lint/correctness/useExhaustiveDependencies: rebuild only when switching machines or rounds
   useEffect(() => {
     const w = makeWorld(DOME, left, rand.current);
     world.current = w;
-    colors.current = new Map(w.balls.map((b, i) => [b.id, SHELLS[(i * 3 + series.id.length) % SHELLS.length]]));
+    colors.current = new Map(w.balls.map((b, i) => [b.id, shells[(i * 3 + series.id.length) % shells.length]]));
     setIds(w.balls.map((b) => b.id));
     wake();
-  }, [series.id]);
+  }, [series.id, round]);
 
   // Keep one capsule in the dome per shisa still to collect
   // biome-ignore lint/correctness/useExhaustiveDependencies: only the count matters
@@ -134,7 +144,7 @@ export function Machine({ series }: { series: Series }) {
     while (inside(w).length < left) {
       const id = addBall(w, rand.current);
       if (id === null) break;
-      colors.current.set(id, SHELLS[id % SHELLS.length]);
+      colors.current.set(id, shells[id % shells.length]);
     }
     setIds(w.balls.map((b) => b.id));
     wake();
@@ -218,7 +228,7 @@ export function Machine({ series }: { series: Series }) {
   // ---------- the coin ----------
   const coinDrag = useRef<{ x0: number; y0: number; moved: boolean } | null>(null);
   const purseDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
-    if (phase !== 'idle' || tokens < 1 || !left) return;
+    if (phase !== 'idle' || tokens < price || !left) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     coinDrag.current = { x0: e.clientX, y0: e.clientY, moved: false };
     setCoinAt({ x: e.clientX, y: e.clientY });
@@ -240,7 +250,7 @@ export function Machine({ series }: { series: Series }) {
     if (near || !c.moved) insertCoin();
   };
 
-  const canCoin = phase === 'idle' && tokens > 0 && left > 0;
+  const canCoin = phase === 'idle' && tokens >= price && left > 0;
   return (
     <div className="machineFrame" ref={frameRef}>
       <svg className="machine" viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`} role="img" aria-label={`${series.name}扭蛋機，裡面還有 ${left} 顆`}>
@@ -278,6 +288,23 @@ export function Machine({ series }: { series: Series }) {
         {/* Coin slot; glows while waiting for a coin */}
         <rect x={186} y={304} width={50} height={68} rx={10} fill="#F7E2C7" stroke="#173944" strokeWidth={3.5} className={canCoin ? 'slotGlow' : undefined} />
         <rect x={206} y={314} width={10} height={48} rx={5} fill="#173944" />
+        {/* Two coins a capsule: a hole either side of the slit, lit as each coin goes in */}
+        {price > 1 &&
+          [196, 226]
+            .slice(0, price)
+            .map((x, i) => (
+              <circle
+                key={x}
+                className="coinHole"
+                data-lit={i < coins || phase !== 'idle'}
+                cx={x}
+                cy={338}
+                r={6}
+                fill={i < coins || phase !== 'idle' ? '#E8B83A' : '#F7E2C7'}
+                stroke="#173944"
+                strokeWidth={2.5}
+              />
+            ))}
         {phase === 'ready' && (
           <g className="coinIn">
             <g transform={`translate(${SLOT.x - 15},${SLOT.y - 30}) scale(.75)`}>

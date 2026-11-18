@@ -1,4 +1,5 @@
 import { CoinIcon, Icon } from '../art/Icons';
+import { DECOR, DECOR_PER_MACHINE, leftIn, priceOf, roundOf } from '../content/decor';
 import { SERIES, VARIANTS } from '../content/shisa';
 import { Machine } from '../gacha/Machine';
 import { autoTurn, go, goPlay, insertCoin, openCapsule, setSeries } from '../game/actions';
@@ -9,9 +10,10 @@ import { Cta } from '../ui/Cta';
  * The main button follows the machine: put a coin in, turn the crank, open the capsule; or go and earn coins.
  * The machine shows its own finger for each step, so the button doesn't add another.
  */
-function GachaStep({ left }: { left: number }) {
+function GachaStep({ left, price }: { left: number; price: number }) {
   const tokens = useGame((s) => s.progress.tokens);
   const phase = useGame((s) => s.ui.pull);
+  const coins = useGame((s) => s.ui.coins);
   if (phase === 'out')
     return (
       <>
@@ -31,22 +33,23 @@ function GachaStep({ left }: { left: number }) {
       </>
     );
   if (!left) return null;
-  if (tokens < 1)
+  if (tokens < price)
     return (
       <>
         <Cta icon={<Icon name="play" />} id="playBtn" onClick={goPlay}>
           去玩，拿福氣幣
         </Cta>
-        <p id="tokenLine">過一站就能拿到 1 枚福氣幣</p>
+        <p id="tokenLine">{tokens > 0 ? `這台轉一次要 ${price} 枚，再過一站就夠了` : '過一站就能拿到 1 枚福氣幣'}</p>
       </>
     );
   return (
     <>
       <Cta icon={<CoinIcon />} id="coinBtn" nudge={false} onClick={insertCoin}>
-        投 1 枚福氣幣
+        {coins > 0 ? '再投 1 枚' : '投 1 枚福氣幣'}
       </Cta>
       <p id="tokenLine">
-        把福氣幣拖進投幣口，你有 <b className="num">{tokens}</b> 枚
+        {price > 1 ? (coins > 0 ? '投幣口還有 1 個洞亮著，再投 1 枚' : '這台要投 2 枚，投幣口的 2 個洞都亮起來才轉得動') : '把福氣幣拖進投幣口'}，你有{' '}
+        <b className="num">{tokens}</b> 枚
       </p>
     </>
   );
@@ -55,11 +58,14 @@ function GachaStep({ left }: { left: number }) {
 export function Gacha() {
   const tokens = useGame((s) => s.progress.tokens);
   const owned = useGame((s) => s.progress.owned);
+  const decor = useGame((s) => s.progress.decor);
+  const age = useGame((s) => s.progress.age);
   const gseries = useGame((s) => s.ui.gseries);
   const phase = useGame((s) => s.ui.pull);
   const series = SERIES.find((x) => x.id === gseries) ?? SERIES[0];
   const all = VARIANTS.filter((v) => v.series === series.id);
-  const left = all.filter((v) => !owned.includes(v.id)).length;
+  const left = leftIn(series.id, owned, decor);
+  const round = roundOf(series.id, owned);
   return (
     <section id="gacha" className="screen">
       <header className="bar">
@@ -75,8 +81,12 @@ export function Gacha() {
       </header>
       <fieldset className="series" aria-label="選扭蛋機">
         {SERIES.map((x) => {
-          const n = VARIANTS.filter((v) => v.series === x.id && owned.includes(v.id)).length;
-          const total = VARIANTS.filter((v) => v.series === x.id).length;
+          // Round 2 counts the machine's decorations, beside a little house
+          const r2 = roundOf(x.id, owned) === 2;
+          const n = r2
+            ? DECOR.filter((d) => d.series === x.id && decor.includes(d.id)).length
+            : VARIANTS.filter((v) => v.series === x.id && owned.includes(v.id)).length;
+          const total = r2 ? DECOR_PER_MACHINE : VARIANTS.filter((v) => v.series === x.id).length;
           return (
             <button
               key={x.id}
@@ -92,7 +102,8 @@ export function Gacha() {
                 {x.name.replace('系列', '')}
                 <span className="sfx">系列</span>
               </span>{' '}
-              <small>
+              <small className={r2 ? 'r2' : undefined}>
+                {r2 && <Icon name="house" />}
                 {n}/{total}
               </small>
             </button>
@@ -104,16 +115,22 @@ export function Gacha() {
           <Machine series={series} />
         </div>
         <div className="gPanel">
-          {left ? (
+          {round === 1 ? (
             <p>
               這台還有 <b className="num">{left}</b> 隻沒抽到，每次一定會抽到新的。
             </p>
+          ) : left ? (
+            <p>
+              西薩都收齊了，這台升級了！還有 <b className="num">{left}</b> 樣擺飾，轉到的可以放進西薩的家。
+            </p>
           ) : (
             <p>
-              <b>這台的 {all.length} 隻都收集到了！</b>
+              <b>
+                這台的 {all.length} 隻西薩和 {DECOR_PER_MACHINE} 樣擺飾都收集到了！
+              </b>
             </p>
           )}
-          <GachaStep left={left} />
+          <GachaStep left={left} price={priceOf(series.id, owned, age)} />
           <button type="button" className="iconBtn" data-go="dex" onClick={() => (phase === 'idle' || phase === 'ready') && go('dex')}>
             <Icon name="book" />
             <span>看圖鑑</span>

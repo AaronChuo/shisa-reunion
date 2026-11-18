@@ -2854,8 +2854,72 @@ h1 {
 .hStk.lift .hIn {
   transform: scale(1.1);
 }
-.hIn.hop {
+/* How each thing moves when it lands or is tapped (decor.ts gives each decoration its kind) */
+.hIn.m-hop {
   animation: hHop 0.5s ease;
+}
+.hIn.m-sway {
+  animation: hSway 0.9s ease-in-out;
+}
+.hIn.m-swing {
+  transform-origin: 50% 0;
+  animation: hSwing 1.1s ease-in-out;
+}
+.hIn.m-wiggle {
+  animation: hWiggle 0.6s ease-in-out;
+}
+.hIn.m-drum {
+  animation: hDrum 0.32s ease-out 2;
+}
+.hIn.m-shine {
+  animation: hShine 0.8s ease-in-out;
+}
+@keyframes hSway {
+  25% {
+    transform: rotate(-6deg);
+  }
+  60% {
+    transform: rotate(5deg);
+  }
+  85% {
+    transform: rotate(-2deg);
+  }
+}
+@keyframes hSwing {
+  20% {
+    transform: rotate(12deg);
+  }
+  50% {
+    transform: rotate(-9deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes hWiggle {
+  20% {
+    transform: translateY(-8%) rotate(-8deg);
+  }
+  45% {
+    transform: translateY(0) rotate(7deg);
+  }
+  70% {
+    transform: rotate(-5deg);
+  }
+}
+@keyframes hDrum {
+  40% {
+    transform: scale(1.1, 0.88);
+  }
+  75% {
+    transform: scale(0.96, 1.04);
+  }
+}
+@keyframes hShine {
+  40% {
+    transform: scale(1.15);
+    filter: brightness(1.35);
+  }
 }
 @keyframes hHop {
   35% {
@@ -2973,6 +3037,13 @@ h1 {
 .hTile.roof > svg {
   opacity: 0.4;
 }
+/* Not turned out yet: a shadow of it, to wonder about */
+.hTile.locked {
+  cursor: pointer;
+}
+.hTile.locked > svg {
+  filter: brightness(0) opacity(0.18);
+}
 .hTag {
   position: absolute;
   left: 50%;
@@ -3061,4 +3132,29 @@ h1 {
     min-height: 1.3em;
     font-size: 12px;
   }
+}
+
+/* A machine's round-2 decorations, as shadows still to be turned out */
+.upgradeRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--sc) 14%, var(--card));
+}
+.upgradeShadow {
+  width: 100%;
+  aspect-ratio: 1;
+  filter: brightness(0) opacity(0.22);
+}
+/* A machine in round 2 counts its decorations beside a little house */
+.sBtn small.r2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.sBtn small.r2 svg {
+  width: 13px;
+  height: 13px;
 }

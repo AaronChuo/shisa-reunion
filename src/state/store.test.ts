@@ -6,6 +6,10 @@ describe('saved progress', () => {
     expect(freshProgress().open).toEqual(['naha']);
   });
 
+  it('keeps only decorations a machine turns out, once each', () => {
+    expect(normalizeProgress({ ...freshProgress(), decor: ['cat', 'cat', 'hibiscus', 'nope', 3] }).decor).toEqual(['cat']);
+  });
+
   it('gives a save from before 西薩的家 an empty house in front of the sky', () => {
     const { house: _house, ...old } = freshProgress();
     expect(normalizeProgress(old).house).toEqual({ bd: 'sky', placed: [] });

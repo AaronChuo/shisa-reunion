@@ -1,13 +1,15 @@
 import { sfx } from '../audio/sfx';
 import { ageOf, handOut } from '../content/age';
+import { drawDecor, isDecor, leftIn, priceOf, roundOf } from '../content/decor';
 import { cardsEarned, type PlaceId, placeSeen } from '../content/places';
-import { drawFromSeries, pairWith, type Series, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
+import { drawFromSeries, pairWith, type Series, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { canLift, DEFS, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, waterAt } from '../engine';
 import { type DexTab, getState, markTitleSeen, mut, type Run, type Screen } from '../state/store';
 import { restBetweenStops } from './family';
 import { generateLevel, prepareLevel } from './generator';
+import { putInHouse } from './house';
 
 /** Each stop has its own seed; a reroll moves to another one. The road picked does not change the level. */
 const stageSeed = (r: Run, si: number, rerolls: number): number => r.seed + si * 1009 + rerolls * 7919;
@@ -59,8 +61,12 @@ export function go(screen: Screen): void {
   mut((s) => {
     s.ui.screen = screen;
     s.ui.modal = null;
-    if (screen === 'gacha') s.ui.pull = 'idle';
+    if (screen === 'gacha') {
+      s.ui.pull = 'idle';
+      s.ui.coins = 0;
+    }
   });
+  if (screen === 'gacha') maybeUpgrade();
 }
 
 export function goHome(): void {
@@ -543,14 +549,24 @@ export function reroll(): void {
 }
 
 // ---------- gacha & collection ----------
-const leftIn = (series: Series['id'], owned: readonly string[]) => VARIANTS.filter((v) => v.series === series && !owned.includes(v.id)).length;
+/** The machine on screen: what is left in it and what a capsule costs */
+function machine() {
+  const st = getState();
+  const { owned, decor, age } = st.progress;
+  return { series: st.ui.gseries, left: leftIn(st.ui.gseries, owned, decor), price: priceOf(st.ui.gseries, owned, age) };
+}
 
-/** A coin goes into the slot and the crank unlocks. The coin is only spent when a capsule actually comes out. */
+/**
+ * A coin goes into the slot; once the capsule's price is in (one coin, or two in round 2 for children 6 and up), the
+ * crank unlocks. The coins are only spent when a capsule actually comes out.
+ */
 export function insertCoin(): boolean {
   const st = getState();
-  if (st.ui.pull !== 'idle' || st.progress.tokens < 1 || !leftIn(st.ui.gseries, st.progress.owned)) return false;
+  const { left, price } = machine();
+  if (st.ui.pull !== 'idle' || st.progress.tokens < price || !left) return false;
   mut((s) => {
-    s.ui.pull = 'ready';
+    s.ui.coins = Math.min(s.ui.coins + 1, price);
+    if (s.ui.coins >= price) s.ui.pull = 'ready';
   });
   sfx.coinIn();
   return true;
@@ -565,23 +581,27 @@ export function autoTurn(): void {
 }
 
 /**
- * A full turn of the crank: the shisa is drawn by the fair rule (never a duplicate, rare ones less often) and the
- * capsule that physically fell out carries it. Returns the shisa id, or null when no coin is in.
+ * A full turn of the crank: a shisa in round 1, a decoration in round 2, drawn by the fair rule (never a repeat, rare
+ * ones less often), and the capsule that physically fell out carries it. Returns its id, or null when no coin is in.
  */
 export function releaseCapsule(color: string): string | null {
   const st = getState();
-  if (st.ui.pull !== 'ready' || st.progress.tokens < 1) return null;
-  const got = drawFromSeries(st.ui.gseries, st.progress.owned);
+  const { series, price } = machine();
+  const { owned, decor, tokens } = st.progress;
+  if (st.ui.pull !== 'ready' || tokens < price) return null;
+  const got = roundOf(series, owned) === 1 ? drawFromSeries(series, owned)?.id : drawDecor(series, decor)?.id;
   if (!got) return null;
   mut((s) => {
-    s.progress.tokens -= 1;
-    s.progress.owned.push(got.id);
+    s.progress.tokens -= price;
+    if (isDecor(got)) s.progress.decor.push(got);
+    else s.progress.owned.push(got);
     s.ui.pull = 'drop';
-    s.ui.pulled = got.id;
+    s.ui.coins = 0;
+    s.ui.pulled = got;
     s.ui.capColor = color;
   });
   sfx.crank();
-  return got.id;
+  return got;
 }
 
 /** The capsule has rolled down the chute into the tray */
@@ -595,24 +615,53 @@ export function capsuleOut(): void {
 
 export function openCapsule(): void {
   const { ui } = getState();
-  const v = ui.pulled ? VARIANT_BY_ID[ui.pulled] : null;
-  if (ui.pull !== 'out' || !v) return;
+  const id = ui.pulled;
+  if (ui.pull !== 'out' || !id) return;
   sfx.pop();
   mut((s) => {
-    s.ui.modal = { kind: 'reveal', id: v.id, series: v.series, color: ui.capColor ?? '#E2703A' };
+    s.ui.modal = { kind: 'reveal', id, series: ui.gseries, color: ui.capColor ?? '#E2703A' };
   });
 }
 
-/** After a capsule opens: keep the new shisa (null), or put it in the pair right away to set out (0) or wait (1) */
-export function finishReveal(role: 0 | 1 | null): void {
-  const id = getState().ui.pulled;
+const closeReveal = () =>
   mut((s) => {
     s.ui.pull = 'idle';
     s.ui.pulled = null;
     s.ui.capColor = null;
     s.ui.modal = null;
   });
+
+/** After a capsule opens: keep the new shisa (null), or put it in the pair right away to set out (0) or wait (1) */
+export function finishReveal(role: 0 | 1 | null): void {
+  const id = getState().ui.pulled;
+  closeReveal();
   if (role !== null && id) chooseRole(id, role);
+  maybeUpgrade();
+}
+
+/** 「放到家裡」 on a decoration out of a capsule: it hops into the yard and the house opens */
+export function sendToHouse(): void {
+  const id = getState().ui.pulled;
+  closeReveal();
+  if (!id) return;
+  const placed = putInHouse(id);
+  mut((s) => {
+    s.ui.justIn = placed ? id : null;
+  });
+  go('house');
+}
+
+/** The first time a machine on screen is in round 2, it says so: right after its last shisa comes out, or on a visit */
+export function maybeUpgrade(): void {
+  const st = getState();
+  const series = st.ui.gseries;
+  const key = `upgrade:${series}`;
+  if (st.ui.modal || st.ui.screen !== 'gacha' || roundOf(series, st.progress.owned) !== 2 || st.progress.seen.includes(key)) return;
+  mut((s) => {
+    s.ui.modal = { kind: 'upgrade', series };
+    s.progress.seen.push(key);
+  });
+  sfx.win();
 }
 
 // ---------- postcards ----------
@@ -699,7 +748,9 @@ export function setSeries(id: Series['id']): void {
   mut((s) => {
     s.ui.gseries = id;
     s.ui.pull = 'idle';
+    s.ui.coins = 0;
   });
+  maybeUpgrade();
 }
 
 export function openAbout(): void {

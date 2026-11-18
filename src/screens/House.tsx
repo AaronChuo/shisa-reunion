@@ -2,14 +2,15 @@ import { type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useRe
 import { Icon } from '../art/Icons';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
-import { backdrops, clampSpot, DECOR, DECOR_BY_ID, HOUSE_CAP, HOUSE_H, HOUSE_W, isDecor, ROOF_SPOTS, SKY, stickerSize } from '../content/house';
-import { VARIANT_BY_ID, VARIANTS } from '../content/shisa';
+import { DECOR, DECOR_BY_ID, hasDecor, isDecor, type Motion, roundOf } from '../content/decor';
+import { backdrops, clampSpot, HOUSE_CAP, HOUSE_H, HOUSE_W, ROOF_SPOTS, SKY, stickerSize } from '../content/house';
+import { SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { sceneUrl } from '../content/zones';
 import { go } from '../game/actions';
 import { cannotPlace, moveInHouse, putAway, putInHouse, setBackdrop } from '../game/house';
 import { DecorArt, DecorIcon } from '../house/DecorArt';
 import { HouseArt, SkyArt } from '../house/HouseArt';
-import { getState, useGame } from '../state/store';
+import { getState, mut, useGame } from '../state/store';
 
 // 西薩的家 (ADR-0037): drag things from the drawer into the house, or tap one and it hops into the yard; drag them
 // around, or back into the drawer to put them away. Tapping something in the house makes it hop and say its name.
@@ -25,6 +26,18 @@ const TABS: { id: Tab; label: string }[] = [
 const HINT = '把東西拖到家裡，或點一下讓它跳進院子。拖回抽屜就收起來。';
 
 const nameOf = (id: string): string => DECOR_BY_ID[id]?.name ?? VARIANT_BY_ID[id]?.name ?? '';
+/** How a thing moves when it lands or is tapped: a decoration by its kind, a shisa hops */
+const motionOf = (id: string): Motion => DECOR_BY_ID[id]?.motion ?? 'hop';
+/** And the sound it makes */
+const SOUND: Record<Motion, () => void> = { hop: sfx.pop, sway: sfx.hang, swing: sfx.hang, wiggle: sfx.boing, drum: sfx.gate, shine: sfx.star };
+
+/** Where a decoration not yet turned out comes from */
+function whereFrom(id: string, owned: readonly string[]): string {
+  const d = DECOR_BY_ID[id];
+  const se = SERIES.find((x) => x.id === d.series);
+  if (!se) return '';
+  return roundOf(se.id, owned) === 1 ? `${se.name}的西薩收齊後，扭蛋機會升級，就轉得到${d.name}` : `去${se.name}的扭蛋機轉轉看，就有機會拿到${d.name}`;
+}
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 
 function inside(el: Element | null, x: number, y: number): boolean {
@@ -61,6 +74,7 @@ export function House() {
   const house = useGame((s) => s.progress.house);
   const pair = useGame((s) => s.progress.pair);
   const owned = useGame((s) => s.progress.owned);
+  const decor = useGame((s) => s.progress.decor);
   const seen = useGame((s) => s.progress.seen);
   const clears = useGame((s) => s.progress.clears);
   const [tab, setTab] = useState<Tab>('decor');
@@ -85,12 +99,23 @@ export function House() {
     hintTimer.current = window.setTimeout(() => setHint(HINT), 4200);
   };
   const bounce = (id: string) => setHop((h) => ({ id, n: (h?.n ?? 0) + 1 }));
-  /** Tapping something in the house: it hops, says its name and makes its sound */
+  /** Tapping something in the house: it moves its own way, shows its name and makes its sound */
   const poke = (id: string) => {
     bounce(id);
-    if (isDecor(id)) sfx.boing();
+    if (isDecor(id)) SOUND[motionOf(id)]();
     else sfx.hello();
   };
+  // A decoration sent here from a capsule hops in as the house opens
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once, as the house opens
+  useEffect(() => {
+    const id = getState().ui.justIn;
+    if (!id) return;
+    bounce(id);
+    say(`${nameOf(id)}跳進院子了`);
+    mut((s) => {
+      s.ui.justIn = null;
+    });
+  }, []);
   const toHouse = (cx: number, cy: number) => {
     const r = sceneRef.current?.getBoundingClientRect();
     if (!r) return { x: HOUSE_W / 2, y: HOUSE_H };
@@ -107,6 +132,10 @@ export function House() {
     } else if (why === 'there') {
       poke(id);
       say(`${name}已經在家裡了`);
+    } else if (why === 'unowned') {
+      sfx.bad();
+      setShake((s) => ({ id, n: (s?.n ?? 0) + 1 }));
+      say(whereFrom(id, getState().progress.owned));
     } else if (why === 'full') {
       sfx.bad();
       setShake((s) => ({ id, n: (s?.n ?? 0) + 1 }));
@@ -214,14 +243,15 @@ export function House() {
   const tile = (id: string, art: ReactNode) => {
     const there = house.placed.some((s) => s.id === id);
     const roof = pair.includes(id);
-    const cls = ['hTile', there && 'home', roof && 'roof', shake?.id === id && 'hShake'].filter(Boolean).join(' ');
+    const locked = isDecor(id) && !hasDecor(id, decor);
+    const cls = ['hTile', there && 'home', roof && 'roof', locked && 'locked', shake?.id === id && 'hShake'].filter(Boolean).join(' ');
     return (
       <button
         key={shake?.id === id ? `${id}:${shake.n}` : id}
         type="button"
         className={cls}
         data-id={id}
-        aria-label={`${nameOf(id)}${roof ? '（在屋頂上）' : there ? '（在家裡）' : ''}`}
+        aria-label={locked ? '還沒拿到的擺飾' : `${nameOf(id)}${roof ? '（在屋頂上）' : there ? '（在家裡）' : ''}`}
         onClick={(e) => e.detail === 0 && tapTile(id)}
         {...handlers('tile', id)}
       >
@@ -261,7 +291,7 @@ export function House() {
               style={{ left: pct(ROOF_SPOTS[i].x, HOUSE_W), top: pct(ROOF_SPOTS[i].y, HOUSE_H), width: pct(64, HOUSE_W), zIndex: ROOF_SPOTS[i].y }}
               onClick={() => poke(id)}
             >
-              <span key={hop?.id === id ? hop.n : 0} className={hop?.id === id ? 'hIn hop' : 'hIn'}>
+              <span key={hop?.id === id ? hop.n : 0} className={hop?.id === id ? 'hIn m-hop' : 'hIn'}>
                 <svg viewBox="-46 -100 92 104" aria-hidden="true">
                   <g className="bob">
                     <ShisaArt v={VARIANT_BY_ID[id]} open={i === 0} />
@@ -291,7 +321,7 @@ export function House() {
                 onKeyDown={(e) => key(e, s.id)}
                 {...handlers('stk', s.id)}
               >
-                <span key={hop?.id === s.id ? hop.n : 0} className={hop?.id === s.id ? 'hIn hop' : 'hIn'}>
+                <span key={hop?.id === s.id ? hop.n : 0} className={hop?.id === s.id ? `hIn m-${motionOf(s.id)}` : 'hIn'}>
                   <StickerArt id={s.id} />
                 </span>
               </button>
@@ -327,7 +357,8 @@ export function House() {
           ))}
         </div>
         <div className={tab === 'bd' ? 'hTiles bds' : 'hTiles'} id="houseTiles" role="tabpanel" aria-labelledby={`htab-${tab}`}>
-          {tab === 'decor' && DECOR.map((d) => tile(d.id, <DecorIcon id={d.id} />))}
+          {tab === 'decor' &&
+            [...DECOR.filter((d) => hasDecor(d.id, decor)), ...DECOR.filter((d) => !hasDecor(d.id, decor))].map((d) => tile(d.id, <DecorIcon id={d.id} />))}
           {tab === 'shisa' && VARIANTS.filter((v) => owned.includes(v.id)).map((v) => tile(v.id, <ShisaIcon v={v} open={false} />))}
           {tab === 'bd' &&
             bds.map((b) => (

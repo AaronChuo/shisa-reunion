@@ -1,5 +1,6 @@
 import { sfx } from '../audio/sfx';
-import { backdrops, clampSpot, freeSpot, HOUSE_CAP, isDecor } from '../content/house';
+import { hasDecor, isDecor } from '../content/decor';
+import { backdrops, clampSpot, freeSpot, HOUSE_CAP } from '../content/house';
 import { getState, mut } from '../state/store';
 
 // 西薩的家: putting things in the yard, moving them, putting them away, and changing the picture behind the house
@@ -8,7 +9,7 @@ import { getState, mut } from '../state/store';
 export function cannotPlace(id: string): 'full' | 'there' | 'roof' | 'unowned' | null {
   const p = getState().progress;
   if (p.pair.includes(id)) return 'roof';
-  if (!isDecor(id) && !p.owned.includes(id)) return 'unowned';
+  if (isDecor(id) ? !hasDecor(id, p.decor) : !p.owned.includes(id)) return 'unowned';
   if (p.house.placed.some((s) => s.id === id)) return 'there';
   return p.house.placed.length >= HOUSE_CAP ? 'full' : null;
 }

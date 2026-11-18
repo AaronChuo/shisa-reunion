@@ -36,7 +36,7 @@ it.describe('西薩的家', () => {
     await expect(page.locator('#house')).toBeVisible();
     await expect(page.locator('.hStk.roof[data-roof="0"]')).toHaveAttribute('aria-label', VARIANT_BY_ID[STARTERS[0]].name);
     await expect(page.locator('.hStk.roof[data-roof="1"]')).toHaveAttribute('aria-label', VARIANT_BY_ID[STARTERS[1]].name);
-    await expect(page.locator('#houseTiles .hTile')).toHaveCount(3);
+    await expect(page.locator('#houseTiles .hTile:not(.locked)')).toHaveCount(3);
     // Every shisa pulled can come too; the two on the roof are already up there
     await page.click('#htab-shisa');
     await expect(page.locator('#houseTiles .hTile')).toHaveCount(3);
@@ -81,6 +81,21 @@ it.describe('西薩的家', () => {
     await drag(page, page.locator('.hStk[data-id="gold"]'), page.locator('#houseDrawer'), 0.5, 0.5);
     await expect(page.locator('.hStk[data-id="gold"]')).toHaveCount(0);
     expect((await house(page)).placed).toEqual([]);
+  });
+
+  it('shows the decorations still to come as shadows that say where they come from, and moves each its own way', async ({ page }) => {
+    await seed(page, { decor: ['lantern'] });
+    await page.goto('/');
+    await page.click('[data-go="house"]');
+    // The three every house starts with and the lantern first, then 55 shadows
+    await expect(page.locator('#houseTiles .hTile:not(.locked)')).toHaveCount(4);
+    await expect(page.locator('#houseTiles .hTile.locked')).toHaveCount(55);
+    await page.click('.hTile[data-id="cat"]');
+    await expect(page.locator('.hHint')).toHaveText('動物系列的西薩收齊後，扭蛋機會升級，就轉得到貓');
+    await expect(page.locator('.hStk[data-id="cat"]')).toHaveCount(0);
+    // A lantern swings from the top when it lands
+    await page.click('.hTile[data-id="lantern"]');
+    await expect(page.locator('.hStk[data-id="lantern"] .hIn')).toHaveClass(/m-swing/);
   });
 
   it('stands in front of the picture of a zone that has been visited', async ({ page }) => {
