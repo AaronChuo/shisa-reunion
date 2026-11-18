@@ -4,7 +4,7 @@ import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, Star4 } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
-import { DECOR, DECOR_BY_ID, DECOR_PER_MACHINE, priceOf } from '../content/decor';
+import { DECOR, DECOR_BY_ID, priceOf } from '../content/decor';
 import { CARD_NEEDS, cardsEarned, PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, pairWith, ROLE_ASK, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
@@ -27,6 +27,7 @@ import {
   toggleSound,
 } from '../game/actions';
 import { DecorArt, DecorIcon } from '../house/DecorArt';
+import { HouseArt, SkyArt } from '../house/HouseArt';
 import { PostcardPicture } from '../places/PostcardPicture';
 import { type Modal, useGame } from '../state/store';
 import { Cta } from '../ui/Cta';
@@ -471,27 +472,62 @@ function Postcard({ id, start, n }: { id: PlaceId; start: number | null; n: numb
   );
 }
 
-/** A machine with all its shisa collected goes up to round 2: its decorations for the house, still as shadows */
+/** A decoration's name without the Japanese in brackets, short enough to sit under its picture */
+const shortName = (name: string) => name.replace(/（.*）/, '');
+
+/**
+ * A machine with all its shisa collected goes up to round 2. Once the capsules have poured in, a card shows what they
+ * hold now (the rare one still a shadow) and what they are for: decorations to put in 西薩的家, like stickers.
+ */
 function Upgrade({ seriesId }: { seriesId: string }) {
   const se = SERIES.find((x) => x.id === seriesId) ?? SERIES[0];
   const owned = useGame((s) => s.progress.owned);
   const seen = useGame((s) => s.progress.seen);
   const age = useGame((s) => s.progress.age);
-  const n = DECOR.filter((x) => x.series === se.id);
+  const items = DECOR.filter((x) => x.series === se.id);
   const shisa = owned.filter((id) => VARIANT_BY_ID[id]?.series === se.id).length;
+  const two = priceOf(se.id, { owned, seen }, age) > 1;
+  const text = `${se.name}的 ${shisa} 隻西薩都收齊了！現在扭蛋裡裝的是擺飾，轉到的可以放進西薩的家，像貼紙一樣，想放哪裡就放哪裡。${two ? '升級後每轉一次要投 2 枚福氣幣。' : ''}`;
+  // Two for the little house: things that stand out in the yard, not trees and flowers like the ones already round it
+  const sample = items.filter((x) => !x.rare && x.motion !== 'sway').slice(0, 2);
+  // The card stays hidden while the machine goes up (hiddenUntil in the CSS), so its button takes the focus once it shows
+  useEffect(() => {
+    const sheet = document.querySelector('#modal .sheet');
+    const shown = (e: Event) => {
+      if ((e as AnimationEvent).animationName === 'hiddenUntil') sheet?.querySelector<HTMLElement>('[data-focus]')?.focus({ preventScroll: true });
+    };
+    sheet?.addEventListener('animationend', shown);
+    return () => sheet?.removeEventListener('animationend', shown);
+  }, []);
   return (
     <Sheet label="扭蛋機升級">
       <div className="eyebrow">{se.name}</div>
       <h2>扭蛋機升級了！</h2>
-      <p>
-        {se.name}的 <span className="num">{shisa}</span> 隻西薩都收齊了。現在這台轉得出 <span className="num">{DECOR_PER_MACHINE}</span>{' '}
-        樣擺飾，轉到的可以放進西薩的家。
-        {priceOf(se.id, { owned, seen }, age) > 1 && '升級後每轉一次要投 2 枚福氣幣。'}
-      </p>
-      <div className="upgradeRow" style={{ ['--sc' as string]: se.color }}>
-        {n.map((x) => (
-          <DecorIcon key={x.id} id={x.id} className="upgradeShadow" />
+      <ul className="upgradeRow" style={{ ['--sc' as string]: se.color }} aria-label="扭蛋裡的擺飾">
+        {items.map((x) => (
+          <li key={x.id} className={x.rare ? 'rare' : undefined} data-id={x.id}>
+            {x.rare ? (
+              // The rare one stays a secret until it comes out
+              <i className="secret">
+                <DecorIcon id={x.id} className="upgradeShadow" />
+                <b>？</b>
+              </i>
+            ) : (
+              <DecorIcon id={x.id} />
+            )}
+            <span>{x.rare ? '稀有' : shortName(x.name)}</span>
+          </li>
         ))}
+      </ul>
+      <div className="upgradeUse">
+        <div className="upgradeHouse" aria-hidden="true">
+          <SkyArt />
+          <HouseArt />
+          {sample.map((x, i) => (
+            <DecorIcon key={x.id} id={x.id} className={`uStk s${i}`} />
+          ))}
+        </div>
+        <Story text={text} />
       </div>
       <div className="btns">
         <Cta icon={<Icon name="check" />} data={{ 'data-ok': true, 'data-focus': true }} onClick={closeModal}>

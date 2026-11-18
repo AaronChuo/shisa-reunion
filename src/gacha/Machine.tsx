@@ -1,5 +1,6 @@
 import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { CoinArt, TapHand } from '../art/Icons';
+import { Star4 } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
 import { leftIn, priceOf, roundOf } from '../content/decor';
 import type { Series } from '../content/shisa';
@@ -22,6 +23,17 @@ const PURSE = { x: 284, y: 368 };
 const SHELLS = ['#E2513C', '#F3A83F', '#2D8FD0', '#3FA36B', '#8C56AA', '#FF8FB1', '#F2C43A', '#3DA399', '#E2703A', '#6FA8D6'];
 /** Round 2's capsules, holding decorations for the house: gold and pearly pastels, so the new round looks new */
 const SHELLS2 = ['#E8B83A', '#F6D77A', '#A8DCD1', '#F7B7A3', '#B9D7F2', '#D9C2EC', '#F2C43A', '#FFE1A8'];
+/** Sparkles round the dome while the machine goes up to round 2: x, y, size */
+const SPARKS: [number, number, number][] = [
+  [62, 112, 11],
+  [96, 52, 8],
+  [214, 56, 12],
+  [252, 118, 9],
+  [258, 214, 11],
+  [52, 220, 8],
+];
+/** How often a new capsule drops in while the machine goes up */
+const POUR_MS = 130;
 /** Degrees per click of the ratchet, and per capsule */
 const NOTCH = 90;
 const TURN = 360;
@@ -68,6 +80,8 @@ export function Machine({ series }: { series: Series }) {
   const spin = useGame((s) => s.ui.spin);
   const capColor = useGame((s) => s.ui.capColor);
   const pulled = useGame((s) => s.ui.pulled);
+  // The upgrade notice for this machine is open: it is going up to round 2 right now
+  const goingUp = useGame((s) => s.ui.modal?.kind === 'upgrade' && s.ui.modal.series === series.id);
   const left = useMemo(() => leftIn(series.id, { owned, decor, seen }), [series.id, owned, decor, seen]);
   const round = roundOf(series.id, { owned, seen });
   // One coin a capsule, or two in round 2 for children 6 and up: the slot shows a hole for each
@@ -80,6 +94,7 @@ export function Machine({ series }: { series: Series }) {
   const els = useRef(new Map<number, SVGGElement>());
   const raf = useRef(0);
   const lastClack = useRef(0);
+  const pouring = useRef(false);
   const [ids, setIds] = useState<number[]>([]);
   const [angle, setAngle] = useState(0);
   const turned = useRef(0);
@@ -138,18 +153,40 @@ export function Machine({ series }: { series: Series }) {
   useEffect(() => {
     // A capsule on its way out isn't lost with the old pile: it lands in the tray all the same
     if (useGame.getState().ui.pull === 'drop') capsuleOut();
-    const w = makeWorld(DOME, left, rand.current);
+    const m = useGame.getState().ui.modal;
+    // Going up to round 2: the dome starts empty and the new capsules pour in one by one while the player watches
+    const pour = m?.kind === 'upgrade' && m.series === series.id;
+    const shell = (id: number) => shells[(id * 3 + series.id.length) % shells.length];
+    const w = makeWorld(DOME, pour ? 0 : left, rand.current);
     world.current = w;
-    colors.current = new Map(w.balls.map((b, i) => [b.id, shells[(i * 3 + series.id.length) % shells.length]]));
+    colors.current = new Map(w.balls.map((b) => [b.id, shell(b.id)]));
     setIds(w.balls.map((b) => b.id));
     wake();
+    if (!pour) return;
+    pouring.current = true;
+    const t = window.setInterval(() => {
+      if (inside(w).length >= left) {
+        window.clearInterval(t);
+        pouring.current = false;
+        return;
+      }
+      const id = addBall(w, rand.current);
+      if (id === null) return;
+      colors.current.set(id, shell(id));
+      setIds(w.balls.map((b) => b.id));
+      wake();
+    }, POUR_MS);
+    return () => {
+      window.clearInterval(t);
+      pouring.current = false;
+    };
   }, [series.id, round]);
 
   // Keep one capsule in the dome per shisa still to collect
   // biome-ignore lint/correctness/useExhaustiveDependencies: only the count matters
   useEffect(() => {
     const w = world.current;
-    if (!w || phase === 'drop') return;
+    if (!w || phase === 'drop' || pouring.current) return;
     while (inside(w).length > left) w.balls.splice(w.balls.indexOf(inside(w)[0]), 1);
     while (inside(w).length < left) {
       const id = addBall(w, rand.current);
@@ -266,7 +303,7 @@ export function Machine({ series }: { series: Series }) {
 
   const canCoin = phase === 'idle' && tokens >= price && left > 0;
   return (
-    <div className="machineFrame" ref={frameRef}>
+    <div className={goingUp ? 'machineFrame up' : 'machineFrame'} ref={frameRef}>
       <svg className="machine" viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`} role="img" aria-label={`${series.name}扭蛋機，裡面還有 ${left} 顆`}>
         <defs>
           <clipPath id="domeClip">
@@ -290,10 +327,18 @@ export function Machine({ series }: { series: Series }) {
             </g>
           ))}
         </g>
+        {goingUp && <circle className="domeFlash" cx={DOME.cx} cy={DOME.cy} r={DOME.R + 4} fill="#fff" />}
         <circle cx={DOME.cx} cy={DOME.cy} r={DOME.R + 6} fill="none" stroke="#7FB4C0" strokeWidth={6} />
         <path d="M90,108 A80,80 0 0 1 150,80" stroke="#fff" strokeWidth={8} fill="none" strokeLinecap="round" opacity={0.8} />
         {/* Each machine's roof is in its series' theme; drawn over the dome so the glass tucks under the eave */}
         <Roof series={series.id} />
+        {goingUp && (
+          <g className="upSparks">
+            {SPARKS.map(([x, y, r], i) => (
+              <Star4 key={`${x},${y}`} x={x} y={y} r={r} fill={i % 2 ? '#FFFFFF' : '#F2C43A'} className="twinkle" />
+            ))}
+          </g>
+        )}
         <rect x={48} y={258} width={214} height={168} rx={24} fill={series.color} stroke="#173944" strokeWidth={4} />
         <rect x={70} y={266} width={170} height={30} rx={10} fill="#fff" opacity={0.92} />
         <text x={155} y={288} textAnchor="middle" fontSize={18} fontWeight={700} fill="#173944" fontFamily="GenSen Rounded TW, PingFang TC, sans-serif">

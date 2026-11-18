@@ -3134,19 +3134,148 @@ h1 {
   }
 }
 
-/* A machine's round-2 decorations, as shadows still to be turned out */
+/*
+ * A machine going up to round 2: it hops, the dome flashes, sparkles come out and the new capsules pour in (Machine.tsx).
+ * The notice waits until that is done (UPGRADE_SHOW_MS in ModalHost.tsx), and the screen behind only dims then.
+ */
+.machineFrame.up .machine {
+  transform-origin: 50% 100%;
+  animation: machineUp 0.8s ease-out;
+}
+@keyframes machineUp {
+  20% {
+    transform: scale(1.04, 0.94);
+  }
+  45% {
+    transform: translateY(-12px) scale(0.98, 1.03);
+  }
+  70% {
+    transform: scale(1.02, 0.98);
+  }
+}
+.domeFlash {
+  opacity: 0;
+  animation: domeFlash 0.9s ease-out;
+}
+@keyframes domeFlash {
+  from {
+    opacity: 0.9;
+  }
+}
+.modal[data-kind="upgrade"] {
+  animation: dimIn 0.4s 1.5s both;
+}
+@keyframes dimIn {
+  from {
+    background-color: transparent;
+  }
+}
+.modal[data-kind="upgrade"] .sheet {
+  animation:
+    hiddenUntil 1.8s step-end both,
+    pop 0.3s 1.8s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+@keyframes hiddenUntil {
+  from {
+    visibility: hidden;
+  }
+}
+/* Less motion: no hop or flash; the capsules still pour in (that is the story), and the notice then just appears */
+@media (prefers-reduced-motion: reduce) {
+  .machineFrame.up .machine,
+  .domeFlash {
+    animation: none;
+  }
+  .modal[data-kind="upgrade"] .sheet {
+    animation: hiddenUntil 1.8s step-end both;
+  }
+}
+/* What the machine turns out now: its eight decorations by name, the rare one still a gold shadow */
 .upgradeRow {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 8px;
+  list-style: none;
   border-radius: 16px;
   background: color-mix(in srgb, var(--sc) 14%, var(--card));
+}
+.upgradeRow li {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.upgradeRow svg {
+  width: 100%;
+  max-width: 72px;
+  aspect-ratio: 1;
+}
+.upgradeRow .secret {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3c4 0%, #f6d77a 55%, transparent 72%);
+}
+.upgradeRow .secret b {
+  position: absolute;
+  color: #a77a00;
+  font-size: 26px;
+  font-style: normal;
+}
+.upgradeRow span {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.upgradeRow .rare span {
+  color: #a77a00;
+  font-weight: 700;
 }
 .upgradeShadow {
   width: 100%;
   aspect-ratio: 1;
   filter: brightness(0) opacity(0.22);
+}
+/* And what they are for: a little 西薩的家 with two of them in the yard, beside the words to read aloud */
+.upgradeUse {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.upgradeUse .tale {
+  flex: 1;
+}
+.upgradeHouse {
+  position: relative;
+  flex: none;
+  width: 108px;
+  aspect-ratio: 360 / 450;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: #8fdcf3;
+}
+.upgradeHouse .uStk {
+  position: absolute;
+  bottom: 1%;
+  width: 44%;
+}
+.upgradeHouse .s0 {
+  left: 2%;
+}
+.upgradeHouse .s1 {
+  right: 2%;
 }
 /* A machine in round 2 counts its decorations beside a little house */
 .sBtn small.r2 {

@@ -150,9 +150,14 @@ it.describe('round 2: decorations for 西薩的家', () => {
 
   it('goes up to round 2 once its shisa are all in, and takes two coins a capsule from a child 6 or older', async ({ page }) => {
     await upgraded(page, 'kid', 3);
-    // Said once, with the eight decorations still as shadows
-    await expect(page.locator('#modal[data-kind="upgrade"]')).toBeVisible();
-    await expect(page.locator('#modal .upgradeShadow')).toHaveCount(8);
+    // Said once: the eight decorations by name, the rare one still a secret, and a little house showing what they are for
+    await expect(page.locator('#modal[data-kind="upgrade"] .sheet')).toBeVisible();
+    await expect(page.locator('#modal .upgradeRow li')).toHaveCount(8);
+    await expect(page.locator('#modal .upgradeRow .secret')).toHaveCount(1);
+    await expect(page.locator('#modal .upgradeRow li.rare')).toHaveAttribute('data-id', 'goldStone');
+    await expect(page.locator('#modal .upgradeRow li[data-id="fukugi"]')).toHaveText('福木');
+    await expect(page.locator('#modal .upgradeHouse .uStk')).toHaveCount(2);
+    await expect(page.locator('#modal .tale')).toContainText('放進西薩的家');
     await page.click('#modal [data-ok]');
     await expect(page.locator('#machineBox .capsule')).toHaveCount(8);
     await expect(page.locator('[data-series="trad"] small')).toHaveText('0/8');
@@ -197,10 +202,15 @@ it.describe('round 2: decorations for 西薩的家', () => {
     await page.locator('#capsule').click();
     await expect(page.locator('#modal[data-kind="reveal"] h2')).toHaveText(VARIANT_BY_ID[last].name);
     await page.locator('#modal [data-keep]').click();
-    // Kept: now the machine goes up, and says so
-    await expect(page.locator('#modal[data-kind="upgrade"]')).toBeVisible();
-    await page.click('#modal [data-ok]');
+    // Kept: now the machine goes up while the player watches, the new capsules pouring in before the notice shows
+    await expect(page.locator('#machineBox .machineFrame.up')).toHaveCount(1);
+    await expect(page.locator('#modal[data-kind="upgrade"] .sheet')).toBeHidden();
     await expect(page.locator('#machineBox .capsule')).toHaveCount(8);
+    await expect(page.locator('#modal[data-kind="upgrade"] .sheet')).toBeVisible();
+    await expect(page.locator('#modal [data-ok]')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#modal')).toHaveCount(0);
+    await expect(page.locator('#machineBox .machineFrame.up')).toHaveCount(0);
     await expect(page.locator('[data-series="trad"] small')).toHaveText('0/8');
     // Still free to pick another machine, and to turn this one at round 2's price
     await page.click('[data-series="sea"]');
@@ -216,6 +226,18 @@ it.describe('round 2: decorations for 西薩的家', () => {
     expect(p.owned).toContain(last);
     expect(p.decor).toHaveLength(1);
     expect(p.tokens).toBe(0);
+  });
+
+  it.describe('on a phone set to less motion', () => {
+    it.use({ reducedMotion: 'reduce' });
+
+    it('still pours the new capsules in before the notice, which then just appears', async ({ page }) => {
+      await upgraded(page, 'kid', 0);
+      await expect(page.locator('#machineBox .capsule')).toHaveCount(8);
+      await expect(page.locator('#modal[data-kind="upgrade"] .sheet')).toBeVisible();
+      expect(await animationOf(page, '#modal .sheet')).toBe('hiddenUntil');
+      expect(await animationOf(page, '#machineBox .machine')).toBe('none');
+    });
   });
 
   it('takes one coin a capsule from a child under 6, and a decoration can be kept for later', async ({ page }) => {
