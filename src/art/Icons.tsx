@@ -94,6 +94,22 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M8 3.5c-.8 1 .8 2 0 3.2M12 3.5c-.8 1 .8 2 0 3.2" />
     </>
   ),
+  // A house under a roof, for 西薩的家
+  house: (
+    <>
+      <path d="M2.5 11.5 12 4l9.5 7.5" />
+      <path d="M5 10v10h14V10" />
+      <path d="M10 20v-5.5h4V20" />
+    </>
+  ),
+  // A framed picture of hills and the sun, for the picture behind the house
+  picture: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 16 5-5 4 4 3-3 6 6" />
+      <circle cx="16" cy="9.5" r="1.6" />
+    </>
+  ),
   // A capsule machine: the dome full of capsules on top of the coin box
   gacha: (
     <>

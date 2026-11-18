@@ -1,5 +1,4 @@
-import { cardsEarned, type PlaceId } from '../content/places';
-import { ZONES } from '../content/zones';
+import { zonesBeen } from '../content/places';
 import { SONGS, type SongId } from './songs';
 
 // Outside a journey (the title, the map, the gacha machines, the collection) one queue of songs keeps playing whatever
@@ -14,7 +13,7 @@ export const LOBBY_SECONDS = 90;
 
 /** The queue for a player: the game's songs, then the songs of the zones with at least one stop cleared */
 export function lobbyQueue(seen: string[], clears: Record<string, number>): SongId[] {
-  const been = ZONES.filter((Z) => cardsEarned(Z.id as PlaceId, seen, clears) > 0).map((Z) => Z.bgm);
+  const been = zonesBeen(seen, clears).map((Z) => Z.bgm);
   return [...LOBBY_SONGS, ...been.filter((id) => !LOBBY_SONGS.includes(id))];
 }
 

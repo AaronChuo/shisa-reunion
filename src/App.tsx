@@ -11,6 +11,7 @@ import { ModalHost } from './modals/ModalHost';
 import { Dex } from './screens/Dex';
 import { Gacha } from './screens/Gacha';
 import { Home } from './screens/Home';
+import { House } from './screens/House';
 import { Play } from './screens/Play';
 import { Title } from './screens/Title';
 import { type GameState, getState, useGame } from './state/store';
@@ -55,6 +56,7 @@ export function App() {
       {screen === 'play' && <Play />}
       {screen === 'gacha' && <Gacha />}
       {screen === 'dex' && <Dex />}
+      {screen === 'house' && <House />}
       <ModalHost />
       <DragLayer />
       {story && <Opening />}

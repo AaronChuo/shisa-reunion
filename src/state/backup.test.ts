@@ -24,6 +24,18 @@ describe('backup codes', () => {
     expect(decodeBackup(encodeBackup(p))).toEqual(p);
   });
 
+  it('carries 西薩的家 with it', () => {
+    const p = played();
+    p.house = {
+      bd: 'naha',
+      placed: [
+        { id: 'hibiscus', x: 120, y: 400 },
+        { id: extra[0], x: 220, y: 420 },
+      ],
+    };
+    expect(decodeBackup(encodeBackup(p))?.house).toEqual(p.house);
+  });
+
   it('survives line breaks and spaces picked up when pasting', () => {
     const code = encodeBackup(played());
     const pasted = ` ${code.slice(0, 20)}\n${code.slice(20, 50)} \n${code.slice(50)}\n`;

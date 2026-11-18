@@ -57,6 +57,24 @@ it.describe('phone layout', () => {
     expect(await noSidewaysScroll(page)).toBe(true);
   });
 
+  it('fits 西薩的家 and its drawer on one screen, and a tap puts a decoration in the yard', async ({ page }) => {
+    await page.goto('/');
+    await page.click('[data-go="house"]');
+    const vh = page.viewportSize()?.height ?? 0;
+    const scene = await page.locator('#houseScene').boundingBox();
+    const drawer = await page.locator('#houseDrawer').boundingBox();
+    expect(scene && drawer).toBeTruthy();
+    if (!scene || !drawer) return;
+    expect(drawer.y + drawer.height).toBeLessThanOrEqual(vh);
+    expect(scene.y + scene.height).toBeLessThanOrEqual(drawer.y);
+    // The house keeps its shape and gets most of a phone's width
+    expect(Math.abs(scene.width / scene.height - 0.8)).toBeLessThan(0.02);
+    expect(scene.width).toBeGreaterThan(200);
+    await page.locator('.hTile[data-id="jar"]').tap();
+    await expect(page.locator('.hStk[data-id="jar"]')).toHaveCount(1);
+    expect(await noSidewaysScroll(page)).toBe(true);
+  });
+
   it('fits the zone name and the tray on the play screen', async ({ page }) => {
     await page.goto('/');
     await page.click('.zone [data-zone="0"]');

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { AGE_ORDER, type Age, REST_CHOICES } from '../content/age';
+import { freshHouse, type House, normalizeHouse } from '../content/house';
 import type { PlaceId } from '../content/places';
 import { type Series, STARTERS, VARIANT_BY_ID } from '../content/shisa';
 import type { IntroKey } from '../content/text';
@@ -54,9 +55,11 @@ export interface Progress {
   age: Age | null;
   /** Minutes of play before a rest reminder; null for none */
   restMin: number | null;
+  /** 西薩的家: what is in the yard and the picture behind it */
+  house: House;
 }
 
-export type Screen = 'title' | 'home' | 'play' | 'gacha' | 'dex';
+export type Screen = 'title' | 'home' | 'play' | 'gacha' | 'dex' | 'house';
 
 const TITLE_KEY = 'shisa-reunion:title';
 
@@ -154,6 +157,7 @@ export const freshProgress = (): Progress => ({
   run: null,
   age: null,
   restMin: null,
+  house: freshHouse(),
 });
 
 const freshUi = (): Ui => ({
@@ -229,6 +233,7 @@ export function normalizeProgress(raw: unknown): Progress {
       : [];
   // Zones never close again; the tier rules also open zones added after a save was made
   open.push(...openFor(clears));
+  const seen = Array.isArray(p.seen) ? p.seen.filter((s) => typeof s === 'string') : [];
   return {
     tokens: typeof p.tokens === 'number' && p.tokens >= 0 ? p.tokens : 0,
     owned,
@@ -237,10 +242,11 @@ export function normalizeProgress(raw: unknown): Progress {
     clears,
     sound: typeof p.sound === 'boolean' ? p.sound : true,
     music: typeof p.music === 'boolean' ? p.music : true,
-    seen: Array.isArray(p.seen) ? p.seen.filter((s) => typeof s === 'string') : [],
+    seen,
     run: normalizeRun(p.run),
     age: AGE_ORDER.includes(p.age as Age) ? (p.age as Age) : null,
     restMin: REST_CHOICES.includes(p.restMin as number) ? (p.restMin as number) : null,
+    house: normalizeHouse(p.house, { owned, pair, seen, clears }),
   };
 }
 

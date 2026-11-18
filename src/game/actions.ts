@@ -718,6 +718,8 @@ export function askRole(id: string): void {
 export function chooseRole(id: string, role: 0 | 1): void {
   mut((s) => {
     s.progress.pair = pairWith(s.progress.pair, id, role);
+    // A shisa that was in the yard of 西薩的家 climbs up onto the roof
+    s.progress.house.placed = s.progress.house.placed.filter((p) => !s.progress.pair.includes(p.id));
     s.ui.modal = null;
   });
   sfx.hello();

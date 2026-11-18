@@ -2,6 +2,8 @@
 // in it and a few sentences a parent can read aloud. A zone's first card tells the zone itself. Facts here were checked;
 // keep any new ones just as careful.
 
+import { ZONES, type Zone } from './zones';
+
 export type PlaceId =
   | 'okinawa'
   | 'naha'
@@ -396,6 +398,9 @@ export function cardsEarned(id: PlaceId, seen: string[], clears: Record<string, 
   if (c >= 2) return 2;
   return c >= 1 || seen.includes(placeSeen(id)) ? 1 : 0;
 }
+
+/** The zones with at least one stop cleared (their first card earned), in the order of the loop around Okinawa */
+export const zonesBeen = (seen: string[], clears: Record<string, number>): Zone[] => ZONES.filter((Z) => cardsEarned(Z.id as PlaceId, seen, clears) > 0);
 
 /** A card's picture, large for the postcard or small for the collection grid; Okinawa's is drawn instead */
 export const cardUrl = (id: PlaceId, n: number, small = false) => `/postcards/${id}/${n + 1}${small ? '-small' : ''}.webp`;

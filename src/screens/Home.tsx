@@ -266,6 +266,10 @@ export function Home() {
             <Icon name="book" />
             <span>圖鑑</span>
           </button>
+          <button type="button" className="iconBtn" data-go="house" onClick={() => go('house')}>
+            <Icon name="house" />
+            <span>家</span>
+          </button>
           <button type="button" className="iconBtn" id="storyBtn" onClick={openStory}>
             <Icon name="tale" />
             <span>故事</span>

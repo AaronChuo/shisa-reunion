@@ -2729,3 +2729,299 @@ h1 {
   font-size: 12px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
+
+/* ---------- 西薩的家 ---------- */
+#house {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 620px;
+  overflow: hidden;
+}
+.hCount {
+  gap: 0;
+  padding: 4px 12px;
+}
+.hCount .num + .num {
+  font-size: 15px;
+  color: var(--muted);
+}
+/* The house keeps its 4:5 shape and fills whatever the drawer leaves */
+.hStage {
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+.hScene {
+  position: relative;
+  width: min(100cqw, 80cqh);
+  aspect-ratio: 4 / 5;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #8fdcf3;
+  box-shadow: 0 0 0 2px var(--line);
+  touch-action: none;
+}
+.hScene.over {
+  box-shadow: 0 0 0 4px var(--sel);
+}
+.hBd {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 72%;
+  object-fit: cover;
+}
+.hHouse {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* Each thing stands with its feet on its place */
+.hStk {
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -100%);
+  touch-action: none;
+  cursor: grab;
+  line-height: 0;
+}
+.hStk.lift {
+  cursor: grabbing;
+}
+.hIn {
+  display: block;
+  transform-origin: 50% 100%;
+}
+.hStk svg,
+.hGhost svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+/* A white sticker edge, so anything reads on any picture */
+.hStk:not(.roof) svg,
+.hTile:not(.bd) > svg,
+.hGhost svg {
+  filter: drop-shadow(1.6px 0 0 #fff) drop-shadow(-1.6px 0 0 #fff) drop-shadow(0 1.6px 0 #fff) drop-shadow(0 -1.6px 0 #fff)
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+}
+.hStk.lift .hIn {
+  transform: scale(1.1);
+}
+.hIn.hop {
+  animation: hHop 0.5s ease;
+}
+@keyframes hHop {
+  35% {
+    transform: translateY(-16%);
+  }
+  65% {
+    transform: translateY(0) scale(1.06, 0.94);
+  }
+}
+.hBubble {
+  position: absolute;
+  z-index: 2000;
+  transform: translate(-50%, -100%);
+  padding: 0 10px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 28px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: hBubble 1.6s forwards;
+}
+@keyframes hBubble {
+  0% {
+    opacity: 0;
+  }
+  12%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.hGhost {
+  position: fixed;
+  z-index: 3000;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+.hDrawer {
+  flex: none;
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  transition: background 0.15s;
+}
+.hDrawer.over {
+  border-color: var(--accent);
+  background: #fde7d9;
+}
+.hTabs {
+  display: flex;
+  gap: 6px;
+}
+.hTab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 6px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: #eef7f5;
+  font-weight: 700;
+}
+.hTab svg {
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+.hTab[aria-selected="true"] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+/* Two rows that scroll sideways; a finger sliding up out of the drawer carries a sticker */
+.hTiles {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, 64px);
+  grid-auto-columns: 64px;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  padding-bottom: 2px;
+}
+.hTiles.bds {
+  grid-auto-columns: 104px;
+}
+.hTile {
+  position: relative;
+  padding: 4px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: #eef7f5;
+  touch-action: pan-x;
+  cursor: grab;
+}
+.hTile > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.hTile.home > svg,
+.hTile.roof > svg {
+  opacity: 0.4;
+}
+.hTag {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  transform: translateX(-50%);
+  padding: 0 5px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.hTile.bd {
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.hThumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The land in a zone's picture is low down; the top is mostly sky */
+  object-position: 50% 75%;
+  pointer-events: none;
+}
+.hName {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.hTile.bd.on {
+  border: 3px solid var(--accent);
+}
+.hTile.bd.locked {
+  background: #dfe8e6;
+  color: var(--muted);
+}
+.hTile.bd.locked svg {
+  width: 22px;
+  height: 22px;
+  margin-bottom: 16px;
+  fill: none;
+  stroke: currentColor;
+}
+.hShake {
+  animation: shake 0.35s;
+}
+.hHint {
+  margin: 0;
+  min-height: 2.6em;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+}
+/* Short screens: a smaller drawer leaves the house more room */
+@media (max-height: 700px) {
+  #house {
+    gap: 8px;
+  }
+  .hTab {
+    min-height: 40px;
+  }
+  .hTab svg {
+    width: 24px;
+    height: 24px;
+  }
+  .hTiles {
+    grid-template-rows: repeat(2, 54px);
+    grid-auto-columns: 54px;
+  }
+  .hTiles.bds {
+    grid-auto-columns: 88px;
+  }
+  .hHint {
+    min-height: 1.3em;
+    font-size: 12px;
+  }
+}

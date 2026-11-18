@@ -6,6 +6,11 @@ describe('saved progress', () => {
     expect(freshProgress().open).toEqual(['naha']);
   });
 
+  it('gives a save from before 西薩的家 an empty house in front of the sky', () => {
+    const { house: _house, ...old } = freshProgress();
+    expect(normalizeProgress(old).house).toEqual({ bd: 'sky', placed: [] });
+  });
+
   it('upgrades a save from before the new islands without locking anything', () => {
     const old = { ...freshProgress(), open: undefined, unlocked: 3, clears: [2, 1, 1, 0] };
     const p = normalizeProgress(old);
