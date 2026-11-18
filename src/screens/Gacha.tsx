@@ -59,13 +59,15 @@ export function Gacha() {
   const tokens = useGame((s) => s.progress.tokens);
   const owned = useGame((s) => s.progress.owned);
   const decor = useGame((s) => s.progress.decor);
+  const seen = useGame((s) => s.progress.seen);
   const age = useGame((s) => s.progress.age);
   const gseries = useGame((s) => s.ui.gseries);
   const phase = useGame((s) => s.ui.pull);
   const series = SERIES.find((x) => x.id === gseries) ?? SERIES[0];
   const all = VARIANTS.filter((v) => v.series === series.id);
-  const left = leftIn(series.id, owned, decor);
-  const round = roundOf(series.id, owned);
+  const got = { owned, decor, seen };
+  const left = leftIn(series.id, got);
+  const round = roundOf(series.id, got);
   return (
     <section id="gacha" className="screen">
       <header className="bar">
@@ -82,7 +84,7 @@ export function Gacha() {
       <fieldset className="series" aria-label="選扭蛋機">
         {SERIES.map((x) => {
           // Round 2 counts the machine's decorations, beside a little house
-          const r2 = roundOf(x.id, owned) === 2;
+          const r2 = roundOf(x.id, got) === 2;
           const n = r2
             ? DECOR.filter((d) => d.series === x.id && decor.includes(d.id)).length
             : VARIANTS.filter((v) => v.series === x.id && owned.includes(v.id)).length;
@@ -115,9 +117,14 @@ export function Gacha() {
           <Machine series={series} />
         </div>
         <div className="gPanel">
-          {round === 1 ? (
+          {round === 1 && left ? (
             <p>
               這台還有 <b className="num">{left}</b> 隻沒抽到，每次一定會抽到新的。
+            </p>
+          ) : round === 1 ? (
+            // The last shisa is out: the machine goes up once it has been opened and kept
+            <p>
+              <b>這台的 {all.length} 隻西薩都收齊了！</b>
             </p>
           ) : left ? (
             <p>
@@ -130,7 +137,7 @@ export function Gacha() {
               </b>
             </p>
           )}
-          <GachaStep left={left} price={priceOf(series.id, owned, age)} />
+          <GachaStep left={left} price={priceOf(series.id, got, age)} />
           <button type="button" className="iconBtn" data-go="dex" onClick={() => (phase === 'idle' || phase === 'ready') && go('dex')}>
             <Icon name="book" />
             <span>看圖鑑</span>

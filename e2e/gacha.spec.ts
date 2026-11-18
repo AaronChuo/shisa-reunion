@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { STARTERS, VARIANTS } from '../src/content/shisa';
+import { STARTERS, VARIANT_BY_ID, VARIANTS } from '../src/content/shisa';
 import { freshProgress } from '../src/state/store';
 import { expect, test as it } from './fixtures';
 import { animationOf, progress } from './helpers';
@@ -178,6 +178,44 @@ it.describe('round 2: decorations for 西薩的家', () => {
     await page.click('[data-go="gacha"]');
     await expect(page.locator('#modal')).toHaveCount(0);
     await expect(page.locator('[data-series="trad"] small')).toHaveText('1/8');
+  });
+
+  it('lets the last shisa roll out and be opened and kept before the machine goes up, and keeps working after', async ({ page }) => {
+    const [last, ...rest] = trad.filter((id) => !STARTERS.includes(id));
+    const s = JSON.stringify({ state: { progress: { ...freshProgress(), tokens: 3, owned: [...STARTERS, ...rest], age: 'kid' } }, version: 2 });
+    await page.addInitScript((v) => localStorage.getItem('shisa-reunion') || localStorage.setItem('shisa-reunion', v), s);
+    await page.goto('/');
+    await page.click('[data-go="gacha"]');
+    await expect(page.locator('#machineBox .capsule')).toHaveCount(1);
+    await page.locator('#coinBtn').click();
+    await page.locator('#turnBtn').click();
+    // The last capsule lands in the tray of the same machine; nothing goes up yet
+    await expect(page.locator('#outCap')).toBeVisible();
+    await expect(page.locator('#modal')).toHaveCount(0);
+    await expect(page.locator('.gPanel')).toContainText('都收齊了');
+    await page.locator('#openBtn').click();
+    await page.locator('#capsule').click();
+    await expect(page.locator('#modal[data-kind="reveal"] h2')).toHaveText(VARIANT_BY_ID[last].name);
+    await page.locator('#modal [data-keep]').click();
+    // Kept: now the machine goes up, and says so
+    await expect(page.locator('#modal[data-kind="upgrade"]')).toBeVisible();
+    await page.click('#modal [data-ok]');
+    await expect(page.locator('#machineBox .capsule')).toHaveCount(8);
+    await expect(page.locator('[data-series="trad"] small')).toHaveText('0/8');
+    // Still free to pick another machine, and to turn this one at round 2's price
+    await page.click('[data-series="sea"]');
+    await expect(page.locator('[data-series="sea"]')).toHaveAttribute('aria-pressed', 'true');
+    await page.click('[data-series="trad"]');
+    await page.locator('#coinBtn').click();
+    await page.locator('#coinBtn').click();
+    await page.locator('#turnBtn').click();
+    await page.locator('#openBtn').click();
+    await page.locator('#capsule').click();
+    await expect(page.locator('#modal [data-to-house]')).toBeVisible();
+    const p = await progress(page);
+    expect(p.owned).toContain(last);
+    expect(p.decor).toHaveLength(1);
+    expect(p.tokens).toBe(0);
   });
 
   it('takes one coin a capsule from a child under 6, and a decoration can be kept for later', async ({ page }) => {

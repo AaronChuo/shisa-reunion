@@ -1,6 +1,6 @@
 import { sfx } from '../audio/sfx';
 import { ageOf, handOut } from '../content/age';
-import { drawDecor, isDecor, leftIn, priceOf, roundOf } from '../content/decor';
+import { drawDecor, isDecor, leftIn, priceOf, readyToGoUp, roundOf, upgradeSeen } from '../content/decor';
 import { cardsEarned, type PlaceId, placeSeen } from '../content/places';
 import { drawFromSeries, pairWith, type Series, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, PIECE_NAMES } from '../content/text';
@@ -551,9 +551,8 @@ export function reroll(): void {
 // ---------- gacha & collection ----------
 /** The machine on screen: what is left in it and what a capsule costs */
 function machine() {
-  const st = getState();
-  const { owned, decor, age } = st.progress;
-  return { series: st.ui.gseries, left: leftIn(st.ui.gseries, owned, decor), price: priceOf(st.ui.gseries, owned, age) };
+  const { progress: p, ui } = getState();
+  return { series: ui.gseries, left: leftIn(ui.gseries, p), price: priceOf(ui.gseries, p, p.age) };
 }
 
 /**
@@ -589,7 +588,7 @@ export function releaseCapsule(color: string): string | null {
   const { series, price } = machine();
   const { owned, decor, tokens } = st.progress;
   if (st.ui.pull !== 'ready' || tokens < price) return null;
-  const got = roundOf(series, owned) === 1 ? drawFromSeries(series, owned)?.id : drawDecor(series, decor)?.id;
+  const got = roundOf(series, st.progress) === 1 ? drawFromSeries(series, owned)?.id : drawDecor(series, decor)?.id;
   if (!got) return null;
   mut((s) => {
     s.progress.tokens -= price;
@@ -651,15 +650,17 @@ export function sendToHouse(): void {
   go('house');
 }
 
-/** The first time a machine on screen is in round 2, it says so: right after its last shisa comes out, or on a visit */
+/**
+ * A machine with all its shisa in goes up to round 2 while the player watches: once the last shisa's capsule has been
+ * opened and kept, or on the next visit. Never with a capsule on its way out or a card open.
+ */
 export function maybeUpgrade(): void {
   const st = getState();
   const series = st.ui.gseries;
-  const key = `upgrade:${series}`;
-  if (st.ui.modal || st.ui.screen !== 'gacha' || roundOf(series, st.progress.owned) !== 2 || st.progress.seen.includes(key)) return;
+  if (st.ui.modal || st.ui.screen !== 'gacha' || st.ui.pull !== 'idle' || !readyToGoUp(series, st.progress)) return;
   mut((s) => {
     s.ui.modal = { kind: 'upgrade', series };
-    s.progress.seen.push(key);
+    s.progress.seen.push(upgradeSeen(series));
   });
   sfx.win();
 }

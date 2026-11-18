@@ -139,23 +139,45 @@ export const hasDecor = (id: string, decor: readonly string[]): boolean => DECOR
 
 // ---------- the gacha machines' rounds ----------
 
-/** Round 1 turns out the series' shisa; once every one is collected, round 2 turns out its decorations */
-export const roundOf = (series: Series['id'], owned: readonly string[]): 1 | 2 => (VARIANTS.some((v) => v.series === series && !owned.includes(v.id)) ? 1 : 2);
+/** What the rounds are worked out from: the shisa and decorations collected, and the machines already seen going up */
+export interface Collected {
+  owned: readonly string[];
+  decor: readonly string[];
+  seen: readonly string[];
+}
+
+/** The `seen` mark of a machine that has been seen going up to round 2 */
+export const upgradeSeen = (series: Series['id']): string => `upgrade:${series}`;
+
+/** Every one of the series' shisa is collected */
+export const shisaAllIn = (series: Series['id'], owned: readonly string[]): boolean => !VARIANTS.some((v) => v.series === series && !owned.includes(v.id));
+
+/**
+ * Round 1 turns out the series' shisa; round 2 its decorations. A machine goes up only once its shisa are all in AND
+ * the player has seen it happen, which is after the last shisa's capsule has been opened and kept: a capsule on its way
+ * out of a round-1 machine never finds the machine changed under it.
+ */
+export const roundOf = (series: Series['id'], c: Pick<Collected, 'owned' | 'seen'>): 1 | 2 =>
+  shisaAllIn(series, c.owned) && c.seen.includes(upgradeSeen(series)) ? 2 : 1;
+
+/** All its shisa are in, but the machine hasn't been seen going up yet */
+export const readyToGoUp = (series: Series['id'], c: Pick<Collected, 'owned' | 'seen'>): boolean =>
+  shisaAllIn(series, c.owned) && !c.seen.includes(upgradeSeen(series));
 
 const decorOf = (series: Series['id']) => DECOR.filter((d) => d.series === series);
 
-/** What is still in a machine: shisa in round 1, decorations in round 2 */
-export function leftIn(series: Series['id'], owned: readonly string[], decor: readonly string[]): number {
-  if (roundOf(series, owned) === 1) return VARIANTS.filter((v) => v.series === series && !owned.includes(v.id)).length;
-  return decorOf(series).filter((d) => !decor.includes(d.id)).length;
+/** What is still in a machine: shisa in round 1 (none once they are all in), decorations in round 2 */
+export function leftIn(series: Series['id'], c: Collected): number {
+  if (roundOf(series, c) === 1) return VARIANTS.filter((v) => v.series === series && !c.owned.includes(v.id)).length;
+  return decorOf(series).filter((d) => !c.decor.includes(d.id)).length;
 }
 
 /** All of a machine's round-2 decorations */
 export const DECOR_PER_MACHINE = 8;
 
 /** Coins for one capsule: one in round 1, and in round 2 for children under 6; two in round 2 for everyone else */
-export const priceOf = (series: Series['id'], owned: readonly string[], age: Age | null): number =>
-  roundOf(series, owned) === 2 && age !== null && age !== 'little' ? 2 : 1;
+export const priceOf = (series: Series['id'], c: Pick<Collected, 'owned' | 'seen'>, age: Age | null): number =>
+  roundOf(series, c) === 2 && age !== null && age !== 'little' ? 2 : 1;
 
 /** Weighted draw among the machine's decorations not yet turned out, like the shisa: never a repeat, the rare one less often */
 export function drawDecor(series: Series['id'], decor: readonly string[], random: () => number = Math.random): Decor | null {

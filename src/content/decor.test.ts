@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hasDecorArt } from '../house/DecorArt';
-import { DECOR, DECOR_PER_MACHINE, drawDecor, hasDecor, leftIn, priceOf, roundOf, STARTER_DECOR } from './decor';
+import { DECOR, DECOR_PER_MACHINE, drawDecor, hasDecor, leftIn, priceOf, readyToGoUp, roundOf, STARTER_DECOR, upgradeSeen } from './decor';
 import { SERIES, STARTERS, VARIANTS } from './shisa';
 
 const allOf = (series: string) => VARIANTS.filter((v) => v.series === series).map((v) => v.id);
@@ -37,22 +37,33 @@ describe('the decorations', () => {
 });
 
 describe('a gacha machine’s rounds', () => {
-  it('turns out shisa until all of its series are collected, then decorations', () => {
-    expect(roundOf('trad', STARTERS)).toBe(1);
-    expect(leftIn('trad', STARTERS, [])).toBe(allOf('trad').length - 2);
-    const owned = [...STARTERS, ...allOf('animal')];
-    expect(roundOf('animal', owned)).toBe(2);
-    expect(leftIn('animal', owned, [])).toBe(DECOR_PER_MACHINE);
-    expect(leftIn('animal', owned, ['cat', 'gecko'])).toBe(DECOR_PER_MACHINE - 2);
+  const animal = [...STARTERS, ...allOf('animal')];
+  const up = { owned: animal, decor: [] as string[], seen: [upgradeSeen('animal')] };
+
+  it('turns out shisa until all of its series are collected and it has been seen going up, then decorations', () => {
+    expect(roundOf('trad', { owned: STARTERS, seen: [] })).toBe(1);
+    expect(leftIn('trad', { owned: STARTERS, decor: [], seen: [] })).toBe(allOf('trad').length - 2);
+    expect(roundOf('animal', up)).toBe(2);
+    expect(leftIn('animal', up)).toBe(DECOR_PER_MACHINE);
+    expect(leftIn('animal', { ...up, decor: ['cat', 'gecko'] })).toBe(DECOR_PER_MACHINE - 2);
+  });
+
+  it('stays in round 1, empty, from the last shisa until the machine is seen going up', () => {
+    const justIn = { owned: animal, decor: [] as string[], seen: [] as string[] };
+    expect(roundOf('animal', justIn)).toBe(1);
+    expect(leftIn('animal', justIn)).toBe(0);
+    expect(priceOf('animal', justIn, 'big')).toBe(1);
+    expect(readyToGoUp('animal', justIn)).toBe(true);
+    expect(readyToGoUp('animal', up)).toBe(false);
+    expect(readyToGoUp('trad', { owned: STARTERS, seen: [] })).toBe(false);
   });
 
   it('costs one coin, and two in round 2 for children 6 and up', () => {
-    const owned = [...STARTERS, ...allOf('animal')];
-    expect(priceOf('trad', owned, 'big')).toBe(1);
-    expect(priceOf('animal', owned, 'little')).toBe(1);
-    expect(priceOf('animal', owned, null)).toBe(1);
-    expect(priceOf('animal', owned, 'kid')).toBe(2);
-    expect(priceOf('animal', owned, 'big')).toBe(2);
+    expect(priceOf('trad', up, 'big')).toBe(1);
+    expect(priceOf('animal', up, 'little')).toBe(1);
+    expect(priceOf('animal', up, null)).toBe(1);
+    expect(priceOf('animal', up, 'kid')).toBe(2);
+    expect(priceOf('animal', up, 'big')).toBe(2);
   });
 
   it('never turns out a decoration twice, and the rare one comes less often', () => {

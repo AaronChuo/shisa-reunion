@@ -2,7 +2,7 @@ import { type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useRe
 import { Icon } from '../art/Icons';
 import { ShisaArt, ShisaIcon } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
-import { DECOR, DECOR_BY_ID, hasDecor, isDecor, type Motion, roundOf } from '../content/decor';
+import { DECOR, DECOR_BY_ID, hasDecor, isDecor, type Motion, shisaAllIn } from '../content/decor';
 import { backdrops, clampSpot, HOUSE_CAP, HOUSE_H, HOUSE_W, ROOF_SPOTS, SKY, stickerSize } from '../content/house';
 import { SERIES, VARIANT_BY_ID, VARIANTS } from '../content/shisa';
 import { sceneUrl } from '../content/zones';
@@ -36,7 +36,7 @@ function whereFrom(id: string, owned: readonly string[]): string {
   const d = DECOR_BY_ID[id];
   const se = SERIES.find((x) => x.id === d.series);
   if (!se) return '';
-  return roundOf(se.id, owned) === 1 ? `${se.name}的西薩收齊後，扭蛋機會升級，就轉得到${d.name}` : `去${se.name}的扭蛋機轉轉看，就有機會拿到${d.name}`;
+  return !shisaAllIn(se.id, owned) ? `${se.name}的西薩收齊後，扭蛋機會升級，就轉得到${d.name}` : `去${se.name}的扭蛋機轉轉看，就有機會拿到${d.name}`;
 }
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 

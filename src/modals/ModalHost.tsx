@@ -475,6 +475,7 @@ function Postcard({ id, start, n }: { id: PlaceId; start: number | null; n: numb
 function Upgrade({ seriesId }: { seriesId: string }) {
   const se = SERIES.find((x) => x.id === seriesId) ?? SERIES[0];
   const owned = useGame((s) => s.progress.owned);
+  const seen = useGame((s) => s.progress.seen);
   const age = useGame((s) => s.progress.age);
   const n = DECOR.filter((x) => x.series === se.id);
   const shisa = owned.filter((id) => VARIANT_BY_ID[id]?.series === se.id).length;
@@ -485,7 +486,7 @@ function Upgrade({ seriesId }: { seriesId: string }) {
       <p>
         {se.name}的 <span className="num">{shisa}</span> 隻西薩都收齊了。現在這台轉得出 <span className="num">{DECOR_PER_MACHINE}</span>{' '}
         樣擺飾，轉到的可以放進西薩的家。
-        {priceOf(se.id, owned, age) > 1 && '升級後每轉一次要投 2 枚福氣幣。'}
+        {priceOf(se.id, { owned, seen }, age) > 1 && '升級後每轉一次要投 2 枚福氣幣。'}
       </p>
       <div className="upgradeRow" style={{ ['--sc' as string]: se.color }}>
         {n.map((x) => (

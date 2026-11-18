@@ -60,6 +60,7 @@ function Capsule({ color, r }: { color: string; r: number }) {
 export function Machine({ series }: { series: Series }) {
   const owned = useGame((s) => s.progress.owned);
   const decor = useGame((s) => s.progress.decor);
+  const seen = useGame((s) => s.progress.seen);
   const age = useGame((s) => s.progress.age);
   const tokens = useGame((s) => s.progress.tokens);
   const coins = useGame((s) => s.ui.coins);
@@ -67,10 +68,10 @@ export function Machine({ series }: { series: Series }) {
   const spin = useGame((s) => s.ui.spin);
   const capColor = useGame((s) => s.ui.capColor);
   const pulled = useGame((s) => s.ui.pulled);
-  const left = useMemo(() => leftIn(series.id, owned, decor), [series.id, owned, decor]);
-  const round = roundOf(series.id, owned);
+  const left = useMemo(() => leftIn(series.id, { owned, decor, seen }), [series.id, owned, decor, seen]);
+  const round = roundOf(series.id, { owned, seen });
   // One coin a capsule, or two in round 2 for children 6 and up: the slot shows a hole for each
-  const price = priceOf(series.id, owned, age);
+  const price = priceOf(series.id, { owned, seen }, age);
   const shells = round === 2 ? SHELLS2 : SHELLS;
 
   const rand = useRef(rng(7));
@@ -123,11 +124,20 @@ export function Machine({ series }: { series: Series }) {
     };
     raf.current = requestAnimationFrame(frame);
   };
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(raf.current);
+      // Back to "not running", or a remount (as React's strict mode does in development) could never wake it again
+      raf.current = 0;
+    },
+    [],
+  );
 
   // A fresh pile poured in whenever the machine changes, or goes up to round 2
   // biome-ignore lint/correctness/useExhaustiveDependencies: rebuild only when switching machines or rounds
   useEffect(() => {
+    // A capsule on its way out isn't lost with the old pile: it lands in the tray all the same
+    if (useGame.getState().ui.pull === 'drop') capsuleOut();
     const w = makeWorld(DOME, left, rand.current);
     world.current = w;
     colors.current = new Map(w.balls.map((b, i) => [b.id, shells[(i * 3 + series.id.length) % shells.length]]));
@@ -195,6 +205,10 @@ export function Machine({ series }: { series: Series }) {
   }, [spin]);
   useEffect(() => {
     if (phase !== 'ready') turned.current = 0;
+    // However the capsule's fall goes, it is in the tray within a few seconds, so the machine can never stay stuck
+    if (phase !== 'drop') return;
+    const t = window.setTimeout(capsuleOut, 3000);
+    return () => window.clearTimeout(t);
   }, [phase]);
 
   const drag = useRef<{ prev: number; moved: number } | null>(null);
