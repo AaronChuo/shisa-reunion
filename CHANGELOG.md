@@ -2,6 +2,14 @@
 
 格式參考 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本採用[語意化版本](https://semver.org/lang/zh-TW/)。
 
+## [0.39.0] - 2026-11-19
+
+### 變更
+
+- 西薩有自己的聲音了：「我是西薩！」「西薩！」和休息提醒，改用 Google Gemini 聲音設計做的角色聲音（活潑的卡通小跟班，錄完再放慢一點），不再是旁白調高音調；旁白照舊是 Azure 曉臻
+- 「素材來源」寫明西薩的聲音是 Gemini 聲音設計的
+- `pnpm voice` 也錄西薩的句子（需要 Gemini 金鑰和 ffmpeg），`--again "<句子>"` 只重錄那一句
+
 ## [0.38.2] - 2026-11-18
 
 ### 變更
