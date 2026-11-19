@@ -177,6 +177,7 @@ it.describe('place postcards', () => {
     await expect(page.locator('#modal')).toContainText('原創插畫');
     // The narration is synthesized, and says so
     await expect(page.locator('#voiceCredit')).toContainText('Azure');
+    await expect(page.locator('#voiceCredit')).toContainText('Gemini');
     // Leaving and coming back finds the same page
     await page.click('#modal [data-ok]');
     await page.click('[data-go="home"]');

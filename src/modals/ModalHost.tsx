@@ -545,7 +545,7 @@ function Credits() {
       <h2>素材來源</h2>
       <p className="small">明信片、關卡背景、積木和西薩，都是為這個遊戲畫的原創插畫。</p>
       <p className="small" id="voiceCredit">
-        旁白和西薩說話的聲音，是用 Microsoft Azure AI 語音合成的；沒有錄好的句子，用裝置內建的語音念。
+        旁白是用 Microsoft Azure AI 語音合成的；西薩說話的聲音，是用 Google Gemini 的聲音設計做出來、再合成的。沒有錄好的句子，用裝置內建的語音念。
       </p>
       <div className="btns">
         <Cta icon={<Icon name="check" />} data={{ 'data-ok': true, 'data-focus': true }} onClick={closeModal}>
