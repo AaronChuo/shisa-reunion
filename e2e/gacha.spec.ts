@@ -1,5 +1,7 @@
 import type { Page } from '@playwright/test';
-import { STARTERS, VARIANT_BY_ID, VARIANTS } from '../src/content/shisa';
+import { voiceKey } from '../src/audio/voice';
+import { upgradeText } from '../src/content/decor';
+import { SERIES, STARTERS, VARIANT_BY_ID, VARIANTS } from '../src/content/shisa';
 import { freshProgress } from '../src/state/store';
 import { expect, test as it } from './fixtures';
 import { animationOf, progress } from './helpers';
@@ -158,6 +160,11 @@ it.describe('round 2: decorations for 西薩的家', () => {
     await expect(page.locator('#modal .upgradeRow li[data-id="fukugi"]')).toHaveText('福木');
     await expect(page.locator('#modal .upgradeHouse .uStk')).toHaveCount(2);
     await expect(page.locator('#modal .tale')).toContainText('放進西薩的家');
+    // Read aloud in the recorded narration, the two-coin line included
+    const trad = SERIES.find((se) => se.id === 'trad') ?? SERIES[0];
+    const recording = page.waitForResponse((r) => r.url().endsWith(`/voice/${voiceKey(upgradeText(trad, true), 'narrator')}.mp3`));
+    await page.click('#modal [data-read]');
+    expect((await recording).ok()).toBe(true);
     await page.click('#modal [data-ok]');
     await expect(page.locator('#machineBox .capsule')).toHaveCount(8);
     await expect(page.locator('[data-series="trad"] small')).toHaveText('0/8');

@@ -4,7 +4,7 @@ import { PieceArt } from '../art/PieceArt';
 import { ShisaArt, Star4 } from '../art/Shisa';
 import { currentSongName } from '../audio/music';
 import { useReadAloud } from '../audio/speech';
-import { DECOR, DECOR_BY_ID, priceOf } from '../content/decor';
+import { DECOR, DECOR_BY_ID, priceOf, upgradeText } from '../content/decor';
 import { CARD_NEEDS, cardsEarned, PLACES, type PlaceId } from '../content/places';
 import { ABOUT_SHISA, pairWith, ROLE_ASK, SERIES, VARIANT_BY_ID } from '../content/shisa';
 import { type IntroKey, isPiece, MECHANISM_NAMES, PIECE_NAMES, RULES } from '../content/text';
@@ -485,9 +485,7 @@ function Upgrade({ seriesId }: { seriesId: string }) {
   const seen = useGame((s) => s.progress.seen);
   const age = useGame((s) => s.progress.age);
   const items = DECOR.filter((x) => x.series === se.id);
-  const shisa = owned.filter((id) => VARIANT_BY_ID[id]?.series === se.id).length;
-  const two = priceOf(se.id, { owned, seen }, age) > 1;
-  const text = `${se.name}的 ${shisa} 隻西薩都收齊了！現在扭蛋裡裝的是擺飾，轉到的可以放進西薩的家，像貼紙一樣，想放哪裡就放哪裡。${two ? '升級後每轉一次要投 2 枚福氣幣。' : ''}`;
+  const text = upgradeText(se, priceOf(se.id, { owned, seen }, age) > 1);
   // Two for the little house: things that stand out in the yard, not trees and flowers like the ones already round it
   const sample = items.filter((x) => !x.rare && x.motion !== 'sway').slice(0, 2);
   // The card stays hidden while the machine goes up (hiddenUntil in the CSS), so its button takes the focus once it shows

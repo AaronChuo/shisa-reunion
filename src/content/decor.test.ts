@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hasDecorArt } from '../house/DecorArt';
-import { DECOR, DECOR_PER_MACHINE, drawDecor, hasDecor, leftIn, priceOf, readyToGoUp, roundOf, STARTER_DECOR, upgradeSeen } from './decor';
+import { DECOR, DECOR_PER_MACHINE, drawDecor, hasDecor, leftIn, priceOf, readyToGoUp, roundOf, STARTER_DECOR, upgradeSeen, upgradeText } from './decor';
 import { SERIES, STARTERS, VARIANTS } from './shisa';
 
 const allOf = (series: string) => VARIANTS.filter((v) => v.series === series).map((v) => v.id);
@@ -79,5 +79,17 @@ describe('a gacha machine’s rounds', () => {
     for (let i = 0; i < 300; i++) if (drawDecor('sea', [], () => i / 300)?.rare) rare++;
     expect(rare).toBeGreaterThan(5);
     expect(rare).toBeLessThan(300 / 8);
+  });
+});
+
+describe('the upgrade notice', () => {
+  it("counts the machine's shisa and names the price only when a capsule takes two coins", () => {
+    const trad = SERIES.find((se) => se.id === 'trad');
+    const craft = SERIES.find((se) => se.id === 'craft');
+    if (!trad || !craft) throw new Error('missing series');
+    expect(upgradeText(trad, false)).toMatch(/^傳統系列的 10 隻西薩都收齊了！/);
+    expect(upgradeText(craft, false)).toMatch(/^工藝系列的 5 隻西薩都收齊了！/);
+    expect(upgradeText(trad, false)).not.toContain('2 枚');
+    expect(upgradeText(trad, true)).toMatch(/升級後每轉一次要投 2 枚福氣幣。$/);
   });
 });

@@ -1,6 +1,7 @@
+import { upgradeText } from '../content/decor';
 import { allHints, type HintMood } from '../content/hints';
 import { PLACES } from '../content/places';
-import { ABOUT_SHISA, ROLE_ASK, VARIANTS } from '../content/shisa';
+import { ABOUT_SHISA, ROLE_ASK, SERIES, VARIANTS } from '../content/shisa';
 import { SHISA_CALL, SHISA_HELLO, SHISA_REST, STORY } from '../content/story';
 import { RULES } from '../content/text';
 import type { Voice } from './voice';
@@ -30,6 +31,7 @@ export function voiceLines(): VoiceLine[] {
     ROLE_ASK,
     ...VARIANTS.map((v) => v.story),
     ...Object.values(PLACES).flatMap((p) => p.cards.map((c) => c.story)),
+    ...SERIES.flatMap((se) => [false, true].map((two) => upgradeText(se, two))),
   ];
   const shisa: [string, string][] = [
     [SHISA_HELLO, 'a proud, friendly self-introduction'],

@@ -179,6 +179,15 @@ export const DECOR_PER_MACHINE = 8;
 export const priceOf = (series: Series['id'], c: Pick<Collected, 'owned' | 'seen'>, age: Age | null): number =>
   roundOf(series, c) === 2 && age !== null && age !== 'little' ? 2 : 1;
 
+/**
+ * What the upgrade notice says, and reads aloud: the machine's shisa all in, what its capsules hold now and what they
+ * are for, and the price when it goes up to two coins. Recorded for every machine with and without the price line.
+ */
+export function upgradeText(series: Series, two: boolean): string {
+  const shisa = VARIANTS.filter((v) => v.series === series.id).length;
+  return `${series.name}的 ${shisa} 隻西薩都收齊了！現在扭蛋裡裝的是擺飾，轉到的可以放進西薩的家，像貼紙一樣，想放哪裡就放哪裡。${two ? '升級後每轉一次要投 2 枚福氣幣。' : ''}`;
+}
+
 /** Weighted draw among the machine's decorations not yet turned out, like the shisa: never a repeat, the rare one less often */
 export function drawDecor(series: Series['id'], decor: readonly string[], random: () => number = Math.random): Decor | null {
   const pool = decorOf(series).filter((d) => !decor.includes(d.id));
