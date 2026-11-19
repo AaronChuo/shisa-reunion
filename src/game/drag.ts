@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
+import { NO_ROOM, WOULD_FALL } from '../content/hints';
 import type { PieceType } from '../engine';
 import { getState } from '../state/store';
 import { bad, liftForDrag, place, returnToTray, selectCard } from './actions';
@@ -85,7 +86,7 @@ function onUp(e: PointerEvent): void {
     return;
   }
   if (land?.ok) place(info.k, info.t, info.o, land.x, land.y, info.src !== 'board');
-  else if (land) bad(land.full ? '這裡放不下了' : '這樣會倒下來喔');
+  else if (land) bad(land.full ? NO_ROOM : WOULD_FALL);
 }
 
 function onCancel(e: PointerEvent): void {

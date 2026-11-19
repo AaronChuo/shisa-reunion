@@ -6,7 +6,7 @@
 // Needs, in .env.local (see .env.example), which never goes into the repo: AZURE_SPEECH_KEY and AZURE_SPEECH_REGION for
 // narration, GEMINI_API_KEY for the shisa; and ffmpeg for the shisa's lines.
 // Re-run with `pnpm voice` after changing any text that is read aloud. A Gemini take now and then adds or drops a word:
-// listen, then record it again with `pnpm voice --again "<part of the line>"`.
+// listen, then record it again with `pnpm voice --again "<the line, or part of a shisa line>"`.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -36,13 +36,19 @@ await vite.close();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/** Calls `ask` until it answers, waiting and trying again when rate-limited or briefly unavailable */
+/** Calls `ask` until it answers, waiting and trying again when rate-limited, briefly unavailable or not answering */
 async function retrying(ask, text) {
   for (let attempt = 0; attempt < 6; attempt++) {
-    const res = await ask();
+    const res = await ask().catch((e) => {
+      if (e.name !== 'TimeoutError') throw e;
+      return { ok: false, status: 504, headers: new Headers(), text: async () => 'no answer in time' };
+    });
     if (res.ok) return res;
     if (res.status !== 429 && res.status < 500) throw new Error(`${res.status} ${await res.text()} for: ${text}`);
-    await sleep(Number(res.headers.get('retry-after') ?? 0) * 1000 || 5000 * (attempt + 1));
+    const wait = Number(res.headers.get('retry-after') ?? 0);
+    // A long wait is a daily allowance used up (Gemini's TTS allows 100 requests a day on Tier 1): stop and say so
+    if (wait > 120) throw new Error(`the allowance is used up; run it again in ${Math.ceil(wait / 60)} minutes (${await res.text()})`);
+    await sleep(wait * 1000 || 5000 * (attempt + 1));
   }
   throw new Error(`still failing for: ${text}`);
 }
@@ -69,6 +75,10 @@ async function azure(text, r) {
   return Buffer.from(await res.arrayBuffer());
 }
 
+/** Numbers before a measure word written out as they are said (1 塊 → 一塊, 2 塊 → 兩塊), so the voice does not guess */
+const DIGITS = ['零', '一', '兩', '三', '四', '五', '六', '七', '八', '九'];
+const sayNumbers = (s) => s.replace(/(?<!\d) ?(\d) ?(?=[塊堆])/g, (_, d) => DIGITS[d]);
+
 /** One line from the designed Gemini voice, said the way `style` asks */
 async function gemini(text, style, r) {
   const KEY = process.env.GEMINI_API_KEY;
@@ -78,12 +88,14 @@ async function gemini(text, style, r) {
       fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
         method: 'POST',
         headers: { 'x-goog-api-key': KEY, 'Content-Type': 'application/json' },
+        // A request now and then never answers; give up on it and ask again
+        signal: AbortSignal.timeout(90_000),
         body: JSON.stringify({
           model: r.model,
           input: [
             {
               type: 'user_input',
-              content: [{ type: 'text', text: speakable(text), annotations: style ? [{ type: 'speech_metadata', style }] : [] }],
+              content: [{ type: 'text', text: sayNumbers(speakable(text)), annotations: style ? [{ type: 'speech_metadata', style }] : [] }],
             },
           ],
           response_format: { type: 'audio', mime_type: 'audio/wav' },
@@ -147,9 +159,10 @@ const lines = new Map();
 for (const l of voiceLines()) lines.set(voiceKey(l.text, l.as), l);
 mkdirSync(OUT, { recursive: true });
 const have = new Set(readdirSync(OUT).map((f) => f.replace(/\.mp3$/, '')));
-// --again takes the line that says exactly that, or else every line that has it in it
+// --again takes the line that says exactly that, or else every Gemini line that has it in it (a part of a line never
+// re-records the narration by accident)
 const exact = again && [...lines.values()].some((l) => l.text === again);
-const retake = (l) => again && (exact ? l.text === again : l.text.includes(again));
+const retake = (l) => again && (exact ? l.text === again : RECORDING[l.as].engine === 'gemini' && l.text.includes(again));
 const todo = [...lines].filter(([key, l]) => !have.has(key) || retake(l));
 if (again && !todo.some(([, l]) => retake(l))) throw new Error(`no line says "${again}"`);
 let chars = 0;

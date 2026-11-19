@@ -1,3 +1,4 @@
+import { allHints, type HintMood } from '../content/hints';
 import { PLACES } from '../content/places';
 import { ABOUT_SHISA, ROLE_ASK, VARIANTS } from '../content/shisa';
 import { SHISA_CALL, SHISA_HELLO, SHISA_REST, STORY } from '../content/story';
@@ -10,6 +11,15 @@ export interface VoiceLine {
   as: Voice;
   style?: string;
 }
+
+/** How the shisa says a speech-bubble line, by what it is for */
+const MOOD: Record<HintMood, string> = {
+  guide: 'helpful and clear, showing a young child what to do',
+  oops: 'gently and kindly letting a young child know it does not work',
+  wow: 'surprised and excited',
+  stop: 'cheerful and clear, announcing the next stop',
+  last: 'excited, announcing the last stop of the trip',
+};
 
 /** Every line the game reads aloud, for the recording script and for the test that each one has its recording */
 export function voiceLines(): VoiceLine[] {
@@ -26,5 +36,9 @@ export function voiceLines(): VoiceLine[] {
     [SHISA_CALL, 'calling out happily to a friend'],
     [SHISA_REST, 'caring and gentle, kindly telling a child to take a break'],
   ];
-  return [...narrator.map((text) => ({ text, as: 'narrator' as const })), ...shisa.map(([text, style]) => ({ text, as: 'shisa' as const, style }))];
+  return [
+    ...narrator.map((text) => ({ text, as: 'narrator' as const })),
+    ...shisa.map(([text, style]) => ({ text, as: 'shisa' as const, style })),
+    ...allHints().map(({ text, mood }) => ({ text, as: 'shisa' as const, style: MOOD[mood] })),
+  ];
 }

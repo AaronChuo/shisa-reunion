@@ -564,7 +564,14 @@ function AudioSettings() {
     <Sheet label="聲音設定">
       <h2>聲音</h2>
       <div className="switches">
-        <Switch id="sfxSwitch" on={sound} icon={<Icon name={sound ? 'soundOn' : 'soundOff'} />} label="音效" detail="三線、太鼓、三板" onToggle={toggleSound} />
+        <Switch
+          id="sfxSwitch"
+          on={sound}
+          icon={<Icon name={sound ? 'soundOn' : 'soundOff'} />}
+          label="音效"
+          detail="三線、太鼓、三板和西薩說話"
+          onToggle={toggleSound}
+        />
         <Switch
           id="musicSwitch"
           on={music}

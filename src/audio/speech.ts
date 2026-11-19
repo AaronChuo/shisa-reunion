@@ -9,7 +9,8 @@ import recorded from './voices.json';
 export { speakable, type Voice } from './voice';
 
 const RECORDED = new Set<string>(recorded);
-const hasRecording = (text: string, as: Voice): boolean => RECORDED.has(voiceKey(text, as));
+/** Whether the line has its recording */
+export const hasRecording = (text: string, as: Voice): boolean => RECORDED.has(voiceKey(text, as));
 
 export const canSpeak = (): boolean => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
@@ -127,22 +128,28 @@ function playRecording(text: string, id: number, done: () => void, as: Voice): v
   );
 }
 
+/** Stops what is being read only if it is still the line `speak` returned this id for */
+export function stopSpeakingIf(id: number): void {
+  if (id === session) stopSpeaking();
+}
+
 /**
- * Reads the text aloud; `done` fires at the end or on stop. Respects the sound-effects switch only through the
- * caller. Recordings need the game's audio running, which a tap starts; with no tap yet the device voice reads.
+ * Reads the text aloud; `done` fires at the end. Respects the sound-effects switch only through the caller.
+ * Recordings need the game's audio running, which a tap starts; with no tap yet the device voice reads. Returns an id
+ * for stopSpeakingIf.
  */
-export function speak(text: string, done: () => void = () => {}, as: Voice = 'narrator'): void {
+export function speak(text: string, done: () => void = () => {}, as: Voice = 'narrator'): number {
   stopSpeaking();
   const id = session;
   if (!hasRecording(text, as)) {
     speakWithDevice(text, id, done, as);
-    return;
+    return id;
   }
   ensureAudio(true);
   const ctx = audioCtx();
   if (!ctx || ctx.state === 'running') {
     playRecording(text, id, done, as);
-    return;
+    return id;
   }
   // On iPhone and iPad the tap that asked for this line is still waking the audio, which takes a moment; wait for it
   // rather than switching voices, and read with the device voice only if it does not wake (no tap to wake it)
@@ -152,6 +159,7 @@ export function speak(text: string, done: () => void = () => {}, as: Voice = 'na
     if (ctx.state === 'running') playRecording(text, id, done, as);
     else speakWithDevice(text, id, done, as);
   });
+  return id;
 }
 
 let unlocked = false;

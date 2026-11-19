@@ -4,6 +4,7 @@ import { Background, GateArt, Plate, StarSand, TrayBase, Urchin, Water } from '.
 import { ShisaArt } from '../art/Shisa';
 import { sfx } from '../audio/sfx';
 import { speak } from '../audio/speech';
+import { FIXED, NO_ROOM, PINNED, WOULD_FALL } from '../content/hints';
 import { VARIANT_BY_ID } from '../content/shisa';
 import { SHISA_CALL } from '../content/story';
 import { sceneUrl, timeOfStop } from '../content/zones';
@@ -164,7 +165,7 @@ export function Board() {
       const idx = Number(loose.getAttribute('data-pi'));
       if (!canLiftPiece(idx)) {
         shake(`pi:${idx}`);
-        bad('上面還壓著別的東西');
+        bad(PINNED);
         return;
       }
       const p = run?.placed[idx];
@@ -182,7 +183,7 @@ export function Board() {
     const touchFixed = () => {
       if (!fixed) return;
       shake(`fixed:${fixed.getAttribute('data-fixed')}`);
-      say('這塊是固定的，搬不動');
+      say(FIXED);
     };
     // On a scrolling board, dragging empty ground (or a fixed block) pans the field
     if (st.ui.sel < 0 && scrolling && beginPan(e, touchFixed)) return;
@@ -197,7 +198,7 @@ export function Board() {
       const o = r.orient[sel];
       const at = landingAt(e.clientX, e.clientY, t, o);
       if (at?.ok) place(sel, t, o, at.x, at.y, true);
-      else bad(at?.full ? '這裡放不下了' : '這樣會倒下來喔');
+      else bad(at?.full ? NO_ROOM : WOULD_FALL);
     }
   }
 

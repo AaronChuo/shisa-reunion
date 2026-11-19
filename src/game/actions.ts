@@ -1,9 +1,11 @@
 import { sfx } from '../audio/sfx';
+import { hasRecording, speak, stopSpeakingIf } from '../audio/speech';
 import { ageOf, handOut } from '../content/age';
 import { drawDecor, isDecor, leftIn, priceOf, readyToGoUp, roundOf, upgradeSeen } from '../content/decor';
+import { coachLine, GATE_OPENS, LIFT_FIRST, lastStopLine, PICKED, putLine, stopLine, TIDE_RISES, TIDE_TOO_HIGH } from '../content/hints';
 import { cardsEarned, type PlaceId, placeSeen } from '../content/places';
 import { drawFromSeries, pairWith, type Series, VARIANT_BY_ID } from '../content/shisa';
-import { type IntroKey, PIECE_NAMES } from '../content/text';
+import type { IntroKey } from '../content/text';
 import { learnedFor, openFor, planRun, STAGES, stageCfg, ZONES, zoneStars } from '../content/zones';
 import { canLift, DEFS, findRoute, fits, type Grid, makeGrid, type PathStep, type PieceType, placeKey, solve, stable, waterAt } from '../engine';
 import { type DexTab, getState, markTitleSeen, mut, type Run, type Screen } from '../state/store';
@@ -31,10 +33,23 @@ const goalName = () => VARIANT_BY_ID[getState().progress.pair[1]].name;
 
 // ---------- speech bubble ----------
 let bubbleTimer: ReturnType<typeof setTimeout> | undefined;
-export function say(text: string, ms = 1900): void {
+/** The shisa saying what is in the bubble, so hush can stop it */
+let voice = -1;
+/** What the shisa has said aloud at this stop: a line is said once a stop, then only shows */
+const saidHere = new Set<string>();
+
+/**
+ * Shows a line in the speech bubble, gone after `ms` (0 keeps it), and has the shisa say it with the sound effects on,
+ * if the line is recorded (ADR-0041). Each line is said once a stop, except a hint the player asked for (`again`).
+ */
+export function say(text: string, ms = 1900, again = false): void {
   mut((s) => {
     s.ui.bubble = { text, n: (s.ui.bubble?.n ?? 0) + 1 };
   });
+  if (getState().progress.sound && hasRecording(text, 'shisa') && (again || !saidHere.has(text))) {
+    saidHere.add(text);
+    voice = speak(text, undefined, 'shisa');
+  }
   clearTimeout(bubbleTimer);
   if (ms)
     bubbleTimer = setTimeout(
@@ -47,6 +62,7 @@ export function say(text: string, ms = 1900): void {
 }
 export function hush(): void {
   clearTimeout(bubbleTimer);
+  stopSpeakingIf(voice);
   mut((s) => {
     s.ui.bubble = null;
   });
@@ -179,6 +195,7 @@ async function buildStage(): Promise<void> {
 }
 
 function enterStage(): void {
+  saidHere.clear();
   mut((s) => {
     Object.assign(s.ui, {
       screen: 'play',
@@ -231,13 +248,12 @@ function showNextIntro(): void {
   closeModal();
   const r = run();
   const stars = r.level?.stars.length ?? 0;
-  const starLine = stars ? `，要先撿${stars > 1 ? ` ${stars} 堆` : ''}星砂` : '';
   if (getState().ui.coach) {
     // The very first stage shows a finger dragging the right block to the right spot
     hint(true);
-    say(`把積木拖進來，幫${heroName()}${stars ? '先撿星砂，再' : ''}走到${goalName()}身邊`, 0);
-  } else if (r.si === STAGES - 1) say(`最後一站：${ZONES[r.zi].boss.name}${starLine}`, stars ? 2600 : 2000);
-  else say(`這站要用 ${r.level?.inv.length ?? 0} 塊積木${starLine}`, stars ? 2400 : 1600);
+    say(coachLine(heroName(), goalName(), stars), 0);
+  } else if (r.si === STAGES - 1) say(lastStopLine(ZONES[r.zi].boss.name, stars), stars ? 2600 : 2000);
+  else say(stopLine(r.level?.inv.length ?? 0, stars), stars ? 2400 : 1600);
 }
 
 export function ackIntro(key: IntroKey): void {
@@ -257,7 +273,7 @@ export function selectCard(k: number): void {
   mut((s) => {
     s.ui.sel = s.ui.sel === k ? -1 : k;
   });
-  if (getState().ui.sel >= 0) say('點一下盤面放下，或直接拖過去');
+  if (getState().ui.sel >= 0) say(PICKED);
 }
 
 export function clearSelection(): void {
@@ -337,11 +353,11 @@ export function place(k: number, t: PieceType, o: number, x: number, y: number, 
   const after = gridNow();
   if (after.gateOpen && !before.gateOpen) {
     sfx.gate();
-    say('石門打開了！', 1500);
+    say(GATE_OPENS, 1500);
   }
   if (after.water > before.water) {
     sfx.tide();
-    say('海水漲上來了！', 1500);
+    say(TIDE_RISES, 1500);
   }
   checkWin();
 }
@@ -506,7 +522,7 @@ export function hint(free = false): void {
   const want = new Set(best.map(placeKey));
   const wrong = r.placed.map((_, i) => i).filter((i) => !want.has(have[i]));
   if (lv.tide && !wrong.length && waterAt(lv, r.moves + best.length - bestN) > waterAt(lv, best.length)) {
-    say('海水漲太高了，按「重來」讓海水退回去', 3000);
+    say(TIDE_TOO_HIGH, 3000, true);
     return;
   }
   if (wrong.length) {
@@ -515,7 +531,7 @@ export function hint(free = false): void {
       if (s.progress.run) s.progress.run.shell -= cost;
       s.ui.hint = { type: 'lift', pi };
     });
-    say('先把發亮的這塊拿下來', 2400);
+    say(LIFT_FIRST, 2400, true);
     return;
   }
   const g = gridNow();
@@ -531,7 +547,7 @@ export function hint(free = false): void {
     if (k >= 0) cur.orient[k] = p.o;
     s.ui.hint = { type: 'put', p, k };
   });
-  say(`把發亮的${PIECE_NAMES[p.t]}放到虛線那裡`, 2600);
+  say(putLine(p.t), 2600, true);
 }
 
 export function reroll(): void {
